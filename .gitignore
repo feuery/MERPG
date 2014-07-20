@@ -1,0 +1,13 @@
+/target
+/classes
+/checkouts
+pom.xml
+pom.xml.asc
+*.jar
+*.class
+/.lein-*
+/.nrepl-port
+/project.clj~
+/src/merpg/basic_map_stuff.clj~
+/src/merpg/core.clj~
+/src/merpg/map_layer_editing.clj~

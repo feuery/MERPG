@@ -1,6 +1,6 @@
-(ns merpg.map-layer-editing
-  (:require [merpg.basic-map-stuff :refer :all]
-            [merpg.multi :refer [def-real-multi]]
+(ns merpg.immutable.map-layer-editing
+  (:require [merpg.immutable.basic-map-stuff :refer :all]
+            [merpg.macros.multi :refer [def-real-multi]]
             [clojure.pprint :refer :all]
             [clojure.test :refer :all]))
 

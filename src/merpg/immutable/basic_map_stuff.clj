@@ -1,5 +1,5 @@
-(ns merpg.basic-map-stuff
-  (:require [merpg.multi :refer [def-real-multi]]
+(ns merpg.immutable.basic-map-stuff
+  (:require [merpg.macros.multi :refer :all]
             [clojure.test :refer :all]
             [clojure.pprint :refer :all]))
 

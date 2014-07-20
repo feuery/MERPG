@@ -1,4 +1,4 @@
-(ns merpg.multi)
+(ns merpg.macros.multi)
 
 (defmacro def-real-multi [Name params fn]
   (let [symbolname (name Name)

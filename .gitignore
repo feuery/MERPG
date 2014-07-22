@@ -14,3 +14,8 @@ pom.xml.asc
 /src/merpg/immutable/basic_map_stuff.clj~
 /src/merpg/immutable/map_layer_editing.clj~
 /src/merpg/macros/multi.clj~
+/src/merpg/2D/#core.clj#.orig
+/src/merpg/2D/core.clj.orig
+/src/merpg/2D/core.clj~
+/src/merpg/IO/tileset.clj~
+/src/merpg/UI/BindableCanvas.clj~

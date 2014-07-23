@@ -16,9 +16,9 @@
   (get-in layer [x y]))
 
 (defmethod get-tile [:map 3]
-  [map tile x y]
+  [map layer x y]
   {:pre [(not (= (class map) clojure.lang.LazySeq))]}
-  (get-in map [tile x y]))
+  (get-in map [layer x y]))
 
 (def-real-multi set-tile [& params]
   [(-> params first meta :tyyppi)

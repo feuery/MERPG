@@ -48,6 +48,10 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
     {:tyyppi :map
      :relocation-fns {:north north :west west :south south :east east}}))
 
+(defn layer-count [map]
+  {:pre [(-> map meta :tyyppi (= :map))]}
+  (count map))
+
 
 (defn edge-fn
   ([map edge]

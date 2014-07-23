@@ -20,3 +20,4 @@ pom.xml.asc
 /src/merpg/IO/tileset.clj~
 /src/merpg/UI/BindableCanvas.clj~
 /src/merpg/mutable/tool.clj~
+/src/merpg/UI/map_controller.clj~

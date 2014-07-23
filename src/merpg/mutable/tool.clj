@@ -1,4 +1,5 @@
-(ns merpg.mutable.tool ))
+(ns merpg.mutable.tool )
+
 
 ;; Tools are called with current map, current tile, coordinates in-which the tool 
 ;; was used, and the selected layer.
@@ -9,7 +10,7 @@
   "Returns the def-form with which you create the tools, which are put into the map-atom sent here as a parameter"
   [tool-map-atom]
   (fn [tool-name tool-fn]
-    (swap! tool-map-atom #(assoc % tool-name tool-fn)))))
+    (swap! tool-map-atom #(assoc % tool-name tool-fn))))
 
 (comment
   (deftool :Pen (fn [map current-tile x y layer]
@@ -20,5 +21,4 @@
                    map))
 
   (deftool :test4 (fn [map current-tile x y layer]
-                    (println "Hello world!")))))
-
+                    (println "Hello world!"))))

@@ -38,22 +38,14 @@
 
 (defn map-controller
   "Returns the mainview, on which we can edit the map"
-  []
-  (let [map-width  10
-        map-height  10] ;;These are needed on the top-level...
-    (def map-data-image (ref (make-map map-width
-                                       map-height
-                                       2)))
-    (def tool-atom (atom {}))
-    (def current-tool-fn (atom nil)))
+  [map-data-image tool-atom current-tool-fn-atom tileset-ref]
   
   (let [deftool (tool-factory-factory tool-atom)
         map-width  10
         map-height  10
         _ (comment map-data-image (ref (make-map map-width
-                                 map-height
-                                 2)))
-        tileset-ref (ref [(load-tileset "/Users/feuer2/Dropbox/memapper/tileset.png")])
+                                                 map-height
+                                                 2)))
         
         map-img (image (* map-width 50)
                        (* map-height 50))
@@ -62,13 +54,12 @@
                                                            (* 50 map-height)
                                                            50)]
                                    (Rect x y 50 50)))
-        tilesets (ref [])
         canvas (bindable-canvas map-data-image #(map->img % @tileset-ref))]
 
     ;; init tools
     (default-tools deftool)
-    (reset! current-tool-fn (:pen @tool-atom))
-    (tool-frame! tool-atom current-tool-fn)
+    (reset! current-tool-fn-atom (:pen @tool-atom))
+    (tool-frame! tool-atom current-tool-fn-atom)
     
     ;; do nothing 'til tileset is loaded
     ;; Allow mouse-dragging to call tools
@@ -79,10 +70,10 @@
               (let [[x y :as coords] (-> screen->map
                                          (map (mouse-location e))
                                          vec)
-                    tool @current-tool-fn]
+                    tool @current-tool-fn-atom]
                 (dosync
                  (alter map-data-image tool (tile 1 1 0 1) x y (dec (layer-count @map-data-image)))))))
     canvas))
 
-(defn- show [f stuff]
+(defn show [f stuff]
   (config! f :content stuff))

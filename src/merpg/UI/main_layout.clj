@@ -5,14 +5,18 @@
             [merpg.UI.tileset-controller :refer :all]
             [merpg.UI.tool-box :refer [tool-frame!]]
             [merpg.UI.BindableCanvas :refer :all]
-            [merpg.immutable.basic-map-stuff :refer [make-map tile]]))
+            [merpg.UI.BindableList :refer :all]
+            [merpg.immutable.basic-map-stuff :refer [make-map tile layer-count]]))
 
 (defn get-content []
   (let [map-width  10
         map-height  10] ;;The following atoms are needed on the top-level...
-    (def map-data-image (ref (make-map map-width
+    (def map-data-image (atom (make-map map-width
                                        map-height
                                        2)))
+    (def current-layer-atom (atom nil))
+    (def current-layer-index-atom (atom 0 :validator #(and (>= % 0) (< % (layer-count @map-data-image)))))                                                       
+    
     (def tool-atom (atom {}))
     (def current-tool-fn (atom nil))
     
@@ -24,7 +28,8 @@
   (border-panel
    :center
    (top-bottom-split
-    (map-controller map-data-image tool-atom current-tool-fn tileset-ref current-tile)
+    (map-controller map-data-image tool-atom current-tool-fn tileset-ref
+                    current-tile current-layer-index-atom)
     (tileset-controller tileset-ref
                         current-tileset-index
                         current-tile)
@@ -38,4 +43,9 @@
                                   (get (:tileset tile))
                                   (get (:x tile))
                                   (get (:y tile)))))
+           "Layers"
+           (bindable-list map-data-image
+                          current-layer-atom
+                          :custom-model-bind #(-> % meta :name)
+                          :selected-index-atom current-layer-index-atom)
            ])))

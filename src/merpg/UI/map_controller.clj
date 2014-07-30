@@ -38,11 +38,12 @@
 
 (defn default-tools [deftool]
   (deftool :pen (fn [map current-tile x y layer]
+                  (println "using pen" [current-tile x y layer])
                   (set-tile map layer x y current-tile))))
 
 (defn map-controller
   "Returns the mainview, on which we can edit the map"
-  [map-data-image tool-atom current-tool-fn-atom tileset-ref current-tile-ref]
+  [map-data-image tool-atom current-tool-fn-atom tileset-ref current-tile-ref current-layer-ind-atom]
   
   (let [deftool (tool-factory-factory tool-atom)
         map-width  10
@@ -75,8 +76,7 @@
                                          (map (mouse-location e))
                                          vec)
                     tool @current-tool-fn-atom]
-                (dosync
-                 (alter map-data-image tool @current-tile-ref x y (dec (layer-count @map-data-image)))))))
+                 (swap! map-data-image tool @current-tile-ref x y @current-layer-ind-atom))))
     canvas))
 
 (defn show [f stuff]

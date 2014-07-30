@@ -6,7 +6,8 @@
                                                        set-tile]]
             [merpg.mutable.tool :refer :all]
             [merpg.2D.core :refer :all]
-            [seesaw.core :refer [frame config! listen alert]]
+            [merpg.UI.tool-box :refer :all]
+            [seesaw.core :refer [frame config! listen alert button]]
             [seesaw.mouse :refer [location] :rename {location mouse-location}]))
 
 (defn screen->map [coord]
@@ -39,12 +40,14 @@
   "Returns the mainview, on which we can edit the map"
   []
   (let [map-width  10
-        map-height  10]
+        map-height  10] ;;These are needed on the top-level...
     (def map-data-image (ref (make-map map-width
                                        map-height
-                                       2))))
-  (let [tool-atom (atom {})
-        deftool (tool-factory-factory tool-atom)
+                                       2)))
+    (def tool-atom (atom {}))
+    (def current-tool-fn (atom nil)))
+  
+  (let [deftool (tool-factory-factory tool-atom)
         map-width  10
         map-height  10
         _ (comment map-data-image (ref (make-map map-width
@@ -61,16 +64,24 @@
                                    (Rect x y 50 50)))
         tilesets (ref [])
         canvas (bindable-canvas map-data-image #(map->img % @tileset-ref))]
+
+    ;; init tools
     (default-tools deftool)
-    ;; Load tools
+    (reset! current-tool-fn (:pen @tool-atom))
+    (tool-frame! tool-atom current-tool-fn)
+    
     ;; do nothing 'til tileset is loaded
     ;; Allow mouse-dragging to call tools
-    
+
+    ;; [map current-tile x y layer]
     (listen canvas :mouse-dragged
-            (fn [e]
-              (alert (str "Klikkasit sitten kohtaa " (-> screen->map
-                                                         (map (mouse-location e))
-                                                         vec)))))
+            (fn canvas-drag-listener [e]
+              (let [[x y :as coords] (-> screen->map
+                                         (map (mouse-location e))
+                                         vec)
+                    tool @current-tool-fn]
+                (dosync
+                 (alter map-data-image tool (tile 1 1 0 1) x y (dec (layer-count @map-data-image)))))))
     canvas))
 
 (defn- show [f stuff]

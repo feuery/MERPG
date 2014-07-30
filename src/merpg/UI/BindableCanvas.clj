@@ -12,7 +12,6 @@
 
 (defn bindable-canvas [data-atom img-transformer-fn]
   (let [c (canvas :paint (fn [_ g]
-                           (println "@bindable-canvas.:paint")
                            (.drawImage g (img-transformer-fn @data-atom) 0 0 nil)))]
     (add-watch data-atom :bindable-canvas-updater (fn [_ _ _ _]
                                                     (repaint! c)))

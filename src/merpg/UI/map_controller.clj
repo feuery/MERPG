@@ -2,7 +2,8 @@
   (:require [merpg.UI.BindableCanvas :refer :all]
             [merpg.IO.tileset :refer [load-tileset]]
             [merpg.immutable.basic-map-stuff :refer :all]
-            [merpg.immutable.map-layer-editing :refer [get-tile]]
+            [merpg.immutable.map-layer-editing :refer [get-tile
+                                                       set-tile]]
             [merpg.mutable.tool :refer :all]
             [merpg.2D.core :refer :all]
             [seesaw.core :refer [frame config! listen alert]]
@@ -30,27 +31,37 @@
                                                      (:y tile)])
                                x-y))))))
 
+(defn default-tools [deftool]
+  (deftool :pen (fn [map current-tile x y layer]
+                  (set-tile map layer x y current-tile))))
+
 (defn map-controller
   "Returns the mainview, on which we can edit the map"
   []
+  (let [map-width  10
+        map-height  10]
+    (def map-data-image (ref (make-map map-width
+                                       map-height
+                                       2))))
   (let [tool-atom (atom {})
         deftool (tool-factory-factory tool-atom)
-        map-width (ref 10)
-        map-height (ref 10)
-        map-data-image (ref (make-map @map-width
-                                 @map-height
-                                 2))
+        map-width  10
+        map-height  10
+        _ (comment map-data-image (ref (make-map map-width
+                                 map-height
+                                 2)))
         tileset-ref (ref [(load-tileset "/Users/feuer2/Dropbox/memapper/tileset.png")])
         
-        map-img (image (* @map-width 50)
-                       (* @map-height 50))
+        map-img (image (* map-width 50)
+                       (* map-height 50))
         map-img (draw-to-surface map-img
-                                 (doseq [[x y] (get-coords (* 50 @map-width)
-                                                           (* 50 @map-height)
+                                 (doseq [[x y] (get-coords (* 50 map-width)
+                                                           (* 50 map-height)
                                                            50)]
                                    (Rect x y 50 50)))
         tilesets (ref [])
         canvas (bindable-canvas map-data-image #(map->img % @tileset-ref))]
+    (default-tools deftool)
     ;; Load tools
     ;; do nothing 'til tileset is loaded
     ;; Allow mouse-dragging to call tools

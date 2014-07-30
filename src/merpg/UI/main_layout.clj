@@ -2,8 +2,9 @@
   (:require [seesaw.core :refer :all]
             [merpg.IO.tileset :refer [load-tileset]]
             [merpg.UI.map-controller :refer [map-controller]]
+            [merpg.UI.tileset-controller :refer :all]
             [merpg.UI.tool-box :refer [tool-frame!]]
-            [merpg.immutable.basic-map-stuff :refer [make-map]]))
+            [merpg.immutable.basic-map-stuff :refer [make-map tile]]))
 
 (defn get-content []
   (let [map-width  10
@@ -14,11 +15,16 @@
     (def tool-atom (atom {}))
     (def current-tool-fn (atom nil))
     
-    (def tileset-ref (ref [(load-tileset "/Users/feuer2/Dropbox/memapper/tileset.png")])))
-    
+    (def tileset-ref (ref [(load-tileset "/Users/feuer2/Dropbox/memapper/tileset.png")]))
+    (def current-tileset-index (ref 0))
+
+    (def current-tile (ref (tile 0 0 0 0))))
+  
   (border-panel
    :center
-   (border-panel
-    :center (map-controller map-data-image tool-atom current-tool-fn tileset-ref)
-    :south "Musta tulee isona tilesetinvalitsin")
+   (top-bottom-split
+    (map-controller map-data-image tool-atom current-tool-fn tileset-ref)
+    (tileset-controller tileset-ref
+                        current-tileset-index
+                        current-tile))
    :west (vertical-panel :items [(tool-frame! tool-atom current-tool-fn)])))

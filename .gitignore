@@ -23,3 +23,4 @@ pom.xml.asc
 /src/merpg/UI/map_controller.clj~
 /src/merpg/UI/tool_box.clj~
 /src/merpg/UI/main_layout.clj~
+/src/merpg/UI/tileset_controller.clj~

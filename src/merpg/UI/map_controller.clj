@@ -73,6 +73,7 @@
                     tool @current-tool-fn-atom]
                 (dosync
                  (alter map-data-image tool (tile 1 1 0 1) x y (dec (layer-count @map-data-image)))))))
+    (config! canvas :background :black)
     canvas))
 
 (defn show [f stuff]

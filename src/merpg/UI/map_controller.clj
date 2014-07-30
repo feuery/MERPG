@@ -19,18 +19,22 @@
     [x y]))
 
 (defn map->img [map tileset-list] ;;non-atom
-  (draw-to-surface (image (* 50 (width map))
-                          (* 50 (height map)))
-                   (dotimes [layer (layer-count map)]                     
-                     (doseq [[x y :as x-y] (get-coords (* 50 (width map))
-                                                       (* 50 (height map)) 50)]
-                       (let [tile (get-tile map layer
-                                            (long (/ x 50))
-                                            (long (/ y 50)))]
-                         (Draw (get-in tileset-list [(:tileset tile)
-                                                     (:x tile)
-                                                     (:y tile)])
-                               x-y))))))
+  (if (pos? (count tileset-list))
+    (draw-to-surface (image (* 50 (width map))
+                            (* 50 (height map)))
+                     (println "count tileset-list " (count tileset-list))
+                     (dotimes [layer (layer-count map)]                     
+                       (doseq [[x y :as x-y] (get-coords (* 50 (width map))
+                                                         (* 50 (height map)) 50)]
+                         (let [tile (get-tile map layer
+                                              (long (/ x 50))
+                                              (long (/ y 50)))]
+                           (Draw (get-in tileset-list [(:tileset tile)
+                                                       (:x tile)
+                                                       (:y tile)])
+                                 x-y)))))
+    (draw-to-surface (image 200 100)
+                     (Draw "Load a tileset, please" [0 0]))))
 
 (defn default-tools [deftool]
   (deftool :pen (fn [map current-tile x y layer]
@@ -73,7 +77,6 @@
                     tool @current-tool-fn-atom]
                 (dosync
                  (alter map-data-image tool (tile 1 1 0 1) x y (dec (layer-count @map-data-image)))))))
-    (config! canvas :background :black)
     canvas))
 
 (defn show [f stuff]

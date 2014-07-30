@@ -15,7 +15,7 @@
     (def tool-atom (atom {}))
     (def current-tool-fn (atom nil))
     
-    (def tileset-ref (ref [(load-tileset "/Users/feuer2/Dropbox/memapper/tileset.png")]))
+    (def tileset-ref (ref []));; (load-tileset "/Users/feuer2/Dropbox/memapper/tileset.png")]))
     (def current-tileset-index (ref 0))
 
     (def current-tile (ref (tile 0 0 0 0))))
@@ -26,5 +26,6 @@
     (map-controller map-data-image tool-atom current-tool-fn tileset-ref)
     (tileset-controller tileset-ref
                         current-tileset-index
-                        current-tile))
+                        current-tile)
+    :divider-location 3/4)
    :west (vertical-panel :items [(tool-frame! tool-atom current-tool-fn)])))

@@ -42,7 +42,7 @@
 
 (defn map-controller
   "Returns the mainview, on which we can edit the map"
-  [map-data-image tool-atom current-tool-fn-atom tileset-ref]
+  [map-data-image tool-atom current-tool-fn-atom tileset-ref current-tile-ref]
   
   (let [deftool (tool-factory-factory tool-atom)
         map-width  10
@@ -76,7 +76,7 @@
                                          vec)
                     tool @current-tool-fn-atom]
                 (dosync
-                 (alter map-data-image tool (tile 1 1 0 1) x y (dec (layer-count @map-data-image)))))))
+                 (alter map-data-image tool @current-tile-ref x y (dec (layer-count @map-data-image)))))))
     canvas))
 
 (defn show [f stuff]

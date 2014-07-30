@@ -4,6 +4,7 @@
             [merpg.UI.map-controller :refer [map-controller]]
             [merpg.UI.tileset-controller :refer :all]
             [merpg.UI.tool-box :refer [tool-frame!]]
+            [merpg.UI.BindableCanvas :refer :all]
             [merpg.immutable.basic-map-stuff :refer [make-map tile]]))
 
 (defn get-content []
@@ -15,7 +16,7 @@
     (def tool-atom (atom {}))
     (def current-tool-fn (atom nil))
     
-    (def tileset-ref (ref []));; (load-tileset "/Users/feuer2/Dropbox/memapper/tileset.png")]))
+    (def tileset-ref (ref [(load-tileset "/Users/feuer2/Dropbox/memapper/tileset.png")]))
     (def current-tileset-index (ref 0))
 
     (def current-tile (ref (tile 0 0 0 0))))
@@ -23,9 +24,18 @@
   (border-panel
    :center
    (top-bottom-split
-    (map-controller map-data-image tool-atom current-tool-fn tileset-ref)
+    (map-controller map-data-image tool-atom current-tool-fn tileset-ref current-tile)
     (tileset-controller tileset-ref
                         current-tileset-index
                         current-tile)
     :divider-location 3/4)
-   :west (vertical-panel :items [(tool-frame! tool-atom current-tool-fn)])))
+   :west (vertical-panel
+          :items
+          [(tool-frame! tool-atom current-tool-fn)
+           (bindable-canvas current-tile
+                            (fn [tile]
+                              (-> @tileset-ref
+                                  (get (:tileset tile))
+                                  (get (:x tile))
+                                  (get (:y tile)))))
+           ])))

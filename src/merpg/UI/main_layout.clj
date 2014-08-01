@@ -9,6 +9,7 @@
             [merpg.UI.tool-box :refer [tool-frame!]]
             [merpg.UI.BindableCanvas :refer :all]
             [merpg.UI.BindableList :refer :all]
+            [merpg.UI.property-editor :refer :all]
             [merpg.immutable.basic-map-stuff :refer :all]))
 
 (defn get-content []
@@ -18,7 +19,9 @@
                                        map-height
                                        2)))
     (def current-layer-atom (atom nil))
-    (def current-layer-index-atom (atom 0 :validator #(and (>= % 0) (< % (layer-count @map-data-image)))))                                                       
+    (def current-layer-index-atom (atom 0 :validator (fn [new]
+                                                       (println "@current-layer-index-atom validator, new = " new)
+                                                       (and (>= new 0) (< new (layer-count @map-data-image))))))                                                       
     
     (def tool-atom (atom {}))
     (def current-tool-fn (atom nil))
@@ -51,7 +54,11 @@
                           current-layer-atom
                           :custom-model-bind #(-> % meta :name)
                           :selected-index-atom current-layer-index-atom
-                          :reverse? true)
+                          :reverse? true       
+                          :on-select (fn [_]
+                                       (property-editor map-data-image
+                                                        :with-meta? true
+                                                        :index @current-layer-index-atom)))
            (button :text "New layer"
                    :listen
                    [:action (fn [_]

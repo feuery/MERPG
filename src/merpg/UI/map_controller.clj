@@ -24,20 +24,21 @@
                             (* 50 (height map)))
                      ;; (println "count tileset-list " (count tileset-list))
                      (dotimes [layer (layer-count map)]
-                       (let [layer-img (image (* 50 (width map))
-                                              (* 50 (height map)))
-                             opacity (-> (get map layer) opacity)]
-                         (draw-to-surface layer-img
-                                          (doseq [[x y :as x-y] (get-coords (* 50 (width map))
-                                                                            (* 50 (height map)) 50)]
-                                            (let [tile (get-tile map layer
-                                                                 (long (/ x 50))
-                                                                 (long (/ y 50)))]
-                                              (Draw (get-in tileset-list [(:tileset tile)
-                                                                          (:x tile)
-                                                                          (:y tile)])
-                                                    x-y))))
-                         (Draw (set-opacity layer-img opacity) [0 0]))))
+                       (when (-> (get map layer) layer-visible)
+                         (let [layer-img (image (* 50 (width map))
+                                                (* 50 (height map)))
+                               opacity (-> (get map layer) opacity)]
+                           (draw-to-surface layer-img
+                                            (doseq [[x y :as x-y] (get-coords (* 50 (width map))
+                                                                              (* 50 (height map)) 50)]
+                                              (let [tile (get-tile map layer
+                                                                   (long (/ x 50))
+                                                                   (long (/ y 50)))]
+                                                (Draw (get-in tileset-list [(:tileset tile)
+                                                                            (:x tile)
+                                                                            (:y tile)])
+                                                      x-y))))
+                           (Draw (set-opacity layer-img opacity) [0 0])))))
     (draw-to-surface (image 200 100)
                      (Draw "Load a tileset, please" [0 0]))))
 

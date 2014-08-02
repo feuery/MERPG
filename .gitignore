@@ -26,3 +26,4 @@ pom.xml.asc
 /src/merpg/UI/tileset_controller.clj~
 /src/merpg/UI/BindableList.clj~
 /src/merpg/UI/property_editor.clj~
+/src/merpg/util.clj~

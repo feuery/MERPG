@@ -3,6 +3,7 @@
                                  vertical-panel top-bottom-split
                                  button]]
             [seesaw.chooser :refer :all]
+            [clojure.stacktrace :refer [print-stack-trace]]
             [merpg.IO.tileset :refer [load-tileset]]
             [merpg.UI.map-controller :refer [map-controller]]
             [merpg.UI.tileset-controller :refer :all]
@@ -10,18 +11,25 @@
             [merpg.UI.BindableCanvas :refer :all]
             [merpg.UI.BindableList :refer :all]
             [merpg.UI.property-editor :refer :all]
-            [merpg.immutable.basic-map-stuff :refer :all]))
+            [merpg.immutable.basic-map-stuff :refer :all]
+            [merpg.util :refer [vec-remove]]))
 
 (defn get-content []
   (let [map-width  10
         map-height  10] ;;The following atoms are needed on the top-level...
     (def map-data-image (atom (make-map map-width
                                        map-height
-                                       2)))
+                                       2)
+                              :validator
+                              (fn [new]
+                                (println "@map-data-image validator, new: " (-> new meta :tyyppi))
+                                (and (not (nil? (-> new meta :tyyppi (= :map))))
+                                     (-> new meta :tyyppi (= :map))))))
     (def current-layer-atom (atom nil))
     (def current-layer-index-atom (atom 0 :validator (fn [new]
                                                        (println "@current-layer-index-atom validator, new = " new)
-                                                       (and (>= new 0) (< new (layer-count @map-data-image))))))                                                       
+                                                       (and (>= new 0)
+                                                            (< new (layer-count @map-data-image))))))                                                       
     
     (def tool-atom (atom {}))
     (def current-tool-fn (atom nil))
@@ -54,7 +62,7 @@
                           current-layer-atom
                           :custom-model-bind #(-> % meta :name)
                           :selected-index-atom current-layer-index-atom
-                          :reverse? true       
+                          ;; :reverse? true       
                           :on-select (fn [_]
                                        (property-editor map-data-image
                                                         :with-meta? true
@@ -64,13 +72,24 @@
                    [:action (fn [_]
                               (swap! map-data-image conj (make-layer (width @map-data-image)
                                                                      (height @map-data-image))))])
+
+           (button :text "Remove layer"
+                   :listen
+                   [:action (fn [_]
+                              (let [old-i @current-layer-index-atom]
+                                (swap! current-layer-index-atom (comp #(if (neg? %) 0 %) dec))
+                                (swap! map-data-image vec-remove old-i)))])
            
            "Tilesets"
            (bindable-list tileset-atom
                           current-tileset-atom
                           :custom-model-bind (fn [_]
                                                (str (inc @current-tileset-index-atom) "th"))
-                          :selected-index-atom current-tileset-index-atom)
+                          :selected-index-atom current-tileset-index-atom
+                          :on-select (fn [_]
+                                       (property-editor tileset-atom
+                                                        :with-meta? true
+                                                        :index @current-tileset-index-atom)))
            (button :text "Load tileset"
                    :listen
                    [:action (fn [_]

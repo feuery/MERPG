@@ -22,7 +22,7 @@
   (if (pos? (count tileset-list))
     (draw-to-surface (image (* 50 (width map))
                             (* 50 (height map)))
-                     (println "count tileset-list " (count tileset-list))
+                     ;; (println "count tileset-list " (count tileset-list))
                      (dotimes [layer (layer-count map)]                     
                        (doseq [[x y :as x-y] (get-coords (* 50 (width map))
                                                          (* 50 (height map)) 50)]
@@ -38,7 +38,7 @@
 
 (defn default-tools [deftool]
   (deftool :pen (fn [map current-tile x y layer]
-                  (println "using pen" [current-tile x y layer])
+                  ;; (println "using pen" [current-tile x y layer])
                   (set-tile map layer x y current-tile))))
 
 (defn map-controller

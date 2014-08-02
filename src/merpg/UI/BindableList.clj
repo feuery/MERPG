@@ -21,7 +21,8 @@
   
   (let [list (listbox :model ;; (if reverse?
                              ;;   (reverse @list-data-atom)
-                               @list-data-atom;; )
+                               @list-data-atom
+                               ;; )        
                       :renderer create-renderer
                       :listen
                       [:mouse-clicked #(when (= (.getClickCount %) 2)
@@ -31,8 +32,11 @@
     ;;   (b/bind list-data-atom
     ;;           (b/transform reverse)
     ;;           (b/property list :model))
-            (b/bind list-data-atom
-              (b/property list :model));; )
+    (b/bind list-data-atom
+            (b/property list :model));; )
+    (comment (b/bind (b/property list :model)
+            list-data-atom) ;;bidirectional \o/
+             )
     (b/bind (b/selection list) selected-item-atom)
     (b/bind (b/selection list) (b/transform (fn [_]
                                               (let [ind (.getSelectedIndex list)]

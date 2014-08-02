@@ -132,7 +132,7 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
 (defmethod reheight {:type :layer :append? true :anchor :top}
   [layer new-h & _]
   {:post [(not (= (class %) clojure.lang.LazySeq))
-          (not (= layer %))
+          ;; (not (= layer %))
           (not (= (height layer) (height %)))]}
   (with-meta-of layer (->> layer
                            (map (fn [row] (concat (->> (tile 0 0 0 0)
@@ -144,7 +144,7 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
 (defmethod reheight {:type :layer :append? true :anchor :bottom}
   [layer new-h & _]
   {:post [(not (= (class %) clojure.lang.LazySeq))
-          (not (= layer %))
+          ;; (not (= layer %))
           (not (= (height layer) (height %)))]}
   (with-meta-of layer (->> layer
                            (map (fn [row] (concat row
@@ -157,7 +157,7 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
 (defmethod reheight {:type :layer :append? false :anchor :top}
   [layer new-h & _]
   {:post [(not (= (class %) clojure.lang.LazySeq))
-          (not (= layer %))
+          ;; (not (= layer %))    ;; Why should one comment one's stupid postconditions?
           (not (= (height layer) (height %)))]}
   (with-meta-of layer (->> layer
                            (map #(drop (- (height layer) new-h) %))
@@ -167,7 +167,7 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
 (defmethod reheight {:type :layer :append? false :anchor :bottom}
   [layer new-h & _]
   {:post [(not (= (class %) clojure.lang.LazySeq))
-          (not (= layer %))
+          ;; (not (= layer %))
           (not (= (height layer) (height %)))]}
   (with-meta-of layer (->> layer
                            (map #(take new-h %))
@@ -180,6 +180,28 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
   (with-meta-of Map
     (vec
      (map #(reheight % new-h :anchor anchor) Map))))
+
+
+;; The resize
+
+(defn- with-meta-of-t
+  "-t from the transposed params"
+  [to from]
+  (with-meta-of from to))
+
+(defn resize [thingy new-width new-height & {:keys [horizontal-anchor vertical-anchor] :or
+                                     {horizontal-anchor :left
+                                      vertical-anchor :top}}]
+  (let [first (if (not= new-width (width thingy))
+                (-> thingy
+                    (rewidth new-width :anchor horizontal-anchor)
+                    (with-meta-of-t thingy))
+                thingy)]
+    (if (not= new-height (height first))
+      (-> first
+          (reheight new-height :anchor vertical-anchor)
+          (with-meta-of-t thingy))
+      first)))
 
 
 (deftest basic-map-tests

@@ -27,3 +27,5 @@ pom.xml.asc
 /src/merpg/UI/BindableList.clj~
 /src/merpg/UI/property_editor.clj~
 /src/merpg/util.clj~
+/src/merpg/UI/dialogs/resize-dialog.clj~
+/src/merpg/UI/dialogs/resize_dialog.clj~

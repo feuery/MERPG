@@ -5,14 +5,23 @@
             [seesaw.chooser :refer :all]
             [clojure.stacktrace :refer [print-stack-trace]]
             [merpg.IO.tileset :refer [load-tileset]]
-            [merpg.UI.map-controller :refer [map-controller]]
+            [merpg.UI.map-controller :refer [map-controller
+                                             show]]
             [merpg.UI.tileset-controller :refer :all]
             [merpg.UI.tool-box :refer [tool-frame!]]
             [merpg.UI.BindableCanvas :refer :all]
             [merpg.UI.BindableList :refer :all]
             [merpg.UI.property-editor :refer :all]
+            [merpg.UI.dialogs.resize-dialog :refer [resize-dialog]]
             [merpg.immutable.basic-map-stuff :refer :all]
             [merpg.util :refer [vec-remove]]))
+
+(defn do-resize! [map-atom width height
+                  horizontal-anchor
+                  vertical-anchor]
+  (swap! map-atom #(resize % width height
+         :horizontal-anchor horizontal-anchor
+         :vertical-anchor vertical-anchor)))
 
 (defn get-content []
   (let [map-width  10
@@ -51,12 +60,30 @@
    :west (vertical-panel
           :items
           [(tool-frame! tool-atom current-tool-fn)
+           (button :text "Resize map"
+                   :listen
+                   [:action (fn [_]
+                              (let [{ready-state :ready-state :as result-map} (resize-dialog @map-data-image)]
+                                (add-watch ready-state
+                                           :resize-watcher
+                                           (fn [_ _ _ ready-state]
+                                             (println "in resize-thingy")
+                                             (when (= ready-state :ok)
+                                               (println "Resizing to " [@(:width result-map)
+                                                                        @(:height result-map)])
+                                               (do-resize! map-data-image
+                                                           @(:width result-map)
+                                                           @(:height result-map)
+                                                           @(:horizontal-anchor result-map)
+                                                           @(:vertical-anchor result-map)))))))])
+           
            (bindable-canvas current-tile
                             (fn [tile]
                               (-> @tileset-atom
                                   (get (:tileset tile))
                                   (get (:x tile))
-                                  (get (:y tile)))))
+                                  (get (:y tile)))))           
+           
            "Layers"
            (bindable-list map-data-image
                           current-layer-atom

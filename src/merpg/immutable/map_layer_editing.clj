@@ -58,6 +58,7 @@
   [layer i j]
   (swap layer i j))
 
+
 ;;; Tests
 (deftest tile-tests
   (let [m (make-map 2 2 2)

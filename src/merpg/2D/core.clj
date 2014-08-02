@@ -3,7 +3,7 @@
             [clojure.string :as s]
             [clojure.pprint :refer [pprint]]
             [clojure.java.io :refer [file]])
-  (:import  [java.awt Color]
+  (:import  [java.awt Color AlphaComposite]
             [java.awt.event KeyEvent]
             [java.awt.image BufferedImage]
             [javax.imageio ImageIO]))
@@ -172,3 +172,18 @@ Example implementation of Rect: (def-primitive-draw Rect  :doc-string \"Here be 
        (.getSubimage surface x y w h)))
   ([x y w h]
      (subimage *buffer* x y w h)))
+
+(defn set-opacity [^BufferedImage img ^java.lang.Long new-opacity]
+  {:pre [(and (< new-opacity 256) (> new-opacity -1))]}
+  (let [new-img (BufferedImage. (.getWidth img)
+                                (.getHeight img)
+                                BufferedImage/TYPE_INT_ARGB)
+        new-opacity (/ new-opacity 255.0)
+        g (.createGraphics new-img)]
+    (try
+      (.setComposite g (AlphaComposite/getInstance AlphaComposite/SRC_OVER new-opacity))
+      (.drawImage g img 0 0 nil)      
+      (catch IllegalStateException ex
+        (println "new-opacity: " new-opacity)
+        (throw ex)))
+    new-img))  

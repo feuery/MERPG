@@ -117,33 +117,31 @@
                                        (property-editor current-map-atom
                                                         :with-meta? true
                                                         :index @current-layer-index-atom)))
-           (flow-panel :items
-                       [(button :text "New layer"
-                                :listen
-                                [:action (fn [_]
-                                           (swap! current-map-atom conj (make-layer (width @current-map-atom)
-                                                                                    (height @current-map-atom))))])
+           (button :text "New layer"
+                   :listen
+                   [:action (fn [_]
+                              (swap! current-map-atom conj (make-layer (width @current-map-atom)
+                                                                       (height @current-map-atom))))])
 
-                        (button :text "Remove layer"
-                                :listen
-                                [:action (fn [_]
-                                           (let [old-i @current-layer-index-atom]
-                                             (swap! current-layer-index-atom (comp #(if (neg? %) 0 %) dec))
-                                             (swap! current-map-atom vec-remove old-i)))])
-                        (button :text "Move up"
-                                :listen
-                                [:action (fn [_]
-                                           (when (< (inc @current-layer-index-atom)
-                                                    (layer-count @current-map-atom))
-                                             (swap! current-map-atom swap-layers @current-layer-index-atom (inc @current-layer-index-atom))
-                                             (swap! current-layer-index-atom inc)))])
-                        (button :text "Move down"
-                                :listen
-                                [:action (fn [_]
-                                           (when (pos? (dec @current-layer-index-atom))
-                                             (swap! current-map-atom swap-layers @current-layer-index-atom (dec @current-layer-index-atom))
-                                             (swap! current-layer-index-atom dec)))])
-                        ])
+           (button :text "Remove layer"
+                   :listen
+                   [:action (fn [_]
+                              (let [old-i @current-layer-index-atom]
+                                (swap! current-layer-index-atom (comp #(if (neg? %) 0 %) dec))
+                                (swap! current-map-atom vec-remove old-i)))])
+           (button :text "Move up"
+                   :listen
+                   [:action (fn [_]
+                              (when (< (inc @current-layer-index-atom)
+                                       (layer-count @current-map-atom))
+                                (swap! current-map-atom swap-layers @current-layer-index-atom (inc @current-layer-index-atom))
+                                (swap! current-layer-index-atom inc)))])
+           (button :text "Move down"
+                   :listen
+                   [:action (fn [_]
+                              (when (pos? (dec @current-layer-index-atom))
+                                (swap! current-map-atom swap-layers @current-layer-index-atom (dec @current-layer-index-atom))
+                                (swap! current-layer-index-atom dec)))])
            
            "Tilesets"
            (bindable-list tileset-atom

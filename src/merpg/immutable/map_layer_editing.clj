@@ -1,3 +1,4 @@
+
 (ns merpg.immutable.map-layer-editing
   (:require [merpg.immutable.basic-map-stuff :refer :all]
             [merpg.macros.multi :refer [def-real-multi]]
@@ -24,7 +25,7 @@
   [(-> params first meta :tyyppi)
    (dec (count params))])
 
-(defmethod set-tile [:layer 3]
+(defmethod set-tile [:layer 3]  ;;Should work with booleans/hit-layers too
   [layer x y tile]
   {:pre [(not (= (class layer) clojure.lang.LazySeq))]}
   (assoc-in layer [x y] tile))

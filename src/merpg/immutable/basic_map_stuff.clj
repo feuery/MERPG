@@ -7,17 +7,20 @@
 (defn tile [x y tileset rotation]
   {:x x :y y :tileset tileset :rotation rotation})
 
-(defn make-layer [w h & {:keys [opacity] :or {opacity 255}}]
+(defn make-thing [default w h & {:keys [opacity] :or {opacity 255}}]
   (with-meta
-    (->> (tile 0 0 0 0)
-        (repeat h)
-        vec
-        (repeat w)
-        vec)
+    (->> default
+         (repeat h)
+         vec
+         (repeat w)
+         vec)
     {:tyyppi :layer
      :name "New layer"
      :opacity opacity
-     :visible? true}))
+     :visible? true}))  
+
+(def make-layer (partial make-thing (tile 0 0 0 0)))
+(def make-bool-layer (partial make-thing true))
 
 (defn layer-name
   ([layer]
@@ -42,20 +45,29 @@
 (defn make-map
   "The &key params are functions that are called when the player crosses the certain edge of the map.
 There'll be a default-fn-generator, which makes fn's that look like the old idea of the reloc-vectors."
-  [w h layercount & {:keys [north west south east]
-                     :or
-                     {north (fn [& _] ) west (fn [& _] ) south (fn [& _] ) east (fn [& _] )}}]
+  [w h layercount]
   (with-meta (vec (repeat layercount (make-layer w h)))
     {:tyyppi :map
      :id (gensym)
+     :hit-layer (make-bool-layer w h)
+     
      :name (str "Map "  (->>
                          (partial rand-int 16)
                          (repeatedly 5)
                          (map (partial format "%x"))
                          join
-                         upper-case))
-                    
-     :relocation-fns {:north north :west west :south south :east east}}))
+                         upper-case))}))
+
+(def-real-multi hitdata [& params]
+  [(-> params first meta :tyyppi)
+   (dec (count params))])
+
+(defmethod hitdata [:map 0] [map]
+  (-> map meta :hit-layer))
+
+(defmethod hitdata [:map 1] [map new-layer]
+  {:pre [(-> new-layer meta :tyyppi (= :layer))]}
+  (vary-meta map assoc :hit-layer new-layer))
 
 (defn layer-count [map]
   {:pre [(-> map meta :tyyppi (= :map))]}
@@ -86,6 +98,11 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
 (defmacro with-meta-of [from to]
   `(with-meta ~to (meta ~from)))
 
+(defn get-default-val [layer]
+  (if (instance? java.lang.Boolean (get-in layer [0 0]))
+    true
+    (tile 0 0 0 0)))
+
 (def-real-multi rewidth [thing new-w & {:keys [anchor] :or {anchor :right}}]
   (if (= (-> thing meta :tyyppi) :layer)
       {:type (-> thing meta :tyyppi)
@@ -96,17 +113,21 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
 (defmethod rewidth {:type :layer :append? true :anchor :right}
   [layer new-w & _]
   {:post [(not (= (class %) clojure.lang.LazySeq))]}
-  (with-meta-of layer (vec (concat layer (->> (tile 0 0 0 0)
-                                (repeat (height layer))
-                                vec
-                                (repeat (- new-w (width layer))))))))
+  (with-meta-of layer (vec (concat layer (->> layer
+                                              get-default-val
+                                              (repeat (height layer))
+                                              vec
+                                              (repeat (- new-w (width layer))))))))
+
 (defmethod rewidth {:type :layer :append? true :anchor :left}
   [layer new-w & _]
   {:post [(not (= (class %) clojure.lang.LazySeq))]}
-  (with-meta-of layer (vec (concat (->> (tile 0 0 0 0)
-                                   (repeat (height layer))
-                                   vec
-                                   (repeat (- new-w (width layer)))) layer))))
+    (with-meta-of layer (vec (concat (->> layer
+                                          get-default-val
+                                          (repeat (height layer))
+                                          vec
+                                          (repeat (- new-w (width layer)))) layer))))
+
 (defmethod rewidth {:type :layer :append? false :anchor :right}
   [layer new-w & _]
   {:post [(not (= (class %) clojure.lang.LazySeq))]}
@@ -144,7 +165,8 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
           ;; (not (= layer %))
           (not (= (height layer) (height %)))]}
   (with-meta-of layer (->> layer
-                           (map (fn [row] (concat (->> (tile 0 0 0 0)
+                           (map (fn [row] (concat (->> layer
+                                                       get-default-val
                                                        (repeat (- new-h (height layer)))
                                                        vec)
                                                   row)))
@@ -157,7 +179,8 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
           (not (= (height layer) (height %)))]}
   (with-meta-of layer (->> layer
                            (map (fn [row] (concat row
-                                                  (->> (tile 0 0 0 0)
+                                                  (->> layer
+                                                       get-default-val
                                                        (repeat (- new-h (height layer)))
                                                        vec))))
                            (map vec)
@@ -205,12 +228,19 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
                 (-> thingy
                     (rewidth new-width :anchor horizontal-anchor)
                     (with-meta-of-t thingy))
-                thingy)]
-    (if (not= new-height (height first))
-      (-> first
-          (reheight new-height :anchor vertical-anchor)
-          (with-meta-of-t thingy))
-      first)))
+                thingy)
+        first-with-hit (if (not= new-width (width thingy))
+                         (hitdata first (rewidth (hitdata first) new-width :anchor horizontal-anchor))
+                         first)
+        second (if (not= new-height (height first-with-hit))
+                 (-> first-with-hit
+                     (reheight new-height :anchor vertical-anchor)
+                     (with-meta-of-t thingy))
+                 first-with-hit)]
+    (if (not= new-height (height thingy))
+                         (hitdata second (reheight (hitdata second) new-height :anchor vertical-anchor))
+                         second)))
+    
 
 
 (deftest basic-map-tests

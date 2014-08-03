@@ -1,6 +1,7 @@
 (ns merpg.immutable.basic-map-stuff
   (:require [merpg.macros.multi :refer :all]
             [clojure.test :refer :all]
+            [clojure.string :refer [join upper-case]]
             [clojure.pprint :refer :all]))
 
 (defn tile [x y tileset rotation]
@@ -46,6 +47,13 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
                      {north (fn [& _] ) west (fn [& _] ) south (fn [& _] ) east (fn [& _] )}}]
   (with-meta (vec (repeat layercount (make-layer w h)))
     {:tyyppi :map
+     :name (str "Map "  (->>
+                         (partial rand-int 16)
+                         (repeatedly 5)
+                         (map (partial format "%x"))
+                         join
+                         upper-case))
+                    
      :relocation-fns {:north north :west west :south south :east east}}))
 
 (defn layer-count [map]

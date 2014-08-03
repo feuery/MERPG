@@ -1,5 +1,6 @@
 (ns merpg.UI.BindableList
-  (:require [seesaw.core :refer :all]
+  (:require [seesaw.core :refer :all :exclude [width height]]
+            [merpg.immutable.basic-map-stuff :as bms]
             [seesaw.bind :as b]))
 
 (defn bindable-list [list-data-atom selected-item-atom &
@@ -16,8 +17,8 @@
     (config! renderer :text (str (custom-model-bind value))))
 
   (add-watch list-data-atom :bindable-list-watch
-             (fn [_ _ _ _]
-               (println "list-data changed")))
+             (fn bdlistwatch [_ _ _ new]
+               (println "@bdlistwatch metanew " (meta new))))
   
   (let [list (listbox :model ;; (if reverse?
                              ;;   (reverse @list-data-atom)
@@ -40,8 +41,9 @@
     (b/bind (b/selection list) selected-item-atom)
     (b/bind (b/selection list) (b/transform (fn [_]
                                               (let [ind (.getSelectedIndex list)]
-                                                (when-not (neg? ind)
-                                                  (reset! last-good-index ind))
+                                                (if-not (neg? ind)
+                                                  (reset! last-good-index ind)
+                                                  (println "list-index is neg :("))
 
                                                 @last-good-index)))
             selected-index-atom)

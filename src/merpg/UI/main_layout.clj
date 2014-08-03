@@ -1,6 +1,6 @@
 (ns merpg.UI.main-layout
-  (:require [seesaw.core :refer [frame border-panel
-                                 vertical-panel top-bottom-split alert
+  (:require [seesaw.core :refer [frame border-panel flow-panel
+                                 vertical-panel left-right-split top-bottom-split alert
                                  button]]
             [seesaw.chooser :refer :all]
             [clojure.stacktrace :refer [print-stack-trace]]
@@ -14,6 +14,7 @@
             [merpg.UI.property-editor :refer :all]
             [merpg.UI.dialogs.resize-dialog :refer [resize-dialog]]
             [merpg.immutable.basic-map-stuff :refer :all]
+            [merpg.immutable.map-layer-editing :refer :all]
             [merpg.util :refer [vec-remove]]))
 
 (defn do-resize! [map-atom width height
@@ -59,16 +60,8 @@
                                              (swap! map-set-image assoc @current-map-index-atom new))) ;; Updates changes to the current map to the global map list
     )
   
-  (border-panel
-   :center
-   (top-bottom-split
-    (map-controller current-map-atom tool-atom current-tool-fn tileset-atom
-                    current-tile current-layer-index-atom)
-    (tileset-controller tileset-atom
-                        current-tileset-index-atom
-                        current-tile)
-    :divider-location 3/4)
-   :west (vertical-panel
+  (left-right-split
+   (vertical-panel
           :items
           [(tool-frame! tool-atom current-tool-fn)
            (button :text "Resize map"
@@ -91,8 +84,9 @@
            (button :text "Relocation functions"
                    :listen
                    [:action (fn [_]
-                              (alert (str "These are set up in the REPL with merpg.mutable.relocation/defn-reloc - macro. 
-           
+                              (alert (str "These are set up in the REPL with merpg.mutable.relocation/defn-reloc - macro. The usage is explained in merpg/mutable.relocation.clj (https://github.com/feuery/MERPG/blob/master/src/merpg/mutable/relocation.clj#L26)")))])
+
+           "Current tile"           
            (bindable-canvas current-tile
                             (fn [tile]
                               (-> @tileset-atom
@@ -108,6 +102,10 @@
                                        (property-editor map-set-image
                                                         :with-meta? true
                                                         :index @current-map-index-atom)))
+           (button :text "Add map"
+                   :listen
+                   [:action (fn [_]
+                              (swap! map-set-image conj (make-map 2 2 2)))])
            
            "Layers"
            (bindable-list current-map-atom
@@ -119,18 +117,33 @@
                                        (property-editor current-map-atom
                                                         :with-meta? true
                                                         :index @current-layer-index-atom)))
-           (button :text "New layer"
-                   :listen
-                   [:action (fn [_]
-                              (swap! current-map-atom conj (make-layer (width @current-map-atom)
-                                                                     (height @current-map-atom))))])
+           (flow-panel :items
+                       [(button :text "New layer"
+                                :listen
+                                [:action (fn [_]
+                                           (swap! current-map-atom conj (make-layer (width @current-map-atom)
+                                                                                    (height @current-map-atom))))])
 
-           (button :text "Remove layer"
-                   :listen
-                   [:action (fn [_]
-                              (let [old-i @current-layer-index-atom]
-                                (swap! current-layer-index-atom (comp #(if (neg? %) 0 %) dec))
-                                (swap! current-map-atom vec-remove old-i)))])
+                        (button :text "Remove layer"
+                                :listen
+                                [:action (fn [_]
+                                           (let [old-i @current-layer-index-atom]
+                                             (swap! current-layer-index-atom (comp #(if (neg? %) 0 %) dec))
+                                             (swap! current-map-atom vec-remove old-i)))])
+                        (button :text "Move up"
+                                :listen
+                                [:action (fn [_]
+                                           (when (< (inc @current-layer-index-atom)
+                                                    (layer-count @current-map-atom))
+                                             (swap! current-map-atom swap-layers @current-layer-index-atom (inc @current-layer-index-atom))
+                                             (swap! current-layer-index-atom inc)))])
+                        (button :text "Move down"
+                                :listen
+                                [:action (fn [_]
+                                           (when (pos? (dec @current-layer-index-atom))
+                                             (swap! current-map-atom swap-layers @current-layer-index-atom (dec @current-layer-index-atom))
+                                             (swap! current-layer-index-atom dec)))])
+                        ])
            
            "Tilesets"
            (bindable-list tileset-atom
@@ -152,4 +165,12 @@
                                              (let [tilesets (->> files
                                                                  (map str)
                                                                  (map load-tileset))]
-                                               (swap! tileset-atom #(vec (concat % tilesets)))))))])])))
+                                               (swap! tileset-atom #(vec (concat % tilesets)))))))])])
+   (top-bottom-split
+    (map-controller current-map-atom tool-atom current-tool-fn tileset-atom
+                    current-tile current-layer-index-atom)
+    (tileset-controller tileset-atom
+                        current-tileset-index-atom
+                        current-tile)
+    :divider-location 3/4)
+   :divider-location 1/6))

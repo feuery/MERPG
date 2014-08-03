@@ -16,9 +16,9 @@
     [renderer {:keys [value]}]
     (config! renderer :text (str (custom-model-bind value))))
 
-  (add-watch list-data-atom :bindable-list-watch
-             (fn bdlistwatch [_ _ _ new]
-               (println "@bdlistwatch metanew " (meta new))))
+  ;; (add-watch list-data-atom :bindable-list-watch
+  ;;            (fn bdlistwatch [_ _ _ new]
+  ;;              (println "@bdlistwatch metanew " (meta new))))
   
   (let [list (listbox :model ;; (if reverse?
                              ;;   (reverse @list-data-atom)

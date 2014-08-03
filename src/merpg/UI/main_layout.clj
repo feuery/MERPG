@@ -52,6 +52,8 @@
     (def current-tileset-atom (atom nil))
     (def current-tile (ref (tile 0 0 0 0)))
 
+    (def selected-tool (atom :pen))
+
     (add-watch current-map-index-atom :index-watch (fn [_ _ _ new]
                                                      (reset! current-map-atom (get @map-set-image new))
                                                      (reset! current-layer-index-atom 0)
@@ -63,7 +65,7 @@
   (left-right-split
    (vertical-panel
           :items
-          [(tool-frame! tool-atom current-tool-fn)
+          [(tool-frame! tool-atom current-tool-fn selected-tool)
            (button :text "Resize map"
                    :listen
                    [:action (fn [_]
@@ -166,7 +168,7 @@
                                                (swap! tileset-atom #(vec (concat % tilesets)))))))])])
    (top-bottom-split
     (map-controller current-map-atom tool-atom current-tool-fn tileset-atom
-                    current-tile current-layer-index-atom)
+                    current-tile current-layer-index-atom selected-tool)
     (tileset-controller tileset-atom
                         current-tileset-index-atom
                         current-tile)

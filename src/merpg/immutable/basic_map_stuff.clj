@@ -47,6 +47,7 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
                      {north (fn [& _] ) west (fn [& _] ) south (fn [& _] ) east (fn [& _] )}}]
   (with-meta (vec (repeat layercount (make-layer w h)))
     {:tyyppi :map
+     :id (gensym)
      :name (str "Map "  (->>
                          (partial rand-int 16)
                          (repeatedly 5)

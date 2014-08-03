@@ -1,6 +1,6 @@
 (ns merpg.UI.main-layout
   (:require [seesaw.core :refer [frame border-panel
-                                 vertical-panel top-bottom-split
+                                 vertical-panel top-bottom-split alert
                                  button]]
             [seesaw.chooser :refer :all]
             [clojure.stacktrace :refer [print-stack-trace]]
@@ -87,6 +87,11 @@
                                                            @(:height result-map)
                                                            @(:horizontal-anchor result-map)
                                                            @(:vertical-anchor result-map)))))))])
+
+           (button :text "Relocation functions"
+                   :listen
+                   [:action (fn [_]
+                              (alert (str "These are set up in the REPL with merpg.mutable.relocation/defn-reloc - macro. 
            
            (bindable-canvas current-tile
                             (fn [tile]
@@ -147,6 +152,4 @@
                                              (let [tilesets (->> files
                                                                  (map str)
                                                                  (map load-tileset))]
-                                               (swap! tileset-atom #(vec (concat % tilesets)))))))])
-                                                  
-                                                  ])))
+                                               (swap! tileset-atom #(vec (concat % tilesets)))))))])])))

@@ -56,8 +56,7 @@
                          (let [img (if (get-in (hitdata Map) (map screen->map x-y))
                                      yes
                                      no)]
-                           (Draw img x-y)))
-                       (Draw "Hitdata active!" [200 200])))
+                           (Draw img x-y)))))
     (draw-to-surface (image 200 100)
                      (Draw "Load a tileset, please" [0 0]))))
 
@@ -104,9 +103,8 @@
                                          (map (mouse-location e))
                                          vec)
                     tool @current-tool-fn-atom]
-                ;; (println "Will be returned: " (meta (tool @map-data-image @current-tile-ref x y @current-layer-ind-atom)))
-                (let [result-of-tool (swap! map-data-image tool @current-tile-ref x y @current-layer-ind-atom)]
-                  (println "result-of-tool-hitdata: " (hitdata result-of-tool)))))
+                (if-not (get-in @mouse-map-a [x y])
+                  (swap! map-data-image tool @current-tile-ref x y @current-layer-ind-atom))))
             :mouse-pressed (fn [_]
                              (swap! mouse-down-a? not))
             :mouse-released (fn [_]

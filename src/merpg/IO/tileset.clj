@@ -25,7 +25,7 @@
                        (doseq [x-y (for [x (range 0 img-w 50)
                                          y (range 0 img-h 50)]
                                      [x y])]
-                         (println "x-y " x-y)
-                         (println "class " (class (get-in tileset (map #(/ % 50) x-y) x-y)))
+                         ;; (println "x-y " x-y)
+                         ;; (println "class " (class (get-in tileset (map #(/ % 50) x-y) x-y)))
                          (Draw (get-in tileset (map #(/ % 50) x-y)) x-y))))
     (image 50 50)))

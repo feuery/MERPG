@@ -54,11 +54,14 @@
 
     (def selected-tool (atom :pen))
 
+    (def mouse-down-a? (atom false))
+    (def mouse-map-a (atom (make-bool-layer map-width map-height :default-value false))) 
     (add-watch current-map-index-atom :index-watch (fn [_ _ _ new]
                                                      (reset! current-map-atom (get @map-set-image new))
                                                      (reset! current-layer-index-atom 0)
                                                      (reset! current-layer-atom (get @current-map-atom @current-layer-index-atom)))) ;;Keeps an eye on the Maps - list
     (add-watch current-map-atom :map-watch (fn [_ _ _ new]
+                                             (println "new map's meta: " (meta new))
                                              (swap! map-set-image assoc @current-map-index-atom new))) ;; Updates changes to the current map to the global map list
     )
   
@@ -168,7 +171,7 @@
                                                (swap! tileset-atom #(vec (concat % tilesets)))))))])])
    (top-bottom-split
     (map-controller current-map-atom tool-atom current-tool-fn tileset-atom
-                    current-tile current-layer-index-atom selected-tool)
+                    current-tile current-layer-index-atom selected-tool mouse-down-a? mouse-map-a)
     (tileset-controller tileset-atom
                         current-tileset-index-atom
                         current-tile)

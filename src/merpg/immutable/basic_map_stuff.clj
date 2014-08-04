@@ -20,7 +20,11 @@
      :visible? true}))  
 
 (def make-layer (partial make-thing (tile 0 0 0 0)))
-(def make-bool-layer (partial make-thing true))
+(defn make-bool-layer [w h & {:keys [opacity ;;because api-compability
+                                     default-value]
+                              :or {opacity 255
+                                   default-value true}}]
+  (make-thing default-value w h :opacity opacity))
 
 (defn layer-name
   ([layer]

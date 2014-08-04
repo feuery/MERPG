@@ -20,28 +20,28 @@
 
 (def yes (set-opacity
           (draw-to-surface (image 50 50)
-                           (with-color "#000000"
+                           (with-color "#00FF00"
                              (Rect 0 0 50 50 :fill? true))) 200))
 (def no (set-opacity
          (draw-to-surface (image 50 50)
-                          (with-color "#FFFFFF"
+                          (with-color "#FF0000"
                             (Rect 0 0 50 50 :fill? true))) 200))
 
-(defn map->img [map tileset-list draw-hit-layer?] ;;non-atom
+(defn map->img [Map tileset-list draw-hit-layer?] ;;non-atom
   ;; (println "Drawing hit-layer? " draw-hit-layer?)
   (if (pos? (count tileset-list))
-    (draw-to-surface (image (* 50 (width map))
-                            (* 50 (height map)))
+    (draw-to-surface (image (* 50 (width Map))
+                            (* 50 (height Map)))
                      ;; (println "count tileset-list " (count tileset-list))
-                     (dotimes [layer (layer-count map)]
-                       (when (-> (get map layer) layer-visible)
-                         (let [layer-img (image (* 50 (width map))
-                                                (* 50 (height map)))
-                               opacity (-> (get map layer) opacity)]
+                     (dotimes [layer (layer-count Map)]
+                       (when (-> (get Map layer) layer-visible)
+                         (let [layer-img (image (* 50 (width Map))
+                                                (* 50 (height Map)))
+                               opacity (-> (get Map layer) opacity)]
                            (draw-to-surface layer-img
-                                            (doseq [[x y :as x-y] (get-coords (* 50 (width map))
-                                                                              (* 50 (height map)) 50)]
-                                              (let [tile (get-tile map layer
+                                            (doseq [[x y :as x-y] (get-coords (* 50 (width Map))
+                                                                              (* 50 (height Map)) 50)]
+                                              (let [tile (get-tile Map layer
                                                                    (long (/ x 50))
                                                                    (long (/ y 50)))]
                                                 (Draw (get-in tileset-list [(:tileset tile)
@@ -51,12 +51,9 @@
                            (Draw (set-opacity layer-img opacity) [0 0]))))
 
                      (when draw-hit-layer?
-                       ;; (println "The hitdata: " (hitdata map))
-                       
-                       ;; (println "at 2 2: " (get-in (hitdata map) [2 2]))
-                       (doseq [[x y :as x-y] (get-coords (* 50 (width map))
-                                                         (* 50 (height map)) 50)]
-                         (let [img (if (get-in (hitdata map) [x y])
+                       (doseq [[x y :as x-y] (get-coords (* 50 (width Map))
+                                                         (* 50 (height Map)) 50)]
+                         (let [img (if (get-in (hitdata Map) (map screen->map x-y))
                                      yes
                                      no)]
                            (Draw img x-y)))
@@ -64,22 +61,20 @@
     (draw-to-surface (image 200 100)
                      (Draw "Load a tileset, please" [0 0]))))
 
-(defn default-tools [deftool]
+(defn default-tools [deftool mouse-map-a]
   (deftool :pen (fn [map current-tile x y layer]
                   ;; (println "using pen" [current-tile x y layer])
                   (set-tile map layer x y current-tile)))
   (deftool :hit-tool (fn [map current-tile x y layer]
-                       (println "new hitadata "
-                                (hitdata (hitdata map (assoc-in (hitdata map) [x y] (not (get-in (hitdata map) [x y]))))))
-                       (hitdata map (assoc-in (hitdata map) [x y] (not (get-in (hitdata map) [x y]))))
-                       
-                       )))
+                       (if (get-in @mouse-map-a [x y])
+                         (hitdata map (set-tile (hitdata map) x y (not (get-in (hitdata map) [x y]))))
+                         map))))
 
 (defn map-controller
   "Returns the mainview, on which we can edit the map"
-  [map-data-image tool-atom current-tool-fn-atom tileset-ref current-tile-ref current-layer-ind-atom selected-tool]
+  [map-data-image tool-atom current-tool-fn-atom tileset-ref current-tile-ref current-layer-ind-atom selected-tool mouse-down-a? mouse-map-a]
   
-  (let [deftool (tool-factory-factory tool-atom)
+  (let [deftool (tool-factory-factory tool-atom mouse-down-a? mouse-map-a)
         map-width  10
         map-height  10        
         map-img (image (* map-width 50)
@@ -94,7 +89,7 @@
                                                   (map->img % @tileset-ref (= @selected-tool :hit-tool))))]
 
     ;; init tools
-    (default-tools deftool)
+    (default-tools deftool mouse-map-a)
     (reset! current-tool-fn-atom (:pen @tool-atom))
     
     
@@ -102,16 +97,20 @@
     ;; Allow mouse-dragging to call tools
 
     ;; [map current-tile x y layer]
-    (listen canvas :mouse-dragged
+    (listen canvas
+            :mouse-dragged
             (fn canvas-drag-listener [e]
               (let [[x y :as coords] (-> screen->map
                                          (map (mouse-location e))
                                          vec)
                     tool @current-tool-fn-atom]
-                ;; (println "old hitdata: " (hitdata @map-data-image))
-                (swap! map-data-image tool @current-tile-ref x y @current-layer-ind-atom)
-                ;; (println "new hitdata: " (hitdata @map-data-image))
-                )))
+                ;; (println "Will be returned: " (meta (tool @map-data-image @current-tile-ref x y @current-layer-ind-atom)))
+                (let [result-of-tool (swap! map-data-image tool @current-tile-ref x y @current-layer-ind-atom)]
+                  (println "result-of-tool-hitdata: " (hitdata result-of-tool)))))
+            :mouse-pressed (fn [_]
+                             (swap! mouse-down-a? not))
+            :mouse-released (fn [_]
+                              (swap! mouse-down-a? not)))
     (add-watch selected-tool :tool-watcher (fn [_ _ _ _]
                                              (repaint! canvas)))
     canvas))

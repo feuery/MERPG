@@ -61,7 +61,6 @@
                                                      (reset! current-layer-index-atom 0)
                                                      (reset! current-layer-atom (get @current-map-atom @current-layer-index-atom)))) ;;Keeps an eye on the Maps - list
     (add-watch current-map-atom :map-watch (fn [_ _ _ new]
-                                             (println "new map's meta: " (meta new))
                                              (swap! map-set-image assoc @current-map-index-atom new))) ;; Updates changes to the current map to the global map list
     )
   

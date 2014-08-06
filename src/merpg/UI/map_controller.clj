@@ -73,7 +73,7 @@
   "Returns the mainview, on which we can edit the map"
   [map-data-image tool-atom current-tool-fn-atom tileset-ref current-tile-ref current-layer-ind-atom selected-tool mouse-down-a? mouse-map-a]
   
-  (let [deftool (tool-factory-factory tool-atom mouse-down-a? mouse-map-a)
+  (let [deftool (tool-factory-factory tool-atom mouse-down-a? mouse-map-a map-data-image)
         map-width  10
         map-height  10        
         map-img (image (* map-width 50)
@@ -103,7 +103,8 @@
                                          (map (mouse-location e))
                                          vec)
                     tool @current-tool-fn-atom]
-                (if-not (get-in @mouse-map-a [x y])
+                (when-not (get-in @mouse-map-a [x y])
+                  (println "Doing stupid stuff")
                   (swap! map-data-image tool @current-tile-ref x y @current-layer-ind-atom))))
             :mouse-pressed (fn [_]
                              (swap! mouse-down-a? not))

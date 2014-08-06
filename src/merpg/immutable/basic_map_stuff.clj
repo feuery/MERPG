@@ -71,7 +71,13 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
 
 (defmethod hitdata [:map 1] [map new-layer]
   {:pre [(-> new-layer meta :tyyppi (= :layer))]}
-  (vary-meta map assoc :hit-layer new-layer))
+  (let [toret (vary-meta map assoc :hit-layer new-layer)]
+    (if (->> toret
+         hitdata
+         flatten
+         (every? (partial instance? java.lang.Boolean)))
+      toret
+      (throw (AssertionError. "postcond failed in hitdata [:map 1]")))))
 
 (defn layer-count [map]
   {:pre [(-> map meta :tyyppi (= :map))]}

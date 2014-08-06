@@ -1,7 +1,6 @@
 (ns merpg.mutable.tool
   (:require [merpg.immutable.basic-map-stuff :refer [make-bool-layer
-                                                     width height]]
-            [merpg.UI.main-layout :refer [current-map-atom]]))
+                                                     width height]]))
 
 
 ;; Tools are called with current map, current tile, coordinates in-which the tool 
@@ -11,7 +10,7 @@
 
 (defn tool-factory-factory ; ;)
   "Returns the def-form with which you create the tools, which are put into the map-atom sent here as a parameter"
-  [tool-map-atom mouse-down-a? mouse-map-a]
+  [tool-map-atom mouse-down-a? mouse-map-a current-map-atom]
   (add-watch mouse-down-a? :mouse-recorder (fn [_ _ _ mouse-down]
                              (let [curmap @current-map-atom]
                                (reset! mouse-map-a (make-bool-layer (width curmap)

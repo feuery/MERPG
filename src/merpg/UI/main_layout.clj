@@ -1,7 +1,8 @@
 (ns merpg.UI.main-layout
-  (:require [seesaw.core :refer [frame border-panel flow-panel
+  (:require [seesaw.core :refer [frame border-panel flow-panel make-widget
                                  vertical-panel left-right-split top-bottom-split alert
                                  button]]
+            [seesaw.bind :as b]
             [seesaw.chooser :refer :all]
             [clojure.stacktrace :refer [print-stack-trace]]
             [merpg.IO.tileset :refer [load-tileset]]
@@ -26,7 +27,10 @@
 
 (defn get-content []
   (let [map-width  10
-        map-height  10] ;;The following atoms are needed on the top-level...
+        map-height  10
+        current-tool-view (->> @selected-tool
+                               str
+                               make-widget)] ;;The following atoms are needed on the top-level...
     (def map-set-image (atom [(make-map map-width
                                         map-height
                                         2)] :validator
@@ -62,12 +66,16 @@
                                                      (reset! current-layer-atom (get @current-map-atom @current-layer-index-atom)))) ;;Keeps an eye on the Maps - list
     (add-watch current-map-atom :map-watch (fn [_ _ _ new]
                                              (swap! map-set-image assoc @current-map-index-atom new))) ;; Updates changes to the current map to the global map list
-    )
+
+    (b/bind selected-tool (b/transform str) current-tool-view)
   
   (left-right-split
    (vertical-panel
           :items
           [(tool-frame! tool-atom current-tool-fn selected-tool)
+           "Current tool"
+           current-tool-view
+           
            (button :text "Resize map"
                    :listen
                    [:action (fn [_]
@@ -175,7 +183,7 @@
                         current-tileset-index-atom
                         current-tile)
     :divider-location 3/4)
-   :divider-location 1/6))
+   :divider-location 1/6)))
 
 (def f (frame :width 800
               :height 600

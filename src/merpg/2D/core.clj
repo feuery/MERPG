@@ -4,8 +4,9 @@
             [clojure.pprint :refer [pprint]]
             [clojure.java.io :refer [file]])
   (:import  [java.awt Color AlphaComposite]
+            [java.awt.geom AffineTransform]
             [java.awt.event KeyEvent]
-            [java.awt.image BufferedImage]
+            [java.awt.image BufferedImage AffineTransformOp]
             [javax.imageio ImageIO]))
 
 ;;;;;; (def ^:dynamic *draw-queue* (atom nil)) ;Frames are used as keys...
@@ -187,3 +188,53 @@ Example implementation of Rect: (def-primitive-draw Rect  :doc-string \"Here be 
         (println "new-opacity: " new-opacity)
         (throw ex)))
     new-img))  
+
+(defn rotate [img degrees]
+  (println "rotating to " degrees "°")
+  (let [W (img-width img)
+        H (img-height img)
+        toret (image (img-width img)
+                     (img-height img))
+        rad-rot (Math/toRadians (double degrees))
+        tx (doto (AffineTransform.)
+             (.rotate rad-rot (double (/ W 2)) (double (/ H 2))))
+        op (AffineTransformOp. tx AffineTransformOp/TYPE_BILINEAR)]
+    (println "WxH " [ W H])
+    (.filter op img toret)
+    (draw-to-surface toret
+                     (with-handle
+                       (.translate handle 0 0)))))
+
+    ;; /**
+    ;;  * Kääntää parametri-imagea rotation * 90 astetta
+    ;;  * @param rotation Kuinka monta kertaa 90 astetta kuvaa käännetään
+    ;;  * @param image Käännettävä kuva
+    ;;  * @return Käännetty kuva
+    ;;  */
+    ;; private BufferedImage rotate(int rotation, BufferedImage image)
+    ;; {
+    ;;     rotation = rotation * 90;
+        
+    ;;     BufferedImage to_return = new BufferedImage(VAKIOT.TILENW, VAKIOT.TILENW, BufferedImage.TYPE_INT_ARGB);
+
+    ;;     //Tässä try-lohkossa on varsinainen käännösprosessi
+    ;;     //Here lies the rotation proccess
+    ;;     try
+    ;;     {
+    ;;         AffineTransform at = new AffineTransform();
+    ;;         at.rotate( Math.toRadians(rotation), VAKIOT.TILENW/2, VAKIOT.TILENW/2);
+
+    ;;         BufferedImageOp kuvajuttu = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
+
+    ;;         to_return = kuvajuttu.filter(image, to_return);
+    ;;         to_return.createGraphics().translate(0, 0);
+    ;;     }
+    ;;     catch(Exception ex)
+    ;;     {
+    ;;         MessageBox.Show(ex.getLocalizedMessage());
+    ;;         ex.printStackTrace();
+    ;;         System.exit(-1);
+    ;;     }
+        
+    ;;     return to_return;
+    ;; }

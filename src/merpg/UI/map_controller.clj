@@ -43,11 +43,13 @@
                                                                               (* 50 (height Map)) 50)]
                                               (let [tile (get-tile Map layer
                                                                    (long (/ x 50))
-                                                                   (long (/ y 50)))]
-                                                (Draw (get-in tileset-list [(:tileset tile)
-                                                                            (:x tile)
-                                                                            (:y tile)])
-                                                      x-y))))
+                                                                   (long (/ y 50)))
+                                                    img (-> tileset-list
+                                                            (get-in [(:tileset tile)
+                                                                     (:x tile)
+                                                                     (:y tile)])
+                                                            (rotate (* (:rotation tile) 90)))]
+                                                (Draw img x-y))))
                            (Draw (set-opacity layer-img opacity) [0 0]))))
 
                      (when draw-hit-layer?
@@ -67,7 +69,14 @@
   (deftool :hit-tool (fn [map current-tile x y layer]
                        (if (get-in @mouse-map-a [x y])
                          (hitdata map (set-tile (hitdata map) x y (not (get-in (hitdata map) [x y]))))
-                         map))))
+                         map)))
+  (deftool :rotater (fn [map current-tile layer-x layer-y layer]
+                      (if (get-in @mouse-map-a [layer-x layer-y])
+                        (let [{x :x y :y tileset :tileset rotation :rotation} (get-tile map layer layer-x layer-y)]
+                          (set-tile map layer layer-x layer-y (tile x y tileset (if (> (inc rotation) 3)
+                                                                      0
+                                                                      (inc rotation)))))
+                        map))))
 
 (defn map-controller
   "Returns the mainview, on which we can edit the map"

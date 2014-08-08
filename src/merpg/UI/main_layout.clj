@@ -176,3 +176,8 @@
                         current-tile)
     :divider-location 3/4)
    :divider-location 1/6))
+
+(def f (frame :width 800
+              :height 600
+              :visible? true
+              :content (get-content)))

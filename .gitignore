@@ -30,3 +30,5 @@ pom.xml.asc
 /src/merpg/UI/dialogs/resize-dialog.clj~
 /src/merpg/UI/dialogs/resize_dialog.clj~
 /src/merpg/mutable/relocation.clj~
+/src/merpg/pxart/main_layout.clj~
+/.DS_Store

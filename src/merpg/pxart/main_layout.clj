@@ -44,12 +44,28 @@
         
         W 10
         H 10];;Lowest is black, highest is white
-    (def img-data-atom (atom (make-thing (max-in-seq palette) W H)))
+    (def image-list-atom (atom [(make-thing (max-in-seq palette) W H)]))
+    (def current-image-index (atom 0))
+    (def current-image-atom (atom (get @image-list-atom @current-image-index)))
+
     (def current-color-atom (atom 0 :validator #(< -1 % palette-size)))
+
+    (def index-updating-atom (atom false))
+    
+    (add-watch current-image-index :index-watch (fn [_ _ _ new]
+                                                  (try
+                                                    (swap! index-updating-atom not)
+                                                    (reset! current-image-atom (get @image-list-atom new))
+                                                    (finally (swap! index-updating-atom not)))))
+    
+    (add-watch current-image-atom :current-updater
+               (fn [_ _ _ new-img]
+                 (when-not @index-updating-atom
+                   (swap! image-list-atom assoc @current-image-index new-img))))
     
     (let [img (image (* 50 W)
                      (* 50 H))
-          canv (bindable-canvas img-data-atom (fn [img-data]
+          canv (bindable-canvas current-image-atom (fn [img-data]
                                                 (draw-to-surface img
                                                                  (let [w (mapwidth img-data)
                                                                        h (mapheight img-data)]
@@ -64,9 +80,11 @@
                                                                        (Line (* x 50) 0 (* x 50) (* h 50)))))))))]
       (listen canv :mouse-dragged
               (fn [e]
-                (let [x-y (-> (mouse-location e)
+                (let [[x y :as x-y] (-> (mouse-location e)
                               (drag-location-scrollbar-transformer [@scroll-X-atom @scroll-Y-atom]))]
-                  (swap! img-data-atom assoc-in x-y @current-color-atom))))
+                  (and (< x (mapwidth @current-image-atom))
+                       (< y (mapheight @current-image-atom))
+                  (swap! current-image-atom assoc-in x-y @current-color-atom)))))
       (left-right-split
        (vertical-panel
         :items ["Colours"
@@ -78,8 +96,7 @@
                 (button :text "Clear with current color"
                         :listen
                         [:action (fn [_]
-                                   (reset! img-data-atom (make-thing @current-color-atom W H)))])
-                ])
+                                   (reset! current-image-atom (make-thing @current-color-atom W H)))])])
        (border-panel :center canv
                      :east vertical-scroll
                      :south horizontal-scroll)))))

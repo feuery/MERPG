@@ -190,7 +190,6 @@ Example implementation of Rect: (def-primitive-draw Rect  :doc-string \"Here be 
     new-img))  
 
 (defn rotate [img degrees]
-  (println "rotating to " degrees "°")
   (let [W (img-width img)
         H (img-height img)
         toret (image (img-width img)
@@ -199,7 +198,6 @@ Example implementation of Rect: (def-primitive-draw Rect  :doc-string \"Here be 
         tx (doto (AffineTransform.)
              (.rotate rad-rot (double (/ W 2)) (double (/ H 2))))
         op (AffineTransformOp. tx AffineTransformOp/TYPE_BILINEAR)]
-    (println "WxH " [ W H])
     (.filter op img toret)
     (draw-to-surface toret
                      (with-handle

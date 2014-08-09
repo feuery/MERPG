@@ -1,5 +1,5 @@
 (ns merpg.mutable.tool
-  (:require [merpg.immutable.basic-map-stuff :refer [make-bool-layer
+  (:require [merpg.immutable.basic-map-stuff :refer [make-bool-layer width height
                                                      width height]]))
 
 
@@ -17,8 +17,11 @@
                                                                     (height curmap)
                                                                     :default-value false)))))
   (let [mouse-move-recorder (fn [tool-fn map current-tile x y layer]
-                              (swap! mouse-map-a assoc-in [x y] true)
-                              (tool-fn map current-tile x y layer))]
+                              (when (and (< x (width map))
+                                         (< y (height map)))
+                                (println "coords at mouse-move-recorder " [x y])
+                                (swap! mouse-map-a assoc-in [x y] true)
+                                (tool-fn map current-tile x y layer)))]
     (fn [tool-name tool-fn]
       (swap! tool-map-atom #(assoc % tool-name (partial mouse-move-recorder tool-fn))))))
 

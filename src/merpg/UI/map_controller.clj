@@ -7,8 +7,11 @@
             [merpg.mutable.tool :refer :all]
             [merpg.2D.core :refer :all]
             [merpg.UI.tool-box :refer :all]
-            [seesaw.core :refer [frame config! listen alert button repaint!]]
-            [seesaw.mouse :refer [location] :rename {location mouse-location}]))
+            [merpg.util :refer [abs]]
+            [seesaw.core :refer [frame config! listen alert button repaint! border-panel]]
+            [seesaw.mouse :refer [location] :rename {location mouse-location}])
+  (:import [javax.swing JScrollBar]
+           [java.awt.event AdjustmentListener]))
 
 (defn screen->map [coord]
   (long (/ coord 50)))
@@ -27,8 +30,10 @@
                           (with-color "#FF0000"
                             (Rect 0 0 50 50 :fill? true))) 200))
 
-(defn map->img [Map tileset-list draw-hit-layer?] ;;non-atom
-  ;; (println "Drawing hit-layer? " draw-hit-layer?)
+(defn map->img [Map tileset-list draw-hit-layer?
+                & {:keys [scroll-coords]
+                   :or {scroll-coords [0 0]}}] ;;non-atom
+  (println "@map->img scroll-coords: " scroll-coords)
   (if (pos? (count tileset-list))
     (draw-to-surface (image (* 50 (width Map))
                             (* 50 (height Map)))
@@ -50,15 +55,18 @@
                                                                      (:y tile)])
                                                             (rotate (* (:rotation tile) 90)))]
                                                 (Draw img x-y))))
-                           (Draw (set-opacity layer-img opacity) [0 0]))))
+                           ;; (if (nil? scroll-coords)
+                           ;;   (Draw (set-opacity layer-img opacity) [0 0])
+                             (Draw (set-opacity layer-img opacity) scroll-coords))));)
 
                      (when draw-hit-layer?
+                       (println "scroll-coords " scroll-coords)
                        (doseq [[x y :as x-y] (get-coords (* 50 (width Map))
                                                          (* 50 (height Map)) 50)]
                          (let [img (if (get-in (hitdata Map) (map screen->map x-y))
                                      yes
                                      no)]
-                           (Draw img x-y)))))
+                           (Draw img (vec (map + x-y scroll-coords)))))))
     (draw-to-surface (image 200 100)
                      (Draw "Load a tileset, please" [0 0]))))
 
@@ -78,9 +86,37 @@
                                                                       (inc rotation)))))
                         map))))
 
+(defn make-scrollbar-with-update [scrollbar-val-atom & {:keys [vertical?] :or {vertical? false}}]
+  (doto (JScrollBar. (if vertical? JScrollBar/VERTICAL JScrollBar/HORIZONTAL))
+    (.addAdjustmentListener
+     (proxy [AdjustmentListener] []
+       (adjustmentValueChanged [e]
+         ;; (when-not (.getValueIsAdjusting e)
+           (let [to-screen-coord (comp - (partial * 50))
+                 scrollbar-val (.getValue e)]
+             (swap! scrollbar-val-atom (fn [_] (to-screen-coord scrollbar-val)))))))));)
+
+(defn drag-location-scrollbar-transformer [ mouse-coord  scroll-coord]
+  (let [toret (-> (fn [mouse-pos scroll-pos]
+         (-> mouse-pos
+             (+ (abs scroll-pos))
+             (/ 50)
+             double
+             Math/floor
+             int))
+      (map mouse-coord scroll-coord)
+      vec)]
+    (println "mouse " mouse-coord)
+    (println "scroll " scroll-coord)
+    (println "toret of drag-location-scrollbar-transformer: " toret)
+    toret))
+
 (defn map-controller
   "Returns the mainview, on which we can edit the map"
   [map-data-image tool-atom current-tool-fn-atom tileset-ref current-tile-ref current-layer-ind-atom selected-tool mouse-down-a? mouse-map-a]
+
+  (def scroll-X-atom (atom 0))
+  (def scroll-Y-atom (atom 0))
   
   (let [deftool (tool-factory-factory tool-atom mouse-down-a? mouse-map-a map-data-image)
         map-width  10
@@ -94,7 +130,10 @@
                                    (Rect x y 50 50)))
         canvas (bindable-canvas map-data-image #(do
                                                   ;; (println "drawing hit-layer? " (= @selected-tool :hit-tool))
-                                                  (map->img % @tileset-ref (= @selected-tool :hit-tool))))]
+                                                  (map->img % @tileset-ref (= @selected-tool :hit-tool)
+                                                            :scroll-coords [@scroll-X-atom @scroll-Y-atom])))
+        horizontal-scroll (make-scrollbar-with-update scroll-X-atom)
+        vertical-scroll (make-scrollbar-with-update scroll-Y-atom :vertical? true)]
 
     ;; init tools
     (default-tools deftool mouse-map-a)
@@ -105,12 +144,14 @@
     ;; Allow mouse-dragging to call tools
 
     ;; [map current-tile x y layer]
+    (doseq [a [scroll-Y-atom scroll-X-atom]]
+      (add-watch a :scroll-repainter (fn [_ _ _ _]
+                                       (repaint! canvas))))
     (listen canvas
             :mouse-dragged
             (fn canvas-drag-listener [e]
-              (let [[x y :as coords] (-> screen->map
-                                         (map (mouse-location e))
-                                         vec)
+              (let [[x y :as coords] (-> (mouse-location e)
+                                         (drag-location-scrollbar-transformer [@scroll-X-atom @scroll-Y-atom]))
                     tool @current-tool-fn-atom]
                 (when-not (get-in @mouse-map-a [x y])
                   (println "Doing stupid stuff")
@@ -121,7 +162,9 @@
                               (swap! mouse-down-a? not)))
     (add-watch selected-tool :tool-watcher (fn [_ _ _ _]
                                              (repaint! canvas)))
-    canvas))
+    (border-panel :south horizontal-scroll
+                  :east vertical-scroll
+                  :center canvas)))
 
 (defn show [f stuff]
   (config! f :content stuff))

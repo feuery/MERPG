@@ -26,6 +26,7 @@
          :vertical-anchor vertical-anchor)))
 
 (defn get-content []
+  (def selected-tool (atom :pen))
   (let [map-width  10
         map-height  10
         current-tool-view (->> @selected-tool
@@ -55,8 +56,6 @@
     (def current-tileset-index-atom (atom 0))
     (def current-tileset-atom (atom nil))
     (def current-tile (ref (tile 0 0 0 0)))
-
-    (def selected-tool (atom :pen))
 
     (def mouse-down-a? (atom false))
     (def mouse-map-a (atom (make-bool-layer map-width map-height :default-value false))) 

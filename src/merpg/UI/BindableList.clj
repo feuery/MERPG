@@ -8,7 +8,7 @@
                              selected-index-atom
                              ;; reverse?
                              on-select]
-                      :or {custom-model-bind nil
+                      :or {custom-model-bind (fn [a] a)
                            selected-index-atom (atom 0)
                            ;; reverse? false
                            on-select (fn [_])}}]

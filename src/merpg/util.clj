@@ -14,3 +14,8 @@
 
 (defn sin [angle]
   (Math/sin (Math/toRadians angle)))
+
+(defn vec-insert [vector index element]
+  (let [[first rest] [(subvec vector 0 (inc index))
+                      (subvec vector (inc index))]]
+    (apply conj first element rest)))

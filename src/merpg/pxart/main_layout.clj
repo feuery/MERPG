@@ -1,10 +1,12 @@
 (ns merpg.px-art.main-layout
-  (:require [seesaw.core :refer :all]
+  (:require [seesaw.core :refer :all :exclude [width height]]
             [seesaw.mouse :refer [location] :rename {location mouse-location}]
-            [merpg.immutable.basic-map-stuff :refer [make-thing width height] :rename {width mapwidth make-scrollbar-with-update mapheight}]
+            [merpg.immutable.basic-map-stuff :refer [make-thing width height layer-name] :rename {width mapwidth height mapheight}]
             [merpg.UI.map-controller :refer [show drag-location-scrollbar-transformer
                                              make-scrollbar-with-update]]
             [merpg.UI.BindableCanvas :refer [bindable-canvas]]
+            [merpg.UI.BindableList :refer [bindable-list]]
+            [merpg.util :refer [vec-insert]]
             [merpg.2D.core :refer :all]))
 
 (def f (frame :width 800
@@ -33,6 +35,11 @@
                                      (reset! current-color-atom color))])))
        vec))
 
+(defn make-frame-general [frame-atom w h palette]
+  (-> (max-in-seq palette)
+      (make-thing  w h)
+      (layer-name (str (count @frame-atom) "th"))))
+
 (defn get-content []  
   (let [palette-size 4
         palette (range 0 palette-size)
@@ -44,9 +51,14 @@
         
         W 10
         H 10];;Lowest is black, highest is white
-    (def image-list-atom (atom [(make-thing (max-in-seq palette) W H)]))
+    
+    (def image-list-atom (atom []))
+    (def make-frame (partial make-frame-general image-list-atom))
+
+    (swap! image-list-atom conj (make-frame W H palette))
     (def current-image-index (atom 0))
-    (def current-image-atom (atom (get @image-list-atom @current-image-index)))
+    (def current-image-atom (atom (get @image-list-atom @current-image-index)
+                                  :validator (complement nil?)))
 
     (def current-color-atom (atom 0 :validator #(< -1 % palette-size)))
 
@@ -82,18 +94,34 @@
               (fn [e]
                 (let [[x y :as x-y] (-> (mouse-location e)
                               (drag-location-scrollbar-transformer [@scroll-X-atom @scroll-Y-atom]))]
-                  (and (< x (mapwidth @current-image-atom))
+                  (and (not (nil? @current-image-atom))
+                       (< x (mapwidth @current-image-atom))
                        (< y (mapheight @current-image-atom))
-                  (swap! current-image-atom assoc-in x-y @current-color-atom)))))
+                       (swap! current-image-atom assoc-in x-y @current-color-atom)))))
       (left-right-split
        (vertical-panel
         :items ["Colours"
                 (grid-panel :columns 2 :items (get-color-choosers palette current-color-atom))
+
+                "Frames"
+                (bindable-list image-list-atom current-image-atom :selected-index-atom current-image-index
+                               :custom-model-bind layer-name)
+                (horizontal-panel :items
+                                  [(button :text "Copy current"
+                                           :listen
+                                           [:action (fn [_]
+                                                      (let [current (layer-name @current-image-atom (str (count @image-list-atom) "th"))]
+                                                        (swap! image-list-atom vec-insert @current-image-index current)))])
+                                   (button :text "Add new"
+                                           :listen
+                                           [:action (fn [_]
+                                                      (swap! image-list-atom vec-insert @current-image-index (make-frame W H palette)))])])
+                
                 "Selected colour"
                 (bindable-canvas current-color-atom #(draw-to-surface (image 50 50)
                                                                       (with-color (number->color %)
                                                                         (Rect 0 0 50 50 :fill? true))))
-                (button :text "Clear with current color"
+                (button :text "Clear current frame with current color"
                         :listen
                         [:action (fn [_]
                                    (reset! current-image-atom (make-thing @current-color-atom W H)))])])

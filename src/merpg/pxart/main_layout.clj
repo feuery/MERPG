@@ -1,4 +1,4 @@
-(ns merpg.px-art.main-layout
+(ns merpg.pxart.main-layout
   (:require [seesaw.core :refer :all :exclude [width height]]
             [seesaw.mouse :refer [location] :rename {location mouse-location}]
             [merpg.immutable.basic-map-stuff :refer [make-thing width height layer-name] :rename {width mapwidth height mapheight}]
@@ -7,7 +7,8 @@
             [merpg.UI.BindableCanvas :refer [bindable-canvas]]
             [merpg.UI.BindableList :refer [bindable-list]]
             [merpg.util :refer [vec-insert]]
-            [merpg.2D.core :refer :all]))
+            [merpg.2D.core :refer :all]
+            [merpg.pxart.colors :refer :all]))
 
 (def f (frame :width 800
               :height 600
@@ -17,14 +18,6 @@
 (defn max-in-seq [seq]
   (reduce max seq))
 
-(defn number->color [n]
-  {:pre [(<= 0 n 3)]}
-  (case n
-    0 "#000000"
-    1 "#444444"
-    2 "#888888"
-    3 "#FFFFFF"
-    :else "#FF0000"))
 
 (defn get-color-choosers [palette-range current-color-atom]
   (->> palette-range

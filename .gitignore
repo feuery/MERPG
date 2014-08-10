@@ -32,3 +32,4 @@ pom.xml.asc
 /src/merpg/mutable/relocation.clj~
 /src/merpg/pxart/main_layout.clj~
 /.DS_Store
+/src/merpg/pxart/video_player.clj~

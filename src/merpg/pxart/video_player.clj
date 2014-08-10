@@ -1,5 +1,6 @@
 (ns merpg.pxart.video-player
   (:require [seesaw.core :refer :all :exclude [width height]]
+            [seesaw.bind :as b]
             [merpg.UI.map-controller :refer [show]]
             [merpg.2D.core :refer :all]
             [merpg.immutable.basic-map-stuff :refer [layer-name width height]]
@@ -21,6 +22,8 @@
   (let [frame-list (bindable-list (atom frameset) frame-index-atom :custom-model-bind layer-name) ;; Bindable-list takes care of the index-atom...
         buffer (image (* 10 (width (first frameset)))
                       (* 10 (height (first frameset))))
+        
+        timer-container (atom [])
         canv (canvas :paint (fn [_ g]
                               (.drawImage g
                                           (draw-to-surface buffer
@@ -33,25 +36,31 @@
                                           0 0 nil)))]
     (left-right-split canv
                       (vertical-panel
-                       :items [(button :text "Play"
+                       :items [
+                               (button :text "Play"
                                        :listen
                                        [:action
                                         (fn [_]
-                                          (timer (fn [frame-index]
-                                                   (when-not (nil? frame-index)
-                                                     (reset! running? true)
-                                                     (reset! frame-index-atom frame-index)
-                                                     (repaint! canv)
+                                          (when-not @running?
+                                            (swap! timer-container conj
+                                                   (timer (fn [frame-index]
+                                                            (when-not (nil? frame-index)
+                                                              (reset! running? true)
+                                                              (reset! frame-index-atom frame-index)
+                                                              (repaint! canv)
 
-                                                     (if (< (inc frame-index)
-                                                            (count frameset))
-                                                       (inc frame-index)
-                                                       (do
-                                                         (reset! running? false)
-                                                         nil))))
+                                                              (if (< (inc frame-index)
+                                                                     (count frameset))
+                                                                (inc frame-index)
+                                                                (do
+                                                                  (reset! running? false)
+                                                                  (reset! frame-index-atom 0)
+                                                                  (doseq [timer @timer-container]
+                                                                    (.stop timer)
+                                                                    (swap! @timer-container rest))
+                                                                  nil))))
                                                  :initial-value 0
                                                  :delay @time-per-frame
-                                                 :repeats? true))])])
-                                                   
+                                                 :repeats? true))))])])
                                           
                       :divider-location 1/5)))

@@ -34,3 +34,5 @@ pom.xml.asc
 /.DS_Store
 /src/merpg/pxart/video_player.clj~
 /src/merpg/pxart/#video_player.clj#
+/src/merpg/vfs.clj~
+/src/merpg/vfs/browser.clj~

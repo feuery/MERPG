@@ -1,5 +1,6 @@
 (ns merpg.util
-  (:require [merpg.immutable.basic-map-stuff :refer [with-meta-of]]))
+  (:require [merpg.immutable.basic-map-stuff :refer [with-meta-of]]
+            [clojure.string :refer [join]]))
 
 (defn vec-remove ;;dissoc is bloody useless
   "remove elem in coll"
@@ -19,3 +20,12 @@
   (let [[first rest] [(subvec vector 0 (inc index))
                       (subvec vector (inc index))]]
     (apply conj first element rest)))
+
+(defn eq-gensym
+  "Generates not useless-symbols"
+  []
+  (->> (repeatedly 5 #(rand-int 100))
+       (map str)
+       join
+       (str "S")
+       keyword))

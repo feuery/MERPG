@@ -25,19 +25,19 @@
          :horizontal-anchor horizontal-anchor
          :vertical-anchor vertical-anchor)))
 
-(defn get-content []
+(defn get-content [map-set-image]
   (def selected-tool (atom :pen))
   (let [map-width  10
         map-height  10
         current-tool-view (->> @selected-tool
                                str
                                make-widget)] ;;The following atoms are needed on the top-level...
-    (def map-set-image (atom [(make-map map-width
-                                        map-height
-                                        2)] :validator
-                                        (fn [new]
-                                          (every? #(and (not (nil? (-> % meta :tyyppi (= :map))))
-                                                        (-> % meta :tyyppi (= :map))) new))))
+    ;; (def map-set-image (atom [(make-map map-width
+    ;;                                     map-height
+    ;;                                     2)] :validator
+    ;;                                     (fn [new]
+    ;;                                       (every? #(and (not (nil? (-> % meta :tyyppi (= :map))))
+    ;;                                                     (-> % meta :tyyppi (= :map))) new))))
     
     (def current-map-index-atom (atom 0))
     (def current-map-atom (atom (get @map-set-image @current-map-index-atom)

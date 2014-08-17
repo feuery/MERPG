@@ -23,6 +23,11 @@
                 :validator
                 #(not (some nil? (map meta %)))))
 
+(comment
+  Let the root contain N atoms, one for maps, one for anims, one for everything...
+  These root's childs are the dirs, and all the grandchildren are files
+  Clicking on a child-dir opens the browser there, and clicking on a child-file opens that file on the correct editor)
+
 (defn push! [stack-atm element]
   (swap! stack-atm conj element))
 

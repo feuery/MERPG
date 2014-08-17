@@ -1,6 +1,8 @@
 (ns merpg.util
-  (:require [merpg.immutable.basic-map-stuff :refer [with-meta-of]]
-            [clojure.string :refer [join]]))
+  (:require [clojure.string :refer [join]]))
+
+(defmacro with-meta-of [from to]
+  `(with-meta ~to (meta ~from)))
 
 (defn vec-remove ;;dissoc is bloody useless
   "remove elem in coll"

@@ -6,6 +6,7 @@
             [merpg.UI.map-controller :refer [show]]
             
             [merpg.UI.main_layout] ;;This is required to let us play with its atoms :P
+            [merpg.immutable.basic-map-stuff :refer [make-map]]
             [clojure.stacktrace :refer [print-stack-trace]]
             [merpg.util :refer [eq-gensym]]))
 
@@ -18,7 +19,7 @@
   (config! renderer :text (.getName value)
                    :icon (.getIcon chooser value))))
 
-(def root (atom (make-directory (node-name (nodify @merpg.UI.main-layout/map-set-image) "Maps"))
+(def root (atom (make-directory (node-name (make-map 10 10 2) "Maps"))
                 :validator
                 #(not (some nil? (map meta %)))))
 
@@ -26,9 +27,9 @@
   (swap! stack-atm conj element))
 
 (defn pop! [stack-atm]
-  (let [last (last @folder-stack)]
-		     (swap! folder-stack drop-last)
-		     last))
+  (let [last (last @stack-atm)]
+    (swap! stack-atm drop-last)
+    last))
 
 (defn get-content [root-atom]
   (def folder-stack (atom []))
@@ -40,11 +41,18 @@
                                     (make-icon root-atom (node-id node)
                                                :on-click
                                                (fn [child]
-                                                 (push! folder-stack @root-atom)
-                                                 (reset! root-atom child))
+                                                 (when-not (is-directory child)
+                                                   (println (class child))
+                                                   (println "child not dir"))
+                                                 (when (is-directory child)
+                                                   (push! folder-stack @root-atom)
+                                                   (reset! root-atom child)))
                                                :title-transform (fn [elem]
-                                                                 (println "%: " (meta elem))
-                                                                 (node-name elem))))))
+                                                                  (try
+                                                                    (node-name elem)
+                                                                    (catch AssertionError ex
+                                                                      (println "node-name hajos elementillä " (meta elem))
+                                                                      (print-stack-trace ex))))))))
                            vec))
         real-builder (fn [_ _ _ new]
                        (config! toret :items (build-items @root-atom)))]
@@ -57,6 +65,7 @@
                (fn [_]
                  (reset! root-atom (pop! folder-stack)))])
     (real-builder nil nil nil @root-atom)])))
+
                
                  
     

@@ -1,19 +1,18 @@
 (ns merpg.pxart.main-layout ;;jee
   (:require [seesaw.core :refer :all :exclude [width height]]
             [seesaw.mouse :refer [location] :rename {location mouse-location}]
-            [merpg.immutable.basic-map-stuff :refer [make-thing width height layer-name] :rename {width mapwidth height mapheight}]
+            [merpg.immutable.basic-map-stuff :refer [make-thing
+                                                     width
+                                                     height
+                                                     layer-name] :rename {width mapwidth height mapheight}]
             [merpg.UI.map-controller :refer [show drag-location-scrollbar-transformer
                                              make-scrollbar-with-update]]
             [merpg.UI.BindableCanvas :refer [bindable-canvas]]
             [merpg.UI.BindableList :refer [bindable-list]]
             [merpg.util :refer [vec-insert]]
             [merpg.2D.core :refer :all]
-            [merpg.pxart.colors :refer :all]))
-
-(def f (frame :width 800
-              :height 600
-              :visible? true
-              :title "merpg-px-art"))
+            [merpg.pxart.colors :refer :all]
+            [clojure.pprint :refer [pprint]]))
 
 (defn max-in-seq [seq]
   (reduce max seq))
@@ -33,7 +32,7 @@
       (make-thing  w h)
       (layer-name (str (count @frame-atom) "th"))))
 
-(defn get-content []  
+(defn get-content [image-list-atom f]
   (let [palette-size 4
         palette (range 0 palette-size)
         scroll-X-atom (atom 0)
@@ -44,11 +43,17 @@
         
         W 10
         H 10];;Lowest is black, highest is white
+
+    (println "in get-content")
     
-    (def image-list-atom (atom []))
+    
     (def make-frame (partial make-frame-general image-list-atom))
 
-    (swap! image-list-atom conj (make-frame W H palette))
+    (swap! image-list-atom (comp vec conj) (make-frame W H palette))
+    
+    (println "class: " (class @image-list-atom))
+    (println "image list atom: ")
+    (pprint @image-list-atom)
     (def current-image-index (atom 0))
     (def current-image-atom (atom (get @image-list-atom @current-image-index)
                                   :validator (complement nil?)))
@@ -70,6 +75,7 @@
     
     (let [img (image (* 50 W)
                      (* 50 H))
+          _ (println "current-image-atom: " current-image-atom)
           canv (bindable-canvas current-image-atom (fn [img-data]
                                                 (draw-to-surface img
                                                                  (let [w (mapwidth img-data)
@@ -120,4 +126,21 @@
                                    (reset! current-image-atom (make-thing @current-color-atom W H)))])])
        (border-panel :center canv
                      :east vertical-scroll
-                     :south horizontal-scroll)))))
+                     :south
+                     (vertical-panel
+                      :items [horizontal-scroll
+                              (button :listen
+                                      [:action (fn [_]
+                                                 (dispose! f))])]))))))
+
+(defn show-animation-editor [animations-atom-container current-index]
+  (let [;; current-frameset (atom (get @animations-atom-container current-index))
+        f (frame :width 800
+                 :height 600
+                 :visible? true
+                 :title "merpg-px-art")]
+    (config! f :content (get-content animations-atom-container f))
+    ;; (add-watch current-frameset :animation-watcher
+    ;;            (fn [_ _ _ new-frameset]
+    ;;              (swap! animations-atom-container assoc current-index new-frameset)))
+    ))

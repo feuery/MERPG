@@ -1,7 +1,6 @@
 (ns merpg.immutable.basic-map-stuff
   (:require [merpg.macros.multi :refer :all]
             [merpg.util :refer [with-meta-of]]
-            [merpg.vfs :refer [nodify node-name]]
             [clojure.test :refer :all]
             [clojure.string :refer [join upper-case]]
             [clojure.pprint :refer :all]))
@@ -10,19 +9,16 @@
   {:x x :y y :tileset tileset :rotation rotation})
 
 (defn make-thing [default w h & {:keys [opacity] :or {opacity 255}}]
-  (node-name
-   (nodify (with-meta
-             (->> default
-                  (repeat h)
-                  vec
-                  (repeat w)
-                  vec)
-             {:tyyppi :layer
-              :name "New layer"
-              :opacity opacity
-              :visible? true})
-           :directory? false)
-   "New layer"))
+  (with-meta
+    (->> default
+         (repeat h)
+         vec
+         (repeat w)
+         vec)
+    {:tyyppi :layer
+     :name "New layer"
+     :opacity opacity
+     :visible? true}))
 
 (def make-layer (partial #'make-thing (tile 0 0 0 0)))
 (defn make-bool-layer [w h & {:keys [opacity ;;because api-compability
@@ -55,7 +51,7 @@
   "The &key params are functions that are called when the player crosses the certain edge of the map.
 There'll be a default-fn-generator, which makes fn's that look like the old idea of the reloc-vectors."
   [w h layercount]
-  (nodify (with-meta (vec (repeat layercount (make-layer w h)))
+   (with-meta (vec (repeat layercount (make-layer w h)))
     {:tyyppi :map
      :id (gensym)
      :hit-layer (make-bool-layer w h)
@@ -65,7 +61,7 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
                          (repeatedly 5)
                          (map (partial format "%x"))
                          join
-                         upper-case))})))
+                         upper-case))}))
 
 (def-real-multi hitdata [& params]
   [(-> params first meta :tyyppi)

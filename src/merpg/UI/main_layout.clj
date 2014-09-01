@@ -1,5 +1,5 @@
 (ns merpg.UI.main-layout
-  (:require [seesaw.core :refer [frame border-panel flow-panel make-widget
+  (:require [seesaw.core :refer [frame border-panel flow-panel make-widget dispose! config!
                                  vertical-panel left-right-split top-bottom-split alert
                                  button]]
             [seesaw.bind :as b]
@@ -25,7 +25,11 @@
          :horizontal-anchor horizontal-anchor
          :vertical-anchor vertical-anchor)))
 
-(defn get-content [map-set-image]
+(defn linux? []
+  (= (System/getProperty "os.name") "Linux"))
+  
+
+(defn get-content [map-set-image f]
   (def selected-tool (atom :pen))
   (let [map-width  10
         map-height  10
@@ -44,6 +48,9 @@
                                 :validator (complement nil?)))
     
     (def current-layer-atom (atom nil))  ;; Is set by the layers-listbox
+
+    (println "current-map-atm: " (meta @current-map-atom))
+    
     (def current-layer-index-atom (atom 0 :validator (fn [new]
                                                        (println "@current-layer-index-atom validator, new = " new)
                                                        (and (>= new 0)
@@ -52,7 +59,10 @@
     (def tool-atom (atom {}))
     (def current-tool-fn (atom nil))
     
-    (def tileset-atom (atom [(load-tileset "/Users/feuer2/Dropbox/memapper/tileset.png")]))
+    (def tileset-atom (atom [(load-tileset
+                              (if (linux?)
+                                "/home/feuer/Dropbox/memapper/tileset.png"
+                                "/Users/feuer2/Dropbox/memapper/tileset.png"))]))
     (def current-tileset-index-atom (atom 0))
     (def current-tileset-atom (atom nil))
     (def current-tile (ref (tile 0 0 0 0)))
@@ -174,7 +184,11 @@
                                              (let [tilesets (->> files
                                                                  (map str)
                                                                  (map load-tileset))]
-                                               (swap! tileset-atom #(vec (concat % tilesets)))))))])])
+                                               (swap! tileset-atom #(vec (concat % tilesets)))))))])
+           (button :text "Close"
+                   :listen
+                   [:action (fn [_]
+                              (dispose! f))])])
    (top-bottom-split
     (map-controller current-map-atom tool-atom current-tool-fn tileset-atom
                     current-tile current-layer-index-atom selected-tool mouse-down-a? mouse-map-a)
@@ -184,7 +198,11 @@
     :divider-location 3/4)
    :divider-location 1/6)))
 
-(def f (frame :width 800
+(defn show-mapeditor [map-set-image-atm]
+  (println "mapset at show-mapeditor (" (class map-set-image-atm) "): " (meta @map-set-image-atm))
+  
+  (let [f (frame :width 800
               :height 600
-              :visible? true
-              :content (get-content)))
+              :visible? true)]
+    (config! f :content (get-content map-set-image-atm f))))
+    

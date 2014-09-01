@@ -1,28 +1,25 @@
 (ns merpg.vfs.browser
   (:require [seesaw.core :refer :all]
             [seesaw.tree :refer [simple-tree-model]]
-            [merpg.vfs :refer :all]
             [merpg.vfs.icon :refer :all]
             [merpg.UI.map-controller :refer [show]]
             
-            [merpg.UI.main_layout] ;;This is required to let us play with its atoms :P
+            [merpg.UI.main-layout :refer [show-mapeditor]]
             [merpg.immutable.basic-map-stuff :refer [make-map]]
             [clojure.stacktrace :refer [print-stack-trace]]
-            [merpg.util :refer [eq-gensym]]))
+            [merpg.util :refer [eq-gensym]]
+            [merpg.pxart.main-layout :refer [show-animation-editor make-frame-general]]
+            [clojure.pprint :refer [pprint]]))
 
-(def f (frame :width 800
-              :height 600
-              :visible? true))
+;; (def f (frame :width 800
+;;               :height 600
+;;               :visible? true))
+
 (comment
   (defn render-file-item
   [renderer {:keys [value]}]
   (config! renderer :text (.getName value)
                    :icon (.getIcon chooser value))))
-
-(def root (atom (make-directory (node-name (make-map 10 10 2) "Maps"))
-                :validator
-                #(not (some nil? (map meta %)))))
-
 (comment
   Let the root contain N atoms, one for maps, one for anims, one for everything...
   These root's childs are the dirs, and all the grandchildren are files
@@ -36,41 +33,55 @@
     (swap! stack-atm drop-last)
     last))
 
-(defn get-content [root-atom]
+;;Keys are the dir-names :P
+(def root {:maps (atom [(make-map 10 10 2)])
+           :animations (atom [])}) ;; (make-frame-general (atom []) 10 10 (range 0 4))])})
+
+;(add-watch (:animations root) :vectorifier 
+
+(defn get-content [root]
   (def folder-stack (atom []))
   (let [toret (grid-panel :columns 3)
-        build-items (fn [root-nonatom]
-                      (->> root-nonatom
-                           (map (fn [node]
-                                  (let [is-dir? (is-directory node)]
-                                    (make-icon root-atom (node-id node)
-                                               :on-click
-                                               (fn [child]
-                                                 (when-not (is-directory child)
-                                                   (println (class child))
-                                                   (println "child not dir"))
-                                                 (when (is-directory child)
-                                                   (push! folder-stack @root-atom)
-                                                   (reset! root-atom child)))
-                                               :title-transform (fn [elem]
-                                                                  (try
-                                                                    (node-name elem)
-                                                                    (catch AssertionError ex
-                                                                      (println "node-name hajos elementillä " (meta elem))
-                                                                      (print-stack-trace ex))))))))
-                           vec))
-        real-builder (fn [_ _ _ new]
-                       (config! toret :items (build-items @root-atom)))]
-    (add-watch root-atom :explorer-watcher real-builder)
+        cwd-atom (atom root :validator (fn [new-cwd]
+                                         (or (map? new-cwd)
+                                             (vector? new-cwd))))
+        build-grid (fn [_ _ _ new-cwd]
+                     (config! toret :items
+                              (if (map? new-cwd)
+                                (->> new-cwd
+                                     (map (fn [[key child :as tuple]]
+                                            (println "tuple " tuple)
+                                            (make-icon child true (str key)
+                                                       :on-click
+                                                       (fn [child]
+                                                         (if-not (instance? clojure.lang.Atom child)
+                                                           (throw (Exception. (str "child " (class child) " is (supposed) to be atom always at this point"))))
+                                                           (case key
+                                                             :maps (show-mapeditor child)
+                                                             :animations (do
+                                                                           (pprint @child)
+                                                                           (println (class @child))
+                                                                           (show-animation-editor child 1))
+                                                             
+                                                             (do
+                                                               (alert (str "Type " key " not recognized"))))))))
+                                     vec)
+                                ))
+                     toret)]
+    (add-watch cwd-atom :cwd-browser-refresher build-grid)
     (vertical-panel
      :items
-     [(button :text "Go up the stack"
+     [(button :text "Parent dir"
               :listen
-              [:action
-               (fn [_]
-                 (reset! root-atom (pop! folder-stack)))])
-    (real-builder nil nil nil @root-atom)])))
+              [:action (fn [_]
+                         (when-let [new-cwd (pop! folder-stack)]
+                           (reset! cwd-atom new-cwd)))])
+      (build-grid nil nil nil @cwd-atom)])))
 
-               
-                 
-    
+(def f (frame
+        :width 800
+        :height 600
+        :visible? true
+        :title "MERPG-browser"
+        :content (get-content root)))
+                   

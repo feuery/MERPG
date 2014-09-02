@@ -190,18 +190,20 @@ Example implementation of Rect: (def-primitive-draw Rect  :doc-string \"Here be 
     new-img))  
 
 (defn rotate [img degrees]
-  (let [W (img-width img)
-        H (img-height img)
-        toret (image (img-width img)
-                     (img-height img))
-        rad-rot (Math/toRadians (double degrees))
-        tx (doto (AffineTransform.)
-             (.rotate rad-rot (double (/ W 2)) (double (/ H 2))))
-        op (AffineTransformOp. tx AffineTransformOp/TYPE_BILINEAR)]
-    (.filter op img toret)
-    (draw-to-surface toret
-                     (with-handle
-                       (.translate handle 0 0)))))
+  (if (instance? java.awt.Image img)
+    (let [W (img-width img)
+          H (img-height img)
+          toret (image (img-width img)
+                       (img-height img))
+          rad-rot (Math/toRadians (double degrees))
+          tx (doto (AffineTransform.)
+               (.rotate rad-rot (double (/ W 2)) (double (/ H 2))))
+          op (AffineTransformOp. tx AffineTransformOp/TYPE_BILINEAR)]
+      (.filter op img toret)
+      (draw-to-surface toret
+                       (with-handle
+                         (.translate handle 0 0))))
+    (println "Img's class is " (class img) " at merpg.2D.core/rotate")))
 
     ;; /**
     ;;  * Kääntää parametri-imagea rotation * 90 astetta

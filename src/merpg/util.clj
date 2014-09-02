@@ -31,3 +31,19 @@
        join
        (str "S")
        keyword))
+
+(defn push! [stack-atm element]
+  (swap! stack-atm conj element))
+
+(defn pop! [stack-atm]
+  (let [last (last @stack-atm)]
+    (swap! stack-atm drop-last)
+    last))
+
+(defn enqueue! [queue-atm element]
+  (swap! queue-atm #(conj % element)))
+
+(defn dequeue! [queue-atm]
+  (let [lst (last @queue-atm)]
+    (swap! queue-atm drop-last)
+    lst))

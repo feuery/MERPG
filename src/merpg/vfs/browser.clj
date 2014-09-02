@@ -11,10 +11,6 @@
             [merpg.pxart.main-layout :refer [show-animation-editor make-frame-general]]
             [clojure.pprint :refer [pprint]]))
 
-;; (def f (frame :width 800
-;;               :height 600
-;;               :visible? true))
-
 (comment
   (defn render-file-item
   [renderer {:keys [value]}]
@@ -24,14 +20,6 @@
   Let the root contain N atoms, one for maps, one for anims, one for everything...
   These root's childs are the dirs, and all the grandchildren are files
   Clicking on a child-dir opens the browser there, and clicking on a child-file opens that file on the correct editor)
-
-(defn push! [stack-atm element]
-  (swap! stack-atm conj element))
-
-(defn pop! [stack-atm]
-  (let [last (last @stack-atm)]
-    (swap! stack-atm drop-last)
-    last))
 
 ;;Keys are the dir-names :P
 (def root {:maps (atom [(make-map 10 10 2)])
@@ -71,11 +59,11 @@
     (add-watch cwd-atom :cwd-browser-refresher build-grid)
     (vertical-panel
      :items
-     [(button :text "Parent dir"
-              :listen
-              [:action (fn [_]
-                         (when-let [new-cwd (pop! folder-stack)]
-                           (reset! cwd-atom new-cwd)))])
+     [;; (button :text "Parent dir"
+      ;;         :listen
+      ;;         [:action (fn [_]
+      ;;                    (when-let [new-cwd (pop! folder-stack)]
+      ;;                      (reset! cwd-atom new-cwd)))])
       (build-grid nil nil nil @cwd-atom)])))
 
 (def f (frame

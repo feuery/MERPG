@@ -7,7 +7,7 @@
             [merpg.mutable.tool :refer :all]
             [merpg.2D.core :refer :all]
             [merpg.UI.tool-box :refer :all]
-            [merpg.util :refer [abs]]
+            [merpg.util :refer [abs enqueue! dequeue!]]
             [seesaw.core :refer [frame config! listen alert button repaint! border-panel]]
             [seesaw.mouse :refer [location] :rename {location mouse-location}])
   (:import [javax.swing JScrollBar]
@@ -117,6 +117,8 @@
 
   (def scroll-X-atom (atom 0))
   (def scroll-Y-atom (atom 0))
+
+  (def map-event-queue (atom []))
   
   (let [deftool (tool-factory-factory tool-atom mouse-down-a? mouse-map-a map-data-image)
         map-width  10
@@ -150,12 +152,13 @@
     (listen canvas
             :mouse-dragged
             (fn canvas-drag-listener [e]
-              (let [[x y :as coords] (-> (mouse-location e)
-                                         (drag-location-scrollbar-transformer [@scroll-X-atom @scroll-Y-atom]))
-                    tool @current-tool-fn-atom]
-                (when-not (get-in @mouse-map-a [x y])
-                  (println "Doing stupid stuff")
-                  (swap! map-data-image tool @current-tile-ref x y @current-layer-ind-atom))))
+              (enqueue! map-event-queue (future
+                                          (let [[x y :as coords] (-> (mouse-location e)
+                                                                     (drag-location-scrollbar-transformer [@scroll-X-atom @scroll-Y-atom]))
+                                                tool @current-tool-fn-atom]
+                                            (when-not (get-in @mouse-map-a [x y])
+                                              (println "Doing stupid stuff")
+                                              (swap! map-data-image tool @current-tile-ref x y @current-layer-ind-atom))))))
             :mouse-pressed (fn [_]
                              (swap! mouse-down-a? not))
             :mouse-released (fn [_]

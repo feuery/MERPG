@@ -18,8 +18,16 @@
 
 (defn bindable-canvas [data-atom img-transformer-fn & {:keys [rest-to-bind]
                                                        :or {rest-to-bind []}}]
-  (let [c (canvas :paint (fn [_ g]
-                           (.drawImage g (img-transformer-fn @data-atom) 0 0 nil)))]
+  (let [img-provider (atom (future (img-transformer-fn @data-atom)))
+        old-image (atom nil)
+        c (canvas :paint (fn [_ g]
+                           (when (or (realized? @img-provider)
+                                     (nil? @old-image))
+                             (reset! old-image @@img-provider)
+                             (reset! img-provider (future (img-transformer-fn @data-atom))))
+
+                           (when-not (nil? @old-image)
+                             (.drawImage g @old-image 0 0 nil))))]
 
     (doseq [d rest-to-bind]
       (add-watch d :bindable-canvas-updater (fn [_ _ _ _]

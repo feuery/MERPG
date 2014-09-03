@@ -5,6 +5,7 @@
             [seesaw.bind :as b]
             [seesaw.chooser :refer :all]
             [clojure.stacktrace :refer [print-stack-trace]]
+            [clojure.string :refer :all]
             [merpg.IO.tileset :refer [load-tileset]]
             [merpg.UI.map-controller :refer [map-controller
                                              show]]
@@ -27,7 +28,9 @@
 
 (defn linux? []
   (= (System/getProperty "os.name") "Linux"))
-  
+
+(defn windows? []
+  (.contains (System/getProperty "os.name") "Windows"))
 
 (defn get-content [map-set-image f]
   (def selected-tool (atom :pen))
@@ -62,7 +65,9 @@
     (def tileset-atom (atom [(load-tileset
                               (if (linux?)
                                 "/home/feuer/Dropbox/memapper/tileset.png"
-                                "/Users/feuer2/Dropbox/memapper/tileset.png"))]))
+                                (if (windows?)
+                                  "c:/Users/Ilpo Lehtinen/Dropbox/merpg/assets/tilesets/kaunis_tileset.jpeg"
+                                  "/Users/feuer2/Dropbox/memapper/tileset.png")))]))
     (def current-tileset-index-atom (atom 0))
     (def current-tileset-atom (atom nil))
     (def current-tile (ref (tile 0 0 0 0)))

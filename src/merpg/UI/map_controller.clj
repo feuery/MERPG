@@ -84,7 +84,36 @@
                           (set-tile map layer layer-x layer-y (tile x y tileset (if (> (inc rotation) 3)
                                                                       0
                                                                       (inc rotation)))))
-                        map))))
+                        map)))
+
+  (let [first-click (atom nil)
+        second-click (atom nil)]
+    (deftool :fill-box (fn [map current-tile layer-x layer-y layer]
+                         (if (nil? @first-click)
+                           (do
+                             (reset! first-click [layer-x layer-y])
+                             map)
+                           (if (nil? @second-click)
+                             (do
+                               (reset! second-click [layer-x layer-y])
+                               map)
+                             (let [mutable-map (atom map)
+                                   ys (map second [@first-click @second-click])
+                                   xs (map first [@first-click @second-click])
+                                   lower-y (min ys)
+                                   higher-y (max ys)
+                                   lower-x (min xs)
+                                   higher-x (max xs)
+                                   coordinates (for [x (range lower-x higher-x)
+                                                     y (range lower-y higher-y)]
+                                                 [x y])]
+                               (doseq [[x y :as coord] coordinates]
+                                 ;; set-tile params
+                                 ;; [map layer x y tile]
+                                 (swap! mutable-map set-tile layer x y current-tile))
+                               (reset! first-click nil)
+                               (reset! second-click nil)
+                               @mutable-map)))))))
 
 (defn make-scrollbar-with-update [scrollbar-val-atom & {:keys [vertical?] :or {vertical? false}}]
   (doto (JScrollBar. (if vertical? JScrollBar/VERTICAL JScrollBar/HORIZONTAL))
@@ -119,9 +148,8 @@
   (def scroll-Y-atom (atom 0))
 
   (def map-event-queue (atom []))
-  
-  (let [deftool (tool-factory-factory tool-atom mouse-down-a? mouse-map-a map-data-image)
-        map-width  10
+  (def deftool (tool-factory-factory tool-atom mouse-down-a? mouse-map-a map-data-image))
+  (let [map-width  10
         map-height  10        
         map-img (image (* map-width 50)
                        (* map-height 50))

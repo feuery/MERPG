@@ -9,7 +9,8 @@
             [merpg.UI.tool-box :refer :all]
             [merpg.util :refer [abs enqueue! dequeue!]]
             [seesaw.core :refer [frame config! listen alert button repaint! border-panel]]
-            [seesaw.mouse :refer [location] :rename {location mouse-location}])
+            [seesaw.mouse :refer [location] :rename {location mouse-location}]
+            [clojure.stacktrace :refer [print-stack-trace]])
   (:import [javax.swing JScrollBar]
            [java.awt.event AdjustmentListener]))
 
@@ -30,14 +31,14 @@
                           (with-color "#FF0000"
                             (Rect 0 0 50 50 :fill? true))) 200))
 
-(defn map->img [Map tileset-list draw-hit-layer?
+(defn map->img [Map tileset-list draw-hit-layer? first-click second-click
                 & {:keys [scroll-coords]
                    :or {scroll-coords [0 0]}}] ;;non-atom
   (println "@map->img scroll-coords: " scroll-coords)
   (if (pos? (count tileset-list))
     (draw-to-surface (image (* 50 (width Map))
                             (* 50 (height Map)))
-                     ;; (println "count tileset-list " (count tileset-list))
+                     ;;Draw the tiles
                      (dotimes [layer (layer-count Map)]
                        (when (-> (get Map layer) layer-visible)
                          (let [layer-img (image (* 50 (width Map))
@@ -55,10 +56,8 @@
                                                                      (:y tile)])
                                                             (rotate (* (:rotation tile) 90)))]
                                                 (Draw img x-y))))
-                           ;; (if (nil? scroll-coords)
-                           ;;   (Draw (set-opacity layer-img opacity) [0 0])
-                             (Draw (set-opacity layer-img opacity) scroll-coords))));)
-
+                             (Draw (set-opacity layer-img opacity) scroll-coords))))
+                     ;; Draw hit-thingy
                      (when draw-hit-layer?
                        (println "scroll-coords " scroll-coords)
                        (doseq [[x y :as x-y] (get-coords (* 50 (width Map))
@@ -66,11 +65,18 @@
                          (let [img (if (get-in (hitdata Map) (map screen->map x-y))
                                      yes
                                      no)]
-                           (Draw img (vec (map + x-y scroll-coords)))))))
+                           (Draw img (vec (map + x-y scroll-coords))))))
+
+                     ;;Fill-tool's rendering
+                     (with-color "#0000FF"
+                       (doseq [[x y] (->> [@first-click @second-click]
+                                          (filter (complement nil?))
+                                          (map #(map (partial * 50) %)))]
+                         (Rect x y 50 50))))
     (draw-to-surface (image 200 100)
                      (Draw "Load a tileset, please" [0 0]))))
 
-(defn default-tools [deftool mouse-map-a]
+(defn default-tools [deftool mouse-map-a first-click second-click]
   (deftool :pen (fn [map current-tile x y layer]
                   ;; (println "using pen" [current-tile x y layer])
                   (set-tile map layer x y current-tile)))
@@ -85,35 +91,34 @@
                                                                       0
                                                                       (inc rotation)))))
                         map)))
-
-  (let [first-click (atom nil)
-        second-click (atom nil)]
-    (deftool :fill-box (fn [map current-tile layer-x layer-y layer]
+  
+  (deftool :fill-box (fn [Map current-tile layer-x layer-y layer]
+                       (println "In fill-box?")
+                       (if (get-in @mouse-map-a [layer-x layer-y])
                          (if (nil? @first-click)
                            (do
                              (reset! first-click [layer-x layer-y])
-                             map)
-                           (if (nil? @second-click)
-                             (do
-                               (reset! second-click [layer-x layer-y])
-                               map)
-                             (let [mutable-map (atom map)
-                                   ys (map second [@first-click @second-click])
-                                   xs (map first [@first-click @second-click])
-                                   lower-y (min ys)
-                                   higher-y (max ys)
-                                   lower-x (min xs)
-                                   higher-x (max xs)
+                             (println "First-click reset to " [layer-x layer-y])
+                             Map)
+                           (try
+                             (let [second-click [layer-x layer-y]
+                                   mutable-map (atom Map)
+                                   ys (map second [@first-click second-click])
+                                   xs (map first [@first-click second-click])
+                                   lower-y (apply min ys)
+                                   higher-y (apply max ys)
+                                   lower-x (apply min xs)
+                                   higher-x (apply max xs)
                                    coordinates (for [x (range lower-x higher-x)
                                                      y (range lower-y higher-y)]
                                                  [x y])]
                                (doseq [[x y :as coord] coordinates]
-                                 ;; set-tile params
-                                 ;; [map layer x y tile]
                                  (swap! mutable-map set-tile layer x y current-tile))
                                (reset! first-click nil)
-                               (reset! second-click nil)
-                               @mutable-map)))))))
+                               @mutable-map)
+                             (catch Exception ex
+                               (print-stack-trace ex))))
+                       Map))))
 
 (defn make-scrollbar-with-update [scrollbar-val-atom & {:keys [vertical?] :or {vertical? false}}]
   (doto (JScrollBar. (if vertical? JScrollBar/VERTICAL JScrollBar/HORIZONTAL))
@@ -149,6 +154,10 @@
 
   (def map-event-queue (atom []))
   (def deftool (tool-factory-factory tool-atom mouse-down-a? mouse-map-a map-data-image))
+
+  (def first-click (atom nil))
+  (def second-click (atom nil))
+
   (let [map-width  10
         map-height  10        
         map-img (image (* map-width 50)
@@ -160,13 +169,13 @@
                                    (Rect x y 50 50)))
         canvas (bindable-canvas map-data-image #(do
                                                   ;; (println "drawing hit-layer? " (= @selected-tool :hit-tool))
-                                                  (map->img % @tileset-ref (= @selected-tool :hit-tool)
+                                                  (map->img % @tileset-ref (= @selected-tool :hit-tool) first-click second-click
                                                             :scroll-coords [@scroll-X-atom @scroll-Y-atom])))
         horizontal-scroll (make-scrollbar-with-update scroll-X-atom)
         vertical-scroll (make-scrollbar-with-update scroll-Y-atom :vertical? true)]
 
     ;; init tools
-    (default-tools deftool mouse-map-a)
+    (default-tools deftool mouse-map-a first-click second-click)
     (reset! current-tool-fn-atom (:pen @tool-atom))
     
     

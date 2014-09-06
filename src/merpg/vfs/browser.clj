@@ -53,8 +53,7 @@
                                                              
                                                              (do
                                                                (alert (str "Type " key " not recognized"))))))))
-                                     vec)
-                                ))
+                                     vec)))
                      toret)]
     (add-watch cwd-atom :cwd-browser-refresher build-grid)
     (vertical-panel

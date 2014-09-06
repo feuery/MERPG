@@ -30,6 +30,14 @@
          (draw-to-surface (image 50 50)
                           (with-color "#FF0000"
                             (Rect 0 0 50 50 :fill? true))) 200))
+(defn to-long [number]
+  (try
+    (if (number? number)
+      number
+      (Long/parseLong number))
+    (catch ClassCastException ex
+        (println "Number " number " (" (class number) ") not converted to long")
+        255)))
 
 (defn map->img [Map tileset-list draw-hit-layer? first-click second-click
                 & {:keys [scroll-coords]
@@ -43,7 +51,7 @@
                        (when (-> (get Map layer) layer-visible)
                          (let [layer-img (image (* 50 (width Map))
                                                 (* 50 (height Map)))
-                               opacity (-> (get Map layer) opacity)]
+                               opacity (-> (get Map layer) opacity to-long)]
                            (draw-to-surface layer-img
                                             (doseq [[x y :as x-y] (get-coords (* 50 (width Map))
                                                                               (* 50 (height Map)) 50)]

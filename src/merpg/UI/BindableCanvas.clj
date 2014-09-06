@@ -20,29 +20,25 @@
 
 (defn bindable-canvas [data-atom img-transformer-fn & {:keys [rest-to-bind]
                                                        :or {rest-to-bind []}}]
-  (let [;;Tehdään tästä joku agenttiviritys...
-        img-provider (atom (future (img-transformer-fn @data-atom)))
+  (let [img-agent (agent (img-transformer-fn @data-atom)
+                         :error-handler (fn [agent ex]
+                                          (println "Img-agent blew up in bindable-canvas")
+                                          (print-stack-trace ex)))
         old-image (atom nil)
-        c (canvas :paint (fn [_ g]
+        c (canvas :paint (fn canvas-painter [_ g]
                            (try
-                             (when (or (realized? @img-provider)
-                                     (nil? @old-image))
-                             (reset! old-image @@img-provider)
-                             (reset! img-provider (future (img-transformer-fn @data-atom))))
-                             (catch Exception ex
-                               (println "Image provider (" (class @@img-provider) "): ")
-                               (pprint @img-provider)
-                               (print-stack-trace ex)))
-
-                           (when-not (nil? @old-image)
-                             (.drawImage g @old-image 0 0 nil))))]
+                             (.drawImage g @img-agent 0 0 nil)
+                             (catch RuntimeException ex
+                               (print-stack-trace ex)))))]
 
     (doseq [d rest-to-bind]
-      (add-watch d :bindable-canvas-updater (fn [_ _ _ _]
-                                              (repaint! c))))
-    (add-watch data-atom :bindable-canvas-updater (fn [_ _ _ da]
-                                                    (println "Data-atomn of bindable-canvas changed")
-                                                    (pprint da)
-                                                    (repaint! c)))
+      (add-watch d :bindable-canvas-updater (fn secondary-binder [_ _ _ _]
+                                              (send img-agent (fn [_] (img-transformer-fn @data-atom))))))
+    (add-watch data-atom :bindable-canvas-updater (fn primary-binder [_ _ _ da]
+                                                    (send img-agent (fn [_] (img-transformer-fn da)))))
+    (add-watch img-agent :repainter (fn repainter [_ _ _ _]
+                                      (try
+                                        (repaint! c)
+                                        (catch Exception ex
+                                          (print-stack-trace ex)))))
     c))
-

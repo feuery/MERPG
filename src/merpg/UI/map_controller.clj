@@ -114,9 +114,9 @@
                                    ys (map second [@first-click second-click])
                                    xs (map first [@first-click second-click])
                                    lower-y (apply min ys)
-                                   higher-y (apply max ys)
+                                   higher-y (+ (apply max ys) 1)
                                    lower-x (apply min xs)
-                                   higher-x (apply max xs)
+                                   higher-x (+ (apply max xs) 1)
                                    coordinates (for [x (range lower-x higher-x)
                                                      y (range lower-y higher-y)]
                                                  [x y])]
@@ -126,7 +126,10 @@
                                @mutable-map)
                              (catch Exception ex
                                (print-stack-trace ex))))
-                       Map))))
+                         Map)))
+  (deftool :reset-filler (fn [Map current-tile layer-x layer-y layer]
+                           (reset! first-click nil)
+                           Map)))
 
 (defn make-scrollbar-with-update [scrollbar-val-atom & {:keys [vertical?] :or {vertical? false}}]
   (doto (JScrollBar. (if vertical? JScrollBar/VERTICAL JScrollBar/HORIZONTAL))

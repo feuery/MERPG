@@ -8,7 +8,7 @@
             [merpg.2D.core :refer :all]
             [merpg.UI.tool-box :refer :all]
             [merpg.util :refer [abs enqueue! dequeue!]]
-            [seesaw.core :refer [frame config! listen alert button repaint! border-panel]]
+            [seesaw.core :refer [frame config! listen alert button repaint! border-panel input]]
             [seesaw.mouse :refer [location] :rename {location mouse-location}]
             [clojure.stacktrace :refer [print-stack-trace]])
   (:import [javax.swing JScrollBar]
@@ -129,7 +129,16 @@
                          Map)))
   (deftool :reset-filler (fn [Map current-tile layer-x layer-y layer]
                            (reset! first-click nil)
-                           Map)))
+                           Map))
+  (deftool :Zonetiles (fn [Map current-tile layer-x layer-y layer]
+                        (let [prompt "Name of a function to be called on this tile?"
+                              old-fn (-> Map
+                                         zonetiles
+                                         (get [layer layer-x layer-y]))
+                              new-fn (input prompt :value old-fn)]
+                          (zonetiles Map
+                                     (-> Map zonetiles
+                                         (assoc [layer layer-x layer-y] new-fn)))))))
 
 (defn make-scrollbar-with-update [scrollbar-val-atom & {:keys [vertical?] :or {vertical? false}}]
   (doto (JScrollBar. (if vertical? JScrollBar/VERTICAL JScrollBar/HORIZONTAL))

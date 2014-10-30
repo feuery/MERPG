@@ -47,6 +47,12 @@
      (let [val (mod val 256)]
        (vary-meta layer assoc :opacity val))))
 
+(defn zonetiles
+  ([map]
+     (-> map meta :zonetiles))
+  ([map zonetiles]
+    (vary-meta map assoc :zonetiles zonetiles)))
+
 (defn make-map
   "The &key params are functions that are called when the player crosses the certain edge of the map.
 There'll be a default-fn-generator, which makes fn's that look like the old idea of the reloc-vectors."
@@ -55,6 +61,7 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
     {:tyyppi :map
      :id (gensym)
      :hit-layer (make-bool-layer w h)
+     :zonetiles {}
      
      :name (str "Map "  (->>
                          (partial rand-int 16)

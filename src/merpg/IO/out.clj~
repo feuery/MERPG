@@ -1,0 +1,42 @@
+(ns merpg.IO.out
+  (:require [clojure.java.io :as io]
+             [merpg.2D.core :refer [)
+  (:import [java.util.zip ZipEntry ZipOutputStream]))
+
+(defmacro ^:private with-entry
+  [zip entry-name & body]
+  `(let [^ZipOutputStream zip# ~zip]
+     (.putNextEntry zip# (ZipEntry. ~entry-name))
+     ~@body
+     (flush)
+     (.closeEntry zip#)))
+
+(do
+  (.createNewFile (io/file "/Users/feuer2/Desktop/testi.zip"))
+  (with-open [file (io/output-stream "/Users/feuer2/Desktop/testi.zip")
+              zip  (ZipOutputStream. file)
+              wrt  (io/writer zip)]
+    (let [img ~/Desktop/tilejuttu.png
+    (binding [*out* wrt]
+      (doto zip
+        (with-entry "jeee.txt"
+          (println "jfdsiiosdfjoifdsjoisdjfi"))
+        (with-entry "moi.txt"
+          (println "Toimii!"))))))
+
+(defn dump-image [filename map-list tileset-list]
+  (let [counter (atom -1)]
+  (doseq [tileset tileset-list]
+    (with-open [file (io/output-stream (str filename ".zip"))
+                zip  (ZipOutputStream. file)
+                wrt  (io/writer zip)]
+      (binding [*out* wrt]
+        (doto zip
+          (with-entry (str "Tileset " (swap! counter inc) ".png")
+
+
+
+
+
+
+            

@@ -5,7 +5,7 @@
             [seesaw.bind :as b]
             [seesaw.chooser :refer :all]
             [clojure.stacktrace :refer [print-stack-trace]]
-            [clojure.string :refer :all]
+            [clojure.string :as str]
             [merpg.IO.tileset :refer [load-tileset]]
             [merpg.UI.map-controller :refer [map-controller
                                              show]]
@@ -17,7 +17,8 @@
             [merpg.UI.dialogs.resize-dialog :refer [resize-dialog]]
             [merpg.immutable.basic-map-stuff :refer :all]
             [merpg.immutable.map-layer-editing :refer :all]
-            [merpg.util :refer [vec-remove]]))
+            [merpg.util :refer [vec-remove]]
+            [merpg.2D.core :as dd]))
 
 (defn do-resize! [map-atom width height
                   horizontal-anchor
@@ -56,12 +57,14 @@
     (def tool-atom (atom {}))
     (def current-tool-fn (atom nil))
     
-    (def tileset-atom (atom [(load-tileset
-                              (if (linux?)
-                                "/home/feuer/Dropbox/memapper/tileset.png"
-                                (if (windows?)
-                                  "c:/Users/Ilpo Lehtinen/Dropbox/merpg/assets/tilesets/kaunis_tileset.jpeg"
-                                  "/Users/feuer2/Dropbox/memapper/tileset.png")))]))
+    (def tileset-atom (atom [(dd/image 50 50)
+                             ;; (load-tileset
+                             ;;  (if (linux?)
+                             ;;    "/home/feuer/Dropbox/memapper/tileset.png"
+                             ;;    (if (windows?)
+                             ;;      "c:/Users/Ilpo Lehtinen/Dropbox/merpg/assets/tilesets/kaunis_tileset.jpeg"
+                             ;;      "/Users/feuer2/Dropbox/memapper/tileset.png")))
+                             ]))
     (def current-tileset-index-atom (atom 0))
     (def current-tileset-atom (atom nil))
     (def current-tile (ref (tile 0 0 0 0)))
@@ -204,4 +207,3 @@
               :height 600
               :visible? true)]
     (config! f :content (get-content map-set-image-atm f))))
-    

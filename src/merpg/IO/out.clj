@@ -43,7 +43,7 @@
               (ImageIO/write (tileset-to-img tileset) "png" zipfile))))
         (reset! counter -1)
         (doseq [map map-list]
-          (with-entry (str "Map " (swap! counter inc) ".png") _
+          (with-entry (str "Map " (swap! counter inc) ".png") _ _
             (println (str map))))))))
 
 

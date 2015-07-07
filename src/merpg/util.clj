@@ -35,7 +35,7 @@
 (defn push! [stack-atm element]
   (swap! stack-atm conj element))
 
-(defn pop! [stack-atm]
+(defn do-pop! [stack-atm]
   (let [last (last @stack-atm)]
     (swap! stack-atm drop-last)
     last))

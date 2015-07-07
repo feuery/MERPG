@@ -8,10 +8,10 @@
             [merpg.pxart.colors :refer :all]))
 
 
-(def f (frame :width 600
-              :height 400
-              :title "Animation player"
-              :visible? true))
+;; (def f (frame :width 600
+;;               :height 400
+;;               :title "Animation player"
+;;               :visible? true))
 
 (defn get-content [frameset]
   {:pre [(not (nil? frameset))]}

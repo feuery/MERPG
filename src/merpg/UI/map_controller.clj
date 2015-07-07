@@ -63,7 +63,25 @@
                                                                      (:x tile)
                                                                      (:y tile)])
                                                             (rotate (* (:rotation tile) 90)))]
-                                                (Draw img x-y))))
+                                                ;; C-c C-c when point is around here =>
+                                                (comment "RuntimeException No reader function for tag break  clojure.lang.LispReader$CtorReader.readTagged (LispReader.java:1245)
+RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
+RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
+RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
+CompilerException java.lang.RuntimeException: Unable to resolve symbol: layer-img in this context, compiling:(/tmp/form-init6147477731111680799.clj:32:36) 
+RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
+RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
+RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
+CompilerException java.lang.RuntimeException: Unable to resolve symbol: draw-hit-layer? in this context, compiling:(/tmp/form-init6147477731111680799.clj:34:22) 
+RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
+RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
+RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)")
+                                                #break
+                                                (try
+                                                  (Draw img x-y)
+                                                  (catch Exception ex
+                                                    (println ex)
+                                                    (throw ex))))))
                              (Draw (set-opacity layer-img opacity) scroll-coords))))
                      ;; Draw hit-thingy
                      (when draw-hit-layer?

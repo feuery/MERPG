@@ -1,5 +1,8 @@
 (ns merpg.core
-  (:require [merpg.basic-map-stuff :refer :all]
-            [merpg.multi :refer [def-real-multi]]))
+  (:require [merpg.immutable.basic-map-stuff :refer [make-map]]
+            [merpg.UI.main-layout :refer [show-mapeditor]])
+  (:gen-class))
 
-
+(defn -main [& args]
+  (def root {:maps (atom [(make-map 10 10 2)])})
+  (show-mapeditor (:maps root)))

@@ -10,7 +10,8 @@
             [merpg.util :refer [abs enqueue! dequeue!]]
             [seesaw.core :refer [frame config! listen alert button repaint! border-panel input]]
             [seesaw.mouse :refer [location] :rename {location mouse-location}]
-            [clojure.stacktrace :refer [print-stack-trace]])
+            [clojure.stacktrace :refer [print-stack-trace]]
+            [clojure.pprint :refer :all])
   (:import [javax.swing JScrollBar]
            [java.awt.event AdjustmentListener]))
 
@@ -63,25 +64,18 @@
                                                                      (:x tile)
                                                                      (:y tile)])
                                                             (rotate (* (:rotation tile) 90)))]
-                                                ;; C-c C-c when point is around here =>
-                                                (comment "RuntimeException No reader function for tag break  clojure.lang.LispReader$CtorReader.readTagged (LispReader.java:1245)
-RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
-RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
-RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
-CompilerException java.lang.RuntimeException: Unable to resolve symbol: layer-img in this context, compiling:(/tmp/form-init6147477731111680799.clj:32:36) 
-RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
-RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
-RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
-CompilerException java.lang.RuntimeException: Unable to resolve symbol: draw-hit-layer? in this context, compiling:(/tmp/form-init6147477731111680799.clj:34:22) 
-RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
-RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)
-RuntimeException Unmatched delimiter: )  clojure.lang.Util.runtimeException (Util.java:221)")
-                                                #break
+
+                                                ;; #break
                                                 (try
+                                                  (def -tileset-list tileset-list)
                                                   (Draw img x-y)
                                                   (catch Exception ex
-                                                    (println ex)
-                                                    (throw ex))))))
+                                                    (when (nil? img)
+                                                      (println "Tileset-list: ")
+                                                      (pprint tileset-list)
+                                                      (pprint tile))
+                                                    (throw ex)
+                                                    )))))
                              (Draw (set-opacity layer-img opacity) scroll-coords))))
                      ;; Draw hit-thingy
                      (when draw-hit-layer?

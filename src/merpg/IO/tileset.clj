@@ -1,9 +1,8 @@
 (ns merpg.IO.tileset
   (:require [merpg.2D.core :refer :all]))
 
-(defn load-tileset [path]
-  (let [img (image path)
-        partition-limit (/ (img-height img) 50)
+(defn img-to-tileset [img]
+  (let [partition-limit (/ (img-height img) 50)
         coordinate-pairs (for [x (range 0 (img-width img) 50)
                                y (range 0 (img-height img) 50)]
                            [x y])]
@@ -13,6 +12,9 @@
          (partition partition-limit)
          (map vec)
          vec)))
+
+(defn load-tileset [path]
+  (img-to-tileset (image path)))
 
 (defn tileset-to-img [tileset]
   (if-not (nil? tileset)

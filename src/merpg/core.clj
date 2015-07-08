@@ -4,5 +4,5 @@
   (:gen-class))
 
 (defn -main [& args]
-  (def root {:maps (atom [(make-map 10 10 2)])})
+  (def root {:maps (atom [(make-map 10 10 1)])})
   (show-mapeditor (:maps root)))

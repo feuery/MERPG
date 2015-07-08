@@ -111,8 +111,10 @@ Example implementation of Rect: (def-primitive-draw Rect  :doc-string \"Here be 
      (if (.startsWith path "http")
        (ImageIO/read (java.net.URL. path))         
        (ImageIO/read (file path))))
-  ([width height]
-     (BufferedImage. width height BufferedImage/TYPE_INT_ARGB)))
+  ([width height & {:keys [color] :or {color "#000000"}}]
+   (draw-to-surface (BufferedImage. width height BufferedImage/TYPE_INT_ARGB)
+                    (with-color color
+                      (Rect 0 0 width height :fill? true)))))
   
 
 (defmulti Draw

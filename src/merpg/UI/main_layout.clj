@@ -6,7 +6,7 @@
             [seesaw.chooser :refer :all]
             [clojure.stacktrace :refer [print-stack-trace]]
             [clojure.string :as str]
-            [merpg.IO.tileset :refer [load-tileset]]
+            [merpg.IO.tileset :refer [load-tileset img-to-tileset]]
             [merpg.UI.map-controller :refer [map-controller
                                              show]]
             [merpg.UI.tileset-controller :refer :all]
@@ -56,8 +56,10 @@
     
     (def tool-atom (atom {}))
     (def current-tool-fn (atom nil))
+
     
-    (def tileset-atom (atom [(dd/image 50 50)
+    
+    (def tileset-atom (atom [ (img-to-tileset (dd/image 100 100 :color "#FFFFFF"))
                              ;; (load-tileset
                              ;;  (if (linux?)
                              ;;    "/home/feuer/Dropbox/memapper/tileset.png"
@@ -104,10 +106,10 @@
                                                            @(:horizontal-anchor result-map)
                                                            @(:vertical-anchor result-map)))))))])
 
-           (button :text "Relocation functions"
-                   :listen
-                   [:action (fn [_]
-                              (alert (str "These are set up in the REPL with merpg.mutable.relocation/defn-reloc - macro. The usage is explained in merpg/mutable.relocation.clj (https://github.com/feuery/MERPG/blob/master/src/merpg/mutable/relocation.clj#L26)")))])
+           ;; (button :text "Relocation functions"
+           ;;         :listen
+           ;;         [:action (fn [_]
+           ;;                    (alert (str "These are set up in the REPL with merpg.mutable.relocation/defn-reloc - macro. The usage is explained in merpg/mutable.relocation.clj (https://github.com/feuery/MERPG/blob/master/src/merpg/mutable/relocation.clj#L26)")))])
 
            "Current tile"           
            (bindable-canvas current-tile

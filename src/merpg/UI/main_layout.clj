@@ -1,5 +1,5 @@
 (ns merpg.UI.main-layout
-  (:require [seesaw.core :refer [frame border-panel flow-panel make-widget dispose! config!
+  (:require [seesaw.core :refer [frame border-panel flow-panel make-widget dispose! config! show!
                                  vertical-panel left-right-split top-bottom-split alert
                                  button]]
             [seesaw.bind :as b]
@@ -40,6 +40,8 @@
         current-tool-view (->> @selected-tool
                                str
                                make-widget)] ;;The following atoms are needed on the top-level...
+
+    (def map-set-atom map-set-image)
     
     (def current-map-index-atom (atom 0))
     (def current-map-atom (atom (get @map-set-image @current-map-index-atom)
@@ -189,6 +191,13 @@
                                                                  (map str)
                                                                  (map load-tileset))]
                                                (swap! tileset-atom #(vec (concat % tilesets)))))))])
+           (button :text "Remove tileset"
+                   :listen
+                   [:action (fn [_]
+                              (swap! tileset-atom #(let [current-index @current-tileset-index-atom]
+                                                     (vec 
+                                                      (concat (subvec % 0 current-index)
+                                                              (subvec % (inc @current-tileset-index-atom)))))))])
            (button :text "Close"
                    :listen
                    [:action (fn [_]
@@ -204,8 +213,8 @@
 
 (defn show-mapeditor [map-set-image-atm]
   (println "mapset at show-mapeditor (" (class map-set-image-atm) "): " (meta @map-set-image-atm))
-  
-  (let [f (frame :width 800
-              :height 600
-              :visible? true)]
-    (config! f :content (get-content map-set-image-atm f))))
+
+  (def f (frame :width 800
+                :height 600
+                :visible? true))
+  (config! f :content (get-content map-set-image-atm f)))

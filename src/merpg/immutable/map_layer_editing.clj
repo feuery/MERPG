@@ -13,12 +13,14 @@
 
 (defmethod get-tile [:layer 2]
   [layer x y]
-  {:pre [(not (= (class layer) clojure.lang.LazySeq))]}
+  {:pre [(not (= (class layer) clojure.lang.LazySeq))]
+   :post [(not (number? (:tile %)))]}
   (get-in layer [x y]))
 
 (defmethod get-tile [:map 3]
   [map layer x y]
-  {:pre [(not (= (class map) clojure.lang.LazySeq))]}
+  {:pre [(not (= (class map) clojure.lang.LazySeq))]
+   :post [(not (number? (:tile %)))]}
   (get-in map [layer x y]))
 
 (def-real-multi set-tile [& params]

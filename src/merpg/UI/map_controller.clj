@@ -67,7 +67,12 @@
 
                                                 ;; #break
                                                 (try
+                                                  
                                                   (def -tileset-list tileset-list)
+                                                  (def -tile tile)
+                                                  (def -map Map)
+                                                  (def -layer layer)
+                                                  (def -img img)
                                                   (Draw img x-y)
                                                   (catch Exception ex
                                                     (when (nil? img)
@@ -97,9 +102,13 @@
                      (Draw "Load a tileset, please" [0 0]))))
 
 (defn default-tools [deftool mouse-map-a first-click second-click]
+  (def -deftool deftool)
   (deftool :pen (fn [map current-tile x y layer]
                   ;; (println "using pen" [current-tile x y layer])
-                  (set-tile map layer x y current-tile)))
+                  (locking *out*
+                    (println "USING :PEN")
+                    (pprint current-tile)
+                    (set-tile map layer x y current-tile))))
   (deftool :hit-tool (fn [map current-tile x y layer]
                        (if (get-in @mouse-map-a [x y])
                          (hitdata map (set-tile (hitdata map) x y (not (get-in (hitdata map) [x y]))))
@@ -172,9 +181,9 @@
              int))
       (map mouse-coord scroll-coord)
       vec)]
-    (println "mouse " mouse-coord)
-    (println "scroll " scroll-coord)
-    (println "toret of drag-location-scrollbar-transformer: " toret)
+    ;; (println "mouse " mouse-coord)
+    ;; (println "scroll " scroll-coord)
+    ;; (println "toret of drag-location-scrollbar-transformer: " toret)
     toret))
 
 (defn map-controller
@@ -226,8 +235,13 @@
                                                                      (drag-location-scrollbar-transformer [@scroll-X-atom @scroll-Y-atom]))
                                                 tool @current-tool-fn-atom]
                                             (when-not (get-in @mouse-map-a [x y])
-                                              (println "Doing stupid stuff")
-                                              (swap! map-data-image tool @current-tile-ref x y @current-layer-ind-atom))))))
+                                              (if-not (number? (:tileset @current-tile-ref))
+                                                (locking *out*
+                                                  (println "Current-tile-ref: ")
+                                                  (pprint @current-tile-ref)
+                                                  (swap! map-data-image tool @current-tile-ref x y @current-layer-ind-atom))
+                                                (locking *out*
+                                                  (println "(:tileset @current-tile-ref) is numeric"))))))))
             :mouse-pressed (fn [_]
                              (swap! mouse-down-a? not))
             :mouse-released (fn [_]

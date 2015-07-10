@@ -61,17 +61,17 @@
 
     
     
-    (def tileset-atom (atom [ (img-to-tileset (dd/image 100 100 :color "#FFFFFF"))
+    (def tileset-atom (atom {:initial (img-to-tileset (dd/image 100 100 :color "#FFFFFF"))
                              ;; (load-tileset
                              ;;  (if (linux?)
                              ;;    "/home/feuer/Dropbox/memapper/tileset.png"
                              ;;    (if (windows?)
                              ;;      "c:/Users/Ilpo Lehtinen/Dropbox/merpg/assets/tilesets/kaunis_tileset.jpeg"
                              ;;      "/Users/feuer2/Dropbox/memapper/tileset.png")))
-                             ]))
-    (def current-tileset-index-atom (atom 0))
+                             }))
+    (def current-tileset-index-atom (atom :initial :validator (complement number?)))
     (def current-tileset-atom (atom nil))
-    (def current-tile (ref (tile 0 0 0 0)))
+    (def current-tile (ref (tile 0 0 :initial 0)))
 
     (def mouse-down-a? (atom false))
     (def mouse-map-a (atom (make-bool-layer map-width map-height :default-value false))) 
@@ -171,10 +171,9 @@
                                 (swap! current-layer-index-atom dec)))])
            
            "Tilesets"
-           (bindable-list tileset-atom
+           (bindable-list-with-map-source tileset-atom
                           current-tileset-atom
-                          :custom-model-bind (fn [_]
-                                               (str (inc @current-tileset-index-atom) "th"))
+                          :custom-model-bind (fn [[k v]] (str k))
                           :selected-index-atom current-tileset-index-atom
                           :on-select (fn [_]
                                        (property-editor tileset-atom
@@ -190,14 +189,13 @@
                                              (let [tilesets (->> files
                                                                  (map str)
                                                                  (map load-tileset))]
-                                               (swap! tileset-atom #(vec (concat % tilesets)))))))])
+                                               (doseq [ts tilesets]
+                                                 (swap! tileset-atom assoc (keyword (gensym)) ts))))))])
            (button :text "Remove tileset"
                    :listen
                    [:action (fn [_]
-                              (swap! tileset-atom #(let [current-index @current-tileset-index-atom]
-                                                     (vec 
-                                                      (concat (subvec % 0 current-index)
-                                                              (subvec % (inc @current-tileset-index-atom)))))))])
+                              (swap! tileset-atom dissoc @current-tileset-index-atom)
+                              (reset! current-tileset-index-atom (first (keys @tileset-atom))))])
            (button :text "Close"
                    :listen
                    [:action (fn [_]

@@ -20,7 +20,7 @@
      :opacity opacity
      :visible? true}))
 
-(def make-layer (partial #'make-thing (tile 0 0 0 0)))
+(def make-layer (partial #'make-thing (tile 0 0 :initial 0)))
 (defn make-bool-layer [w h & {:keys [opacity ;;because api-compability
                                      default-value]
                               :or {opacity 255
@@ -114,7 +114,7 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
 (defn get-default-val [layer]
   (if (instance? java.lang.Boolean (get-in layer [0 0]))
     true
-    (tile 0 0 0 0)))
+    (tile 0 0 :initial 0)))
 
 (def-real-multi rewidth [thing new-w & {:keys [anchor] :or {anchor :right}}]
   (if (= (-> thing meta :tyyppi) :layer)

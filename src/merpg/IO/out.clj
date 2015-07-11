@@ -1,6 +1,6 @@
 (ns merpg.IO.out
   (:require [clojure.java.io :as io]
-            ;; [merpg.2D.core :refer [
+            [clojure.edn :as edn]
             [merpg.IO.tileset :refer :all])
   (:import [java.util.zip ZipEntry ZipOutputStream]
            [javax.imageio ImageIO]))
@@ -36,19 +36,14 @@
     (with-open [file (io/output-stream (str filename ".zip"))
                 zip  (ZipOutputStream. file)
                 wrt  (io/writer zip)]
-      (binding [*out* wrt]
-        (doseq [tileset tileset-list]
+      (binding [*out* wrt
+                *print-meta* true]
+        (doseq [[name tileset] tileset-list]
           (doto zip
-            (with-entry (str "Tileset " (swap! counter inc) ".png") zipfile
+            (with-entry (str name ".png") zipfile
               (ImageIO/write (tileset-to-img tileset) "png" zipfile))))
         (reset! counter -1)
         (doseq [map map-list]
-          (with-entry (str "Map " (swap! counter inc) ".png") _ _
-            (println (str map))))))))
-
-
-
-
-
-
-              
+          (doto zip
+            (with-entry (str "Map " (swap! counter inc) ".memap") _
+              (pr map))))))))

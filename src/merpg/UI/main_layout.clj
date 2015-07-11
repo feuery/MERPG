@@ -7,6 +7,7 @@
             [clojure.stacktrace :refer [print-stack-trace]]
             [clojure.string :as str]
             [merpg.IO.tileset :refer [load-tileset img-to-tileset]]
+            [merpg.IO.out :refer [dump-image]]
             [merpg.UI.map-controller :refer [map-controller
                                              show]]
             [merpg.UI.tileset-controller :refer :all]

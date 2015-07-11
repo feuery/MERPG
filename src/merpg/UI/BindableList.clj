@@ -54,6 +54,7 @@
                        (let [keyset (keys new-map)]
                          (reset! index->keys-atm (zipmap (range (count keyset)) keyset))))]
     (keyschanged! nil nil nil @map-atom)
+    (add-watch map-atom :keyschanged keyschanged!)
     (defn create-renderer
       [renderer {:keys [value]}]
       (let [motap-pam (rotate-keys-vals @map-atom)]

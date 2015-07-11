@@ -194,8 +194,21 @@
            (button :text "Remove tileset"
                    :listen
                    [:action (fn [_]
+                              (dosync
+                               (let [m @current-map-atom
+                                     coordinates (for [l (range (layer-count m))
+                                                       x (range (width m))
+                                                       y (range (height m))
+                                                       :when (= (:tileset (get-tile m l x y)) @current-tileset-index-atom)]
+                                                   [l x y])]
+                                 (doseq [[l x y] coordinates]
+                                   (swap! current-map-atom
+                                          set-tile
+                                          l x y
+                                          (tile 0 0 :initial 0))))
+                              (ref-set current-tile (tile 0 0 :initial 0))
                               (swap! tileset-atom dissoc @current-tileset-index-atom)
-                              (reset! current-tileset-index-atom (first (keys @tileset-atom))))])
+                              (reset! current-tileset-index-atom (first (keys @tileset-atom)))))])
            (button :text "Close"
                    :listen
                    [:action (fn [_]

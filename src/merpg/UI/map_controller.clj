@@ -66,21 +66,16 @@
                                                             (rotate (* (:rotation tile) 90)))]
 
                                                 ;; #break
-                                                (try
-                                                  
-                                                  (def -tileset-list tileset-list)
-                                                  (def -tile tile)
-                                                  (def -map Map)
-                                                  (def -layer layer)
-                                                  (def -img img)
+                                                (if-not (nil? img)
                                                   (Draw img x-y)
-                                                  (catch Exception ex
-                                                    (when (nil? img)
-                                                      (println "Tileset-list: ")
-                                                      (pprint tileset-list)
-                                                      (pprint tile))
-                                                    (throw ex)
-                                                    )))))
+                                                  (do
+                                                    (println "Img is nil at map->img")
+                                                    (println "This is to be expected for map is an atom, not a ref updated in a transaction")
+                                                    (def -tileset-list tileset-list)
+                                                    (def -tile tile)
+                                                    (def -map Map)
+                                                    (def -layer layer)
+                                                    (def -img img))))))
                              (Draw (set-opacity layer-img opacity) scroll-coords))))
                      ;; Draw hit-thingy
                      (when draw-hit-layer?

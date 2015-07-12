@@ -2,6 +2,7 @@
   (:require [seesaw.core :refer [frame border-panel flow-panel make-widget dispose! config! show!
                                  vertical-panel left-right-split top-bottom-split alert
                                  button menubar menu menu-item]]
+            [environ.core :refer [env]]
             [seesaw.bind :as b]
             [seesaw.chooser :refer :all]
             [clojure.stacktrace :refer [print-stack-trace]]
@@ -34,17 +35,13 @@
 (defn windows? []
   (.contains (System/getProperty "os.name") "Windows"))
 
-(defn get-content [map-set-atom f tileset-atom]
+(defn get-content [map-set-atom f tileset-atom current-map-atom current-map-index-atom]
   (def selected-tool (atom :pen))
   (let [map-width  10
         map-height  10
         current-tool-view (->> @selected-tool
                                str
                                make-widget)] ;;The following atoms are needed on the top-level...
-    
-    (def current-map-index-atom (atom 0))
-    (def current-map-atom (atom (get @map-set-atom @current-map-index-atom)
-                                :validator (complement nil?)))
     
     (def current-layer-atom (atom nil))  ;; Is set by the layers-listbox
 
@@ -211,7 +208,7 @@
     :divider-location 3/4)
    :divider-location 1/6)))
 
-(defn make-menu [map-list-atom tileset-map-atom]
+(defn make-menu [map-list-atom tileset-map-atom current-map-atom current-map-index-atom]
   (menubar :items
            [(menu :text "File"
                   :items
@@ -224,15 +221,42 @@
                                                       :multi? false
                                            :success-fn
                                            (fn [_ file]
-                                             (dump-image (.getAbsolutePath file) @map-list-atom @tileset-map-atom))))])])]))
+                                             (dump-image (.getAbsolutePath file) @map-list-atom @tileset-map-atom))))])
+                   (menu-item :text "Load game image"
+                              :listen
+                              [:action (fn [_]
+                                         (choose-file :filters [["Kartat" ["memap"]]]
+                                                       :remember-directory? true
+                                                       :multi? false
+                                                       :success-fn
+                                                       (fn [_ file]
+                                                         (let [{map-set :maps
+                                                                tilesets :tilesets} (read-image (.getAbsolutePath file))]
+                                                           (reset! map-list-atom map-set)
+                                                           (reset! tileset-map-atom tilesets)
+                                                           (reset! current-map-index-atom 0)
+                                                           (reset! current-map-atom (get map-set @current-map-index-atom))))))])])]))
+
+(defmacro building? [] ;;We do not care about $mbuild on runtime, only when `lein uberjar` is running
+  (println "BUILDING-FLAG IS SET TO TRUE")
+  (println "INVERT IT OR REPL DIES WITH YOU FRAME")
+  `(do true))
 
 (defn show-mapeditor [map-set-image]
   (println "mapset at show-mapeditor (" (class map-set-image) "): " (meta @map-set-image))
 
   (def map-set-atom map-set-image)
   (def tileset-atom (atom {:initial (img-to-tileset (dd/image 100 100 :color "#FFFFFF"))}))
+  (def current-map-index-atom (atom 0))
+  (def current-map-atom (atom (get @map-set-atom @current-map-index-atom)
+                              :validator (complement nil?)))
+  
   (def f (frame :width 800
                 :height 600
                 :visible? true
-                :menubar (make-menu map-set-atom tileset-atom)))
-  (config! f :content (get-content map-set-image tileset-atom f)))
+                :menubar (make-menu map-set-atom tileset-atom current-map-atom current-map-index-atom)
+                :on-close (if (building?)
+                            :exit
+                            :hide)
+                ))
+  (config! f :content (get-content map-set-image f tileset-atom current-map-atom current-map-index-atom)))

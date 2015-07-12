@@ -1,13 +1,13 @@
 (ns merpg.UI.main-layout
   (:require [seesaw.core :refer [frame border-panel flow-panel make-widget dispose! config! show!
                                  vertical-panel left-right-split top-bottom-split alert
-                                 button]]
+                                 button menubar menu menu-item]]
             [seesaw.bind :as b]
             [seesaw.chooser :refer :all]
             [clojure.stacktrace :refer [print-stack-trace]]
             [clojure.string :as str]
             [merpg.IO.tileset :refer [load-tileset img-to-tileset]]
-            [merpg.IO.out :refer [dump-image]]
+            [merpg.IO.out :refer [dump-image read-image]]
             [merpg.UI.map-controller :refer [map-controller
                                              show]]
             [merpg.UI.tileset-controller :refer :all]
@@ -34,18 +34,16 @@
 (defn windows? []
   (.contains (System/getProperty "os.name") "Windows"))
 
-(defn get-content [map-set-image f]
+(defn get-content [map-set-atom f tileset-atom]
   (def selected-tool (atom :pen))
   (let [map-width  10
         map-height  10
         current-tool-view (->> @selected-tool
                                str
                                make-widget)] ;;The following atoms are needed on the top-level...
-
-    (def map-set-atom map-set-image)
     
     (def current-map-index-atom (atom 0))
-    (def current-map-atom (atom (get @map-set-image @current-map-index-atom)
+    (def current-map-atom (atom (get @map-set-atom @current-map-index-atom)
                                 :validator (complement nil?)))
     
     (def current-layer-atom (atom nil))  ;; Is set by the layers-listbox
@@ -60,16 +58,6 @@
     (def tool-atom (atom {}))
     (def current-tool-fn (atom nil))
 
-    
-    
-    (def tileset-atom (atom {:initial (img-to-tileset (dd/image 100 100 :color "#FFFFFF"))
-                             ;; (load-tileset
-                             ;;  (if (linux?)
-                             ;;    "/home/feuer/Dropbox/memapper/tileset.png"
-                             ;;    (if (windows?)
-                             ;;      "c:/Users/Ilpo Lehtinen/Dropbox/merpg/assets/tilesets/kaunis_tileset.jpeg"
-                             ;;      "/Users/feuer2/Dropbox/memapper/tileset.png")))
-                             }))
     (def current-tileset-index-atom (atom :initial :validator (complement number?)))
     (def current-tileset-atom (atom nil))
     (def current-tile (ref (tile 0 0 :initial 0)))
@@ -77,11 +65,11 @@
     (def mouse-down-a? (atom false))
     (def mouse-map-a (atom (make-bool-layer map-width map-height :default-value false))) 
     (add-watch current-map-index-atom :index-watch (fn [_ _ _ new]
-                                                     (reset! current-map-atom (get @map-set-image new))
+                                                     (reset! current-map-atom (get @map-set-atom new))
                                                      (reset! current-layer-index-atom 0)
                                                      (reset! current-layer-atom (get @current-map-atom @current-layer-index-atom)))) ;;Keeps an eye on the Maps - list
     (add-watch current-map-atom :map-watch (fn [_ _ _ new]
-                                             (swap! map-set-image assoc @current-map-index-atom new))) ;; Updates changes to the current map to the global map list
+                                             (swap! map-set-atom assoc @current-map-index-atom new))) ;; Updates changes to the current map to the global map list
 
     (b/bind selected-tool (b/transform str) current-tool-view)
   
@@ -122,18 +110,18 @@
                                   (get (:x tile))
                                   (get (:y tile)))))           
            "Maps"
-           (bindable-list map-set-image
+           (bindable-list map-set-atom
                           current-map-atom
                           :custom-model-bind #(-> % meta :name)
                           :selected-index-atom current-map-index-atom
                           :on-select (fn [_]
-                                       (property-editor map-set-image
+                                       (property-editor map-set-atom
                                                         :with-meta? true
                                                         :index @current-map-index-atom)))
            (button :text "Add map"
                    :listen
                    [:action (fn [_]
-                              (swap! map-set-image conj (make-map 2 2 2)))])
+                              (swap! map-set-atom conj (make-map 2 2 2)))])
            
            "Layers"
            (bindable-list current-map-atom
@@ -223,10 +211,28 @@
     :divider-location 3/4)
    :divider-location 1/6)))
 
-(defn show-mapeditor [map-set-image-atm]
-  (println "mapset at show-mapeditor (" (class map-set-image-atm) "): " (meta @map-set-image-atm))
+(defn make-menu [map-list-atom tileset-map-atom]
+  (menubar :items
+           [(menu :text "File"
+                  :items
+                  [(menu-item :text "Save game image"
+                              :listen
+                              [:action (fn [_]
+                                         (choose-file :filters [["Kartat" ["memap"]]]
+                                                      :remember-directory? true
+                                                      :type :save
+                                                      :multi? false
+                                           :success-fn
+                                           (fn [_ file]
+                                             (dump-image (.getAbsolutePath file) @map-list-atom @tileset-map-atom))))])])]))
 
+(defn show-mapeditor [map-set-image]
+  (println "mapset at show-mapeditor (" (class map-set-image) "): " (meta @map-set-image))
+
+  (def map-set-atom map-set-image)
+  (def tileset-atom (atom {:initial (img-to-tileset (dd/image 100 100 :color "#FFFFFF"))}))
   (def f (frame :width 800
                 :height 600
-                :visible? true))
-  (config! f :content (get-content map-set-image-atm f)))
+                :visible? true
+                :menubar (make-menu map-set-atom tileset-atom)))
+  (config! f :content (get-content map-set-image tileset-atom f)))

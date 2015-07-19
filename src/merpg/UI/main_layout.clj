@@ -26,8 +26,8 @@
                   horizontal-anchor
                   vertical-anchor]
   (swap! map-atom #(resize % width height
-         :horizontal-anchor horizontal-anchor
-         :vertical-anchor vertical-anchor)))
+                           :horizontal-anchor horizontal-anchor
+                           :vertical-anchor vertical-anchor)))
 
 (defn linux? []
   (= (System/getProperty "os.name") "Linux"))
@@ -238,9 +238,9 @@
                                                            (reset! current-map-atom (get map-set @current-map-index-atom))))))])])]))
 
 (defmacro building? [] ;;We do not care about $mbuild on runtime, only when `lein uberjar` is running
-  (println "BUILDING-FLAG IS SET TO TRUE")
-  (println "INVERT IT OR REPL DIES WITH YOU FRAME")
-  `(do true))
+  ;; (println "BUILDING-FLAG IS SET TO TRUE")
+  ;; (println "INVERT IT OR REPL DIES WITH YOU FRAME")
+  `(do false))
 
 (defn show-mapeditor [map-set-image]
   (println "mapset at show-mapeditor (" (class map-set-image) "): " (meta @map-set-image))

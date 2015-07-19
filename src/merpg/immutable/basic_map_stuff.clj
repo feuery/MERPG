@@ -249,10 +249,13 @@ There'll be a default-fn-generator, which makes fn's that look like the old idea
                  (-> first-with-hit
                      (reheight new-height :anchor vertical-anchor)
                      (with-meta-of-t thingy))
-                 first-with-hit)]
-    (if (not= new-height (height thingy))
+                 first-with-hit)
+        toret (if (not= new-height (height thingy))
                          (hitdata second (reheight (hitdata second) new-height :anchor vertical-anchor))
-                         second)))
+                         second)]
+    (if (not= new-width (width thingy))
+                         (hitdata toret (rewidth (hitdata second) new-width :anchor horizontal-anchor))
+                         toret)))
     
 
 

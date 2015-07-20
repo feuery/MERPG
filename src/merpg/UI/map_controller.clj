@@ -156,15 +156,18 @@
                                      (-> Map zonetiles
                                          (assoc [layer layer-x layer-y] new-fn)))))))
 
-(defn make-scrollbar-with-update [scrollbar-val-atom & {:keys [vertical?] :or {vertical? false}}]
+(defn make-scrollbar-with-update [scrollbar-val-atom & {:keys [vertical?
+                                                               on-adjustment] :or {vertical? false
+                                                                                   on-adjustment (fn [_] )}}]
   (doto (JScrollBar. (if vertical? JScrollBar/VERTICAL JScrollBar/HORIZONTAL))
     (.addAdjustmentListener
      (proxy [AdjustmentListener] []
        (adjustmentValueChanged [e]
          ;; (when-not (.getValueIsAdjusting e)
-           (let [to-screen-coord (comp - (partial * 50))
-                 scrollbar-val (.getValue e)]
-             (swap! scrollbar-val-atom (fn [_] (to-screen-coord scrollbar-val)))))))));)
+         (let [to-screen-coord (comp - (partial * 50))
+               scrollbar-val (.getValue e)]
+           (reset! scrollbar-val-atom (to-screen-coord scrollbar-val))
+           (on-adjustment scrollbar-val)))))));)
 
 (defn drag-location-scrollbar-transformer [ mouse-coord  scroll-coord]
   (let [toret (-> (fn [mouse-pos scroll-pos]
@@ -207,8 +210,19 @@
                                                   ;; (println "drawing hit-layer? " (= @selected-tool :hit-tool))
                                                   (map->img % @tileset-ref (= @selected-tool :hit-tool) first-click second-click
                                                             :scroll-coords [@scroll-X-atom @scroll-Y-atom])))
-        horizontal-scroll (make-scrollbar-with-update scroll-X-atom)
-        vertical-scroll (make-scrollbar-with-update scroll-Y-atom :vertical? true)]
+        horizontal-scroll (make-scrollbar-with-update scroll-X-atom
+                                                      :on-adjustment (fn [_]
+                                                                       ;; noopping on map-data-image generates a notification on the atom
+                                                                       ;; and that refreshes the agent that renders our map
+                                                                       ;; which generates a notification for our canvas to draw our new
+                                                                       ;; map
+                                                                       (swap! map-data-image #(set-tile % 0 0 0
+                                                                                                        (get-tile % 0 0 0)))))
+        vertical-scroll (make-scrollbar-with-update scroll-Y-atom :vertical? true
+                                                    :on-adjustment (fn [_]
+                                                                     ;; In other words, sorry for this ugly hack :D
+                                                                     (swap! map-data-image #(set-tile % 0 0 0
+                                                                                                      (get-tile % 0 0 0)))))]
 
     ;; init tools
     (default-tools deftool mouse-map-a first-click second-click)

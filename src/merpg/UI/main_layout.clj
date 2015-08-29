@@ -259,4 +259,4 @@
                             :exit
                             :hide)
                 ))
-  (config! f :content (get-content map-set-image f tileset-atom current-map-atom current-map-index-atom)))
+  (config! f :content (get-content map-set-atom f tileset-atom current-map-atom current-map-index-atom)))

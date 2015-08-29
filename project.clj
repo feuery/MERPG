@@ -8,4 +8,5 @@
                  [environ "0.5.0"]]
   :plugins [[cider/cider-nrepl "0.9.1"]]
   :main merpg.core
-  :profiles {:uberjar {:aot :all}})
+  ;; :profiles {:uberjar {:aot :all}}
+  )

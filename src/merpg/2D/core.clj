@@ -207,36 +207,10 @@ Example implementation of Rect: (def-primitive-draw Rect  :doc-string \"Here be 
                          (.translate handle 0 0))))
     (println "Img's class is " (class img) " at merpg.2D.core/rotate")))
 
-    ;; /**
-    ;;  * Kääntää parametri-imagea rotation * 90 astetta
-    ;;  * @param rotation Kuinka monta kertaa 90 astetta kuvaa käännetään
-    ;;  * @param image Käännettävä kuva
-    ;;  * @return Käännetty kuva
-    ;;  */
-    ;; private BufferedImage rotate(int rotation, BufferedImage image)
-    ;; {
-    ;;     rotation = rotation * 90;
-        
-    ;;     BufferedImage to_return = new BufferedImage(VAKIOT.TILENW, VAKIOT.TILENW, BufferedImage.TYPE_INT_ARGB);
-
-    ;;     //Tässä try-lohkossa on varsinainen käännösprosessi
-    ;;     //Here lies the rotation proccess
-    ;;     try
-    ;;     {
-    ;;         AffineTransform at = new AffineTransform();
-    ;;         at.rotate( Math.toRadians(rotation), VAKIOT.TILENW/2, VAKIOT.TILENW/2);
-
-    ;;         BufferedImageOp kuvajuttu = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
-
-    ;;         to_return = kuvajuttu.filter(image, to_return);
-    ;;         to_return.createGraphics().translate(0, 0);
-    ;;     }
-    ;;     catch(Exception ex)
-    ;;     {
-    ;;         MessageBox.Show(ex.getLocalizedMessage());
-    ;;         ex.printStackTrace();
-    ;;         System.exit(-1);
-    ;;     }
-        
-    ;;     return to_return;
-    ;; }
+(defn img-resize
+  "Creates a new buffer. Location of the new pixels is not guaranteed."
+  [old-img w h]
+  {:pre [(>= w (img-width old-img))
+         (>= h (img-height old-img))]}
+  (draw-to-surface (image w h)
+                   (Draw old-img [0 0])))

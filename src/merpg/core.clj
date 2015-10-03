@@ -6,7 +6,7 @@
 
 ;; (try
 ;;   (println "UB: " merpg.core.project/uberjarring)
-;;   (catch Exception ex
+;;   (catch Exception exq
 ;;     (println "Probably not uberjarring")))
 
 (defn -main [& args]

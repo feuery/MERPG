@@ -13,6 +13,7 @@
             [clojure.stacktrace :refer [print-stack-trace]]
             [clojure.pprint :refer :all])
   (:import [javax.swing JScrollBar]
+           [merpg.java map_renderer]
            [java.awt.event AdjustmentListener]))
 
 (defn screen->map [coord]

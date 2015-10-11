@@ -70,6 +70,7 @@ import javax.imageio.ImageIO;
 
 public class map_renderer
 {
+    //We need a static method that kills all the running threads
     public BufferedImage visible_buffer;
     private BufferedImage drawing_buffer;
     Atom map_atom, tileset_atom;
@@ -110,75 +111,89 @@ public class map_renderer
 	drawing_buffer = new BufferedImage(w * 50, h * 50, BufferedImage.TYPE_INT_ARGB);
     }
 
-    private volatile boolean rendering;
-    private Thread render_thread = null;
+    private boolean rendering=false;
     
-    public void render()
+    public BufferedImage render()
     {
 	try {
-	    render_thread = render_thread != null ? render_thread:
-		new Thread(new Runnable() {
-			@Override
-			public void run()
-			{
-			    try {
-				rendering = true;
+	    System.out.println("Rendering");
+	    rendering = true;
 
-				List<List<List<Map<Keyword, Object>>>> map = (List<List<List<Map<Keyword, Object>>>>)map_atom.deref();
-				Map<Keyword, List<List<BufferedImage>>> tileset_collection = (Map<Keyword, List<List<BufferedImage>>>)tileset_atom.deref();
+	    List<List<List<Map<Keyword, Object>>>> map = (List<List<List<Map<Keyword, Object>>>>)map_atom.deref();
+	    Map<Keyword, List<List<BufferedImage>>> tileset_collection = (Map<Keyword, List<List<BufferedImage>>>)tileset_atom.deref();
 			
-				Graphics2D map_g = drawing_buffer.createGraphics();				
+	    Graphics2D map_g = drawing_buffer.createGraphics();				
 
-				for(int layer = 0; layer < map.size(); layer++) {
+	    for(int layer = 0; layer < map.size(); layer++) {
 
-				    if(layer_visible.invoke(map.get(layer)).equals(false)) continue;
-				    Map<Keyword, Object> layerMeta = (Map<Keyword, Object>)meta.invoke(map.get(layer));				    
-				    long opacity = (long)layerMeta.get(Keyword.intern("opacity"));
+		if(layer_visible.invoke(map.get(layer)).equals(false)) continue;
+		Map<Keyword, Object> layerMeta = (Map<Keyword, Object>)meta.invoke(map.get(layer));				    
+		long opacity = (long)layerMeta.get(Keyword.intern("opacity"));
 				    
-				    for(int x = 0; x < map.get(layer).size(); x++) {
-					for(int y = 0; y < map.get(layer).get(x).size(); y++) {
-					    // :tileset is a keyword, rest are integers
-					    Map<Keyword, Object> tile = map.get(layer).get(x).get(y);
-					    int tile_x = (int)tile.get(Keyword.intern("", "x")),
-						tile_y = (int)tile.get(Keyword.intern("", "y")),
-						rotation_degrees = (int)tile.get(Keyword.intern("", "rotation")) * 90;
-					    Keyword tileset_index = (Keyword)tile.get(Keyword.intern("", "tileset"));
+		for(int x = 0; x < map.get(layer).size(); x++) {
+		    for(int y = 0; y < map.get(layer).get(x).size(); y++) {
+			// :tileset is a keyword, rest are integers
+			Keyword x_kw = Keyword.intern( "x"),
+			    y_kw = Keyword.intern( "y");
 
-					    List<List<BufferedImage>> tileset = tileset_collection.get(tileset_index);
-					    BufferedImage imgtile = tileset.get(tile_x).get(tile_y);
+			if (x_kw == null) {
+			    // System.out.println(x_kw+" is null");
+			    return visible_buffer;
+			}
 
-					    if(rotation_degrees != 0) {
-						imgtile = Rotate(imgtile, rotation_degrees);
-					    }
+			if (y_kw == null) {
+			    // System.out.println(y_kw+" is null");
+			    return visible_buffer;
+			}
+			
+			Map<Keyword, Object> tile = map.get(layer).get(x).get(y);
 
-					    if(opacity > 0) {
-						if(opacity < 255) {
-						    map_g.drawImage(SetOpacity(imgtile, (double)opacity), x * 50, y * 50, null);
-						}
-						else map_g.drawImage(imgtile, x * 50, y * 50, null);
-					    }
-					}
-				    }
-				}
+			if (tile == null) {
+			    // System.out.println("tile is null");
+			}
 
-				BufferedImage old_visible_buffer = visible_buffer;
-				visible_buffer = drawing_buffer;
-				drawing_buffer = old_visible_buffer;
+			// System.out.println("Tile is "+tile+"");
+			// System.out.println("x_kw is "+x_kw);
+			// System.out.println("tile.get(x_kw) is " + tile.get(x_kw));
+		        
+			int tile_x = ((Long)tile.get(x_kw)).intValue(),
+			    tile_y = ((Long)tile.get(y_kw)).intValue(),
+			    rotation_degrees = ((Long)tile.get(Keyword.intern( "rotation"))).intValue() * 90;
+			Keyword tileset_index = (Keyword)tile.get(Keyword.intern( "tileset"));
+
+			List<List<BufferedImage>> tileset = tileset_collection.get(tileset_index);
+			BufferedImage imgtile = tileset.get(tile_x).get(tile_y);
+
+			if(rotation_degrees != 0) {
+			    imgtile = Rotate(imgtile, rotation_degrees);
+			}
+
+			if(opacity > 0) {
+			    if(opacity < 255) {
+				map_g.drawImage(SetOpacity(imgtile, (double)opacity), x * 50, y * 50, null);
 			    }
-			    catch(Exception ex) {
-				System.out.println(ex.toString());
-			    }
-			    finally {
-				rendering = false;
-			    }
-			}});
-	    render_thread.interrupt();
+			    else map_g.drawImage(imgtile, x * 50, y * 50, null);
+			}
+			    
+		    }
+		}
+	    }
 
-	    render_thread.start();
+	    System.out.println("Rendered. Swapping buffers");
+				
+	    BufferedImage old_visible_buffer = visible_buffer;
+	    visible_buffer = drawing_buffer;
+	    drawing_buffer = old_visible_buffer;
+
 	}
 	catch(Exception ex) {
-	    System.out.println(ex.toString());
+	    ex.printStackTrace();
 	}
+	finally {
+	    rendering = false;
+	}
+
+	return visible_buffer;
     }
 
     /*

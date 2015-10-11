@@ -41,61 +41,7 @@
         (println "Number " number " (" (class number) ") not converted to long")
         255)))
 
-(defn map->img [Map tileset-list draw-hit-layer? first-click second-click
-                & {:keys [scroll-coords]
-                   :or {scroll-coords [0 0]}}] ;;non-atom
-  (println "@map->img scroll-coords: " scroll-coords)
-  (if (pos? (count tileset-list))
-    (draw-to-surface (image (* 50 (width Map))
-                            (* 50 (height Map)))
-                     ;;Draw the tiles
-                     (dotimes [layer (layer-count Map)]
-                       (when (-> (get Map layer) layer-visible)
-                         (let [layer-img (image (* 50 (width Map))
-                                                (* 50 (height Map)))
-                               opacity (-> (get Map layer) opacity to-long)]
-                           (draw-to-surface layer-img
-                                            (doseq [[x y :as x-y] (get-coords (* 50 (width Map))
-                                                                              (* 50 (height Map)) 50)]
-                                              (let [tile (get-tile Map layer
-                                                                   (long (/ x 50))
-                                                                   (long (/ y 50)))
-                                                    img (-> tileset-list
-                                                            (get-in [(:tileset tile)
-                                                                     (:x tile)
-                                                                     (:y tile)])
-                                                            (rotate (* (:rotation tile) 90)))]
-
-                                                ;; #break
-                                                (if-not (nil? img)
-                                                  (Draw img x-y)
-                                                  (do
-                                                    (println "Img is nil at map->img")
-                                                    (println "This is to be expected for map is an atom, not a ref updated in a transaction")
-                                                    (def -tileset-list tileset-list)
-                                                    (def -tile tile)
-                                                    (def -map Map)
-                                                    (def -layer layer)
-                                                    (def -img img))))))
-                             (Draw (set-opacity layer-img opacity) scroll-coords))))
-                     ;; Draw hit-thingy
-                     (when draw-hit-layer?
-                       (println "scroll-coords " scroll-coords)
-                       (doseq [[x y :as x-y] (get-coords (* 50 (width Map))
-                                                         (* 50 (height Map)) 50)]
-                         (let [img (if (get-in (hitdata Map) (map screen->map x-y))
-                                     yes
-                                     no)]
-                           (Draw img (vec (map + x-y scroll-coords))))))
-
-                     ;;Fill-tool's rendering
-                     (with-color "#0000FF"
-                       (doseq [[x y] (->> [@first-click @second-click]
-                                          (filter (complement nil?))
-                                          (map #(map (partial * 50) %)))]
-                         (Rect x y 50 50))))
-    (draw-to-surface (image 200 100)
-                     (Draw "Load a tileset, please" [0 0]))))
+;; map->img removed
 
 (defn default-tools [deftool mouse-map-a first-click second-click]
   (def -deftool deftool)
@@ -142,7 +88,9 @@
                                (reset! first-click nil)
                                @mutable-map)
                              (catch Exception ex
-                               (print-stack-trace ex))))
+                               ;; (print-stack-trace ex)
+                               nil
+                               )))
                          Map)))
   (deftool :reset-filler (fn [Map current-tile layer-x layer-y layer]
                            (reset! first-click nil)
@@ -187,7 +135,7 @@
 
 (defn map-controller
   "Returns the mainview, on which we can edit the map"
-  [map-data-image tool-atom current-tool-fn-atom tileset-ref current-tile-ref current-layer-ind-atom selected-tool mouse-down-a? mouse-map-a]
+  [map-data-image tool-atom current-tool-fn-atom tileset-atom current-tile-ref current-layer-ind-atom selected-tool mouse-down-a? mouse-map-a]
 
   (def scroll-X-atom (atom 0))
   (def scroll-Y-atom (atom 0))
@@ -198,19 +146,21 @@
   (def first-click (atom nil))
   (def second-click (atom nil))
 
+  (def map-renderer (map_renderer. map-data-image tileset-atom))
+
   (let [map-width  10
         map-height  10        
-        map-img (image (* map-width 50)
-                       (* map-height 50))
-        map-img (draw-to-surface map-img
-                                 (doseq [[x y] (get-coords (* 50 map-width)
-                                                           (* 50 map-height)
-                                                           50)]
-                                   (Rect x y 50 50)))
-        canvas (bindable-canvas map-data-image #(do
+        canvas (bindable-canvas map-data-image (fn [& _]
                                                   ;; (println "drawing hit-layer? " (= @selected-tool :hit-tool))
-                                                  (map->img % @tileset-ref (= @selected-tool :hit-tool) first-click second-click
-                                                            :scroll-coords [@scroll-X-atom @scroll-Y-atom])))
+                                                  
+                                                  ;; (map->img % @tileset-atom (= @selected-tool :hit-tool) first-click second-click
+                                                  ;;           :scroll-coords [@scroll-X-atom @scroll-Y-atom])
+                                                 ;; TODO it doesn't handle scrollbars atm
+                                                 (try
+                                                   (println "Rendering")
+                                                   (.render map-renderer)
+                                                   (catch Exception ex
+                                                     (print-stack-trace ex)))))
         horizontal-scroll (make-scrollbar-with-update scroll-X-atom
                                                       :on-adjustment (fn [_]
                                                                        ;; noopping on map-data-image generates a notification on the atom

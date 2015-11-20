@@ -135,7 +135,7 @@
 
 (defn map-controller
   "Returns the mainview, on which we can edit the map"
-  [map-data-image tool-atom current-tool-fn-atom tileset-atom current-tile-ref current-layer-ind-atom selected-tool mouse-down-a? mouse-map-a]
+  [map-data-image tool-atom current-tool-fn-atom tileset-atom current-tile-ref current-layer-ind-atom selected-tool mouse-down-a? mouse-map-a map-renderer]
 
   (def scroll-X-atom (atom 0))
   (def scroll-Y-atom (atom 0))
@@ -145,8 +145,6 @@
 
   (def first-click (atom nil))
   (def second-click (atom nil))
-
-  (def map-renderer (map_renderer. map-data-image tileset-atom))
 
   (let [map-width  10
         map-height  10        

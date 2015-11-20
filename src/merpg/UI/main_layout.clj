@@ -20,14 +20,17 @@
             [merpg.immutable.basic-map-stuff :refer :all]
             [merpg.immutable.map-layer-editing :refer :all]
             [merpg.util :refer [vec-remove]]
-            [merpg.2D.core :as dd]))
+            [merpg.2D.core :as dd])
+  (:import [merpg.java map_renderer]))
 
 (defn do-resize! [map-atom width height
                   horizontal-anchor
-                  vertical-anchor]
+                  vertical-anchor
+                  map-renderer]
   (swap! map-atom #(resize % width height
                            :horizontal-anchor horizontal-anchor
-                           :vertical-anchor vertical-anchor)))
+                           :vertical-anchor vertical-anchor))
+  (.resize_happened map-renderer))
 
 (defn linux? []
   (= (System/getProperty "os.name") "Linux"))
@@ -60,7 +63,9 @@
     (def current-tile (ref (tile 0 0 :initial 0)))
 
     (def mouse-down-a? (atom false))
-    (def mouse-map-a (atom (make-bool-layer map-width map-height :default-value false))) 
+    (def mouse-map-a (atom (make-bool-layer map-width map-height :default-value false)))
+    (def map-renderer (map_renderer. current-map-atom tileset-atom))
+    
     (add-watch current-map-index-atom :index-watch (fn [_ _ _ new]
                                                      (reset! current-map-atom (get @map-set-atom new))
                                                      (reset! current-layer-index-atom 0)
@@ -88,11 +93,13 @@
                                              (when (= ready-state :ok)
                                                (println "Resizing to " [@(:width result-map)
                                                                         @(:height result-map)])
+                                               ;; Me tarvitaan renderer tälle tasolle
                                                (do-resize! current-map-atom
                                                            @(:width result-map)
                                                            @(:height result-map)
                                                            @(:horizontal-anchor result-map)
-                                                           @(:vertical-anchor result-map)))))))])
+                                                           @(:vertical-anchor result-map)
+                                                           map-renderer))))))])
 
            ;; (button :text "Relocation functions"
            ;;         :listen
@@ -201,7 +208,7 @@
                               (dispose! f))])])
    (top-bottom-split
     (map-controller current-map-atom tool-atom current-tool-fn tileset-atom
-                    current-tile current-layer-index-atom selected-tool mouse-down-a? mouse-map-a)
+                    current-tile current-layer-index-atom selected-tool mouse-down-a? mouse-map-a map-renderer)
     (tileset-controller tileset-atom
                         current-tileset-index-atom
                         current-tile)

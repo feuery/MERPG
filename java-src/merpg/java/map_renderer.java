@@ -7,64 +7,10 @@ import java.util.*;
 import java.awt.image.*;
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.Color;
 
 import javax.imageio.ImageIO;
-
-/* (defn map->img [Map tileset-list draw-hit-layer? first-click second-click
-                & {:keys [scroll-coords]
-                   :or {scroll-coords [0 0]}}] ;;non-atom
-  (println "@map->img scroll-coords: " scroll-coords)
-  (if (pos? (count tileset-list))
-    (draw-to-surface (image (* 50 (width Map))
-                            (* 50 (height Map)))
-                     ;;Draw the tiles
-                     (dotimes [layer (layer-count Map)]
-                       (when (-> (get Map layer) layer-visible)
-		       (let [layer-img (image (* 50 (width Map))
-                                                (* 50 (height Map)))
-						opacity (-> (get Map layer) opacity to-long)]
-                           (draw-to-surface layer-img
-                                            (doseq [[x y :as x-y] (get-coords (* 50 (width Map))
-                                                                              (* 50 (height Map)) 50)]
-                                              (let [tile (get-tile Map layer
-                                                                   (long (/ x 50))
-                                                                   (long (/ y 50)))
-                                                    img (-> tileset-list
-                                                            (get-in [(:tileset tile)
-                                                                     (:x tile)
-                                                                     (:y tile)])
-                                                            (rotate (* (:rotation tile) 90)))]
-
-                                                ;; #break
-                                                (if-not (nil? img)
-                                                  (Draw img x-y)
-                                                  (do
-                                                    (println "Img is nil at map->img")
-                                                    (println "This is to be expected for map is an atom, not a ref updated in a transaction")
-                                                    (def -tileset-list tileset-list)
-                                                    (def -tile tile)
-                                                    (def -map Map)
-                                                    (def -layer layer)
-                                                    (def -img img))))))
-                             (Draw (set-opacity layer-img opacity) scroll-coords))))
-                     ;; Draw hit-thingy
-                     (when draw-hit-layer?
-                       (println "scroll-coords " scroll-coords)
-                       (doseq [[x y :as x-y] (get-coords (* 50 (width Map))
-                                                         (* 50 (height Map)) 50)]
-                         (let [img (if (get-in (hitdata Map) (map screen->map x-y))
-                                     yes
-                                     no)]
-                           (Draw img (vec (map + x-y scroll-coords))))))
-
-                     ;;Fill-tool's rendering
-                     (with-color "#0000FF"
-                       (doseq [[x y] (->> [@first-click @second-click]
-                                          (filter (complement nil?))
-                                          (map #(map (partial * 50) %)))]
-                         (Rect x y 50 50))))
-    (draw-to-surface (image 200 100)
-                     (Draw "Load a tileset, please" [0 0])))) */
 
 // TODO: hit tiles, this-tile-selected - rectangle of fill-tool
 
@@ -73,13 +19,17 @@ public class map_renderer
     //We need a static method that kills all the running threads
     public BufferedImage visible_buffer;
     private BufferedImage drawing_buffer;
-    Atom map_atom, tileset_atom;
+
+    private static final int TILEW = 50;
+    
+    Atom map_atom, tileset_atom, selectedtool_atom;
 
     int w=0, h=0; //tiles, not pixels
     IFn layer_visible = Clojure.var("merpg.immutable.basic-map-stuff", "layer-visible"),
-	meta = Clojure.var("clojure.core", "meta");
+	meta = Clojure.var("clojure.core", "meta"),
+	get_hitdata = Clojure.var("merpg.immutable.map-layer-editing", "get-hitdata");
     
-    public map_renderer(clojure.lang.Atom map_atom, Atom tileset_atom)
+    public map_renderer(clojure.lang.Atom map_atom, Atom tileset_atom, Atom selectedtool_atom)
     {
 	// List<List<List<Map>>> is the type of whatever map_atom contains
 	List<List<List<Map>>> map = (List<List<List<Map>>>)map_atom.deref();
@@ -94,7 +44,7 @@ public class map_renderer
 	
 	this.map_atom = map_atom;
 	this.tileset_atom = tileset_atom;
-
+	this.selectedtool_atom = selectedtool_atom;
 	
 
 	System.out.println("I'm ready, size of map is " + w +", "+ h + " and size of the visible_buffer is " + (w * 50) + ", "+ (h*50));
@@ -177,6 +127,23 @@ public class map_renderer
 			    
 		    }
 		}
+	    }
+
+	    Keyword selected_tool = (Keyword)selectedtool_atom.deref();
+
+	    if(selected_tool.equals(Keyword.intern("hit-tool"))) {
+		Object MAP = map_atom.deref();
+		for(int x = 0; x < w; x++)
+		    for(int y = 0; y < h; y++) {
+			
+			if(get_hitdata.invoke(MAP, x, y).equals(true)) {
+			    map_g.setColor(new Color(255, 0, 0, 112));
+			}
+			else map_g.setColor(new Color(0, 255, 0, 112));
+
+			map_g.fill(new Rectangle(x * TILEW, y * TILEW,
+						 TILEW, TILEW));
+		    }
 	    }
 
 	    System.out.println("Rendered. Swapping buffers");

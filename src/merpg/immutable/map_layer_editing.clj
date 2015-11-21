@@ -1,8 +1,8 @@
-
 (ns merpg.immutable.map-layer-editing
   (:require [merpg.immutable.basic-map-stuff :refer :all]
             [merpg.macros.multi :refer [def-real-multi]]
             [clojure.pprint :refer :all]
+            [clojure.stacktrace :refer :all]
             [clojure.test :refer :all]))
 
 ;;; Tile-editing
@@ -60,6 +60,18 @@
 (defmethod swap-layers :map
   [layer i j]
   (swap layer i j))
+
+
+;; hitdata
+
+(defn get-hitdata [map x y]
+  (try
+    (-> map
+        hitdata
+        (get-tile x y))
+    (catch Exception ex
+      (print-stack-trace ex)
+      (throw ex))))
 
 
 ;;; Tests

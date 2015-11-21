@@ -64,7 +64,7 @@
 
     (def mouse-down-a? (atom false))
     (def mouse-map-a (atom (make-bool-layer map-width map-height :default-value false)))
-    (def map-renderer (map_renderer. current-map-atom tileset-atom))
+    (def map-renderer (map_renderer. current-map-atom tileset-atom selected-tool))
     
     (add-watch current-map-index-atom :index-watch (fn [_ _ _ new]
                                                      (reset! current-map-atom (get @map-set-atom new))

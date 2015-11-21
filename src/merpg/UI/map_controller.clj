@@ -24,14 +24,6 @@
         y (range 0 h step)]
     [x y]))
 
-(def yes (set-opacity
-          (draw-to-surface (image 50 50)
-                           (with-color "#00FF00"
-                             (Rect 0 0 50 50 :fill? true))) 200))
-(def no (set-opacity
-         (draw-to-surface (image 50 50)
-                          (with-color "#FF0000"
-                            (Rect 0 0 50 50 :fill? true))) 200))
 (defn to-long [number]
   (try
     (if (number? number)
@@ -139,6 +131,11 @@
 
   (def scroll-X-atom (atom 0))
   (def scroll-Y-atom (atom 0))
+
+  (doto map-renderer
+    (.registerScrollAtoms scroll-X-atom
+                          scroll-Y-atom))
+  
 
   (def map-event-queue (atom []))
   (def deftool (tool-factory-factory tool-atom mouse-down-a? mouse-map-a map-data-image))

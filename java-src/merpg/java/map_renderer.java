@@ -22,7 +22,7 @@ public class map_renderer
 
     private static final int TILEW = 50;
     
-    Atom map_atom, tileset_atom, selectedtool_atom;
+    Atom map_atom, tileset_atom, selectedtool_atom, scroll_X = null, scroll_Y = null;
 
     int w=0, h=0; //tiles, not pixels
     IFn layer_visible = Clojure.var("merpg.immutable.basic-map-stuff", "layer-visible"),
@@ -45,7 +45,6 @@ public class map_renderer
 	this.map_atom = map_atom;
 	this.tileset_atom = tileset_atom;
 	this.selectedtool_atom = selectedtool_atom;
-	
 
 	System.out.println("I'm ready, size of map is " + w +", "+ h + " and size of the visible_buffer is " + (w * 50) + ", "+ (h*50));
     }
@@ -62,6 +61,12 @@ public class map_renderer
     }
 
     private boolean rendering=false;
+
+    public void registerScrollAtoms(Atom scrollX, Atom scrollY)
+    {
+	this.scroll_X = scrollX;
+	this.scroll_Y = scrollY;
+    }
     
     public BufferedImage render()
     {
@@ -72,7 +77,9 @@ public class map_renderer
 	    List<List<List<Map<Keyword, Object>>>> map = (List<List<List<Map<Keyword, Object>>>>)map_atom.deref();
 	    Map<Keyword, List<List<BufferedImage>>> tileset_collection = (Map<Keyword, List<List<BufferedImage>>>)tileset_atom.deref();
 			
-	    Graphics2D map_g = drawing_buffer.createGraphics();				
+	    Graphics2D map_g = drawing_buffer.createGraphics();
+	    map_g.setColor(Color.BLACK);
+	    map_g.fill(new Rectangle(0,0, drawing_buffer.getWidth(), drawing_buffer.getHeight()));
 
 	    for(int layer = 0; layer < map.size(); layer++) {
 
@@ -148,9 +155,11 @@ public class map_renderer
 
 	    System.out.println("Rendered. Swapping buffers");
 				
-	    BufferedImage old_visible_buffer = visible_buffer;
-	    visible_buffer = drawing_buffer;
-	    drawing_buffer = old_visible_buffer;
+	    Graphics2D gg = visible_buffer.createGraphics();
+	    gg.setColor(Color.BLACK);
+	    gg.drawImage(drawing_buffer, null,
+			 ((Long)scroll_X.deref()).intValue(),
+			 ((Long)scroll_Y.deref()).intValue());
 
 	}
 	catch(Exception ex) {

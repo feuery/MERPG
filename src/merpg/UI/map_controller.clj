@@ -101,6 +101,7 @@
                                                                on-adjustment] :or {vertical? false
                                                                                    on-adjustment (fn [_] )}}]
   (doto (JScrollBar. (if vertical? JScrollBar/VERTICAL JScrollBar/HORIZONTAL))
+                     ;; @TODO Implement here some auto-updating maths on how much of the map our current view can show)
     (.addAdjustmentListener
      (proxy [AdjustmentListener] []
        (adjustmentValueChanged [e]
@@ -108,7 +109,7 @@
          (let [to-screen-coord (comp - (partial * 50))
                scrollbar-val (.getValue e)]
            (reset! scrollbar-val-atom (to-screen-coord scrollbar-val))
-           (on-adjustment scrollbar-val)))))));)
+           (on-adjustment scrollbar-val)))))))
 
 (defn drag-location-scrollbar-transformer [ mouse-coord  scroll-coord]
   (let [toret (-> (fn [mouse-pos scroll-pos]

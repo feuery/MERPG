@@ -54,11 +54,12 @@
                                       (try
                                         (println "Img-agentin koko: " [(img-width @img-agent) :by (img-height @img-agent)])
                                         (println "Img-agent changed!")
-                                        ;; (repaint! c)
+                                        
                                         (.invalidate c)
                                         (.invalidate scroller)
                                         (repaint! scroller)
                                         (.revalidate scroller)
+
                                         (catch Exception ex
                                           (print-stack-trace ex)))))
     {:canvas c

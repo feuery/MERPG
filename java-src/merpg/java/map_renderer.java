@@ -22,7 +22,7 @@ public class map_renderer
 
     private static final int TILEW = 50;
     
-    Atom map_atom, tileset_atom, selectedtool_atom, scroll_X = null, scroll_Y = null;
+    Atom map_atom, tileset_atom, selectedtool_atom;
 
     int w=0, h=0; //tiles, not pixels
     IFn layer_visible = Clojure.var("merpg.immutable.basic-map-stuff", "layer-visible"),
@@ -61,12 +61,6 @@ public class map_renderer
     }
 
     private boolean rendering=false;
-
-    public void registerScrollAtoms(Atom scrollX, Atom scrollY)
-    {
-	this.scroll_X = scrollX;
-	this.scroll_Y = scrollY;
-    }
     
     public BufferedImage render()
     {
@@ -157,9 +151,7 @@ public class map_renderer
 				
 	    Graphics2D gg = visible_buffer.createGraphics();
 	    gg.setColor(Color.BLACK);
-	    gg.drawImage(drawing_buffer, null,
-			 ((Long)scroll_X.deref()).intValue(),
-			 ((Long)scroll_Y.deref()).intValue());
+	    gg.drawImage(drawing_buffer, null, 0, 0);
 
 	}
 	catch(Exception ex) {
@@ -171,25 +163,7 @@ public class map_renderer
 
 	return visible_buffer;
     }
-
-    /*
-      (defn rotate [img degrees]
-  (if (instance? java.awt.Image img)
-    (let [W (img-width img)
-          H (img-height img)
-          toret (image (img-width img)
-                       (img-height img))
-          rad-rot (Math/toRadians (double degrees))
-          tx (doto (AffineTransform.)
-               (.rotate rad-rot (double (/ W 2)) (double (/ H 2))))
-          op (AffineTransformOp. tx AffineTransformOp/TYPE_BILINEAR)]
-      (.filter op img toret)
-      (draw-to-surface toret
-                       (with-handle
-                         (.translate handle 0 0))))
-    (println "Img's class is " (class img) " at merpg.2D.core/rotate")))
-     */
-
+    
     public BufferedImage Rotate(BufferedImage img, int degrees)
     {
 	double w = img.getWidth(), h = img.getHeight();

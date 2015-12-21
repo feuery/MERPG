@@ -94,29 +94,20 @@
                                      (-> Map zonetiles
                                          (assoc [layer layer-x layer-y] new-fn)))))))
 
-(defn drag-location-scrollbar-transformer [ mouse-coord  scroll-coord]
-  (let [toret (-> (fn [mouse-pos scroll-pos]
-         (-> mouse-pos
-             (+ (abs scroll-pos))
-             (/ 50)
-             double
-             Math/floor
-             int))
-      (map mouse-coord scroll-coord)
-      vec)]
+(defn drag-location-scrollbar-transformer [ mouse-coord]
+  (let [toret (-> (fn [mouse-pos]
+                    (-> mouse-pos
+                        (/ 50)
+                        double
+                        Math/floor
+                        int))
+                  (map mouse-coord)
+                  vec)]
     toret))
 
 (defn map-controller
   "Returns the mainview, on which we can edit the map"
-  [map-data-image tool-atom current-tool-fn-atom tileset-atom current-tile-ref current-layer-ind-atom selected-tool mouse-down-a? mouse-map-a map-renderer]
-
-  (def scroll-X-atom (atom 0))
-  (def scroll-Y-atom (atom 0))
-
-  (doto map-renderer
-    (.registerScrollAtoms scroll-X-atom
-                          scroll-Y-atom))
-  
+  [map-data-image tool-atom current-tool-fn-atom tileset-atom current-tile-ref current-layer-ind-atom selected-tool mouse-down-a? mouse-map-a map-renderer]  
 
   (def map-event-queue (atom []))
   (def deftool (tool-factory-factory tool-atom mouse-down-a? mouse-map-a map-data-image))
@@ -142,16 +133,12 @@
     ;; do nothing 'til tileset is loaded
     ;; Allow mouse-dragging to call tools
 
-    ;; [map current-tile x y layer]
-    (doseq [a [scroll-Y-atom scroll-X-atom]]
-      (add-watch a :scroll-repainter (fn [_ _ _ _]
-                                       (repaint! canvas))))
     (listen canvas
             :mouse-dragged
             (fn canvas-drag-listener [e]
               (enqueue! map-event-queue (future
                                           (let [[x y :as coords] (-> (mouse-location e)
-                                                                     (drag-location-scrollbar-transformer [@scroll-X-atom @scroll-Y-atom]))
+                                                                     drag-location-scrollbar-transformer)
                                                 tool @current-tool-fn-atom]
                                             (when-not (get-in @mouse-map-a [x y])
                                               (if-not (number? (:tileset @current-tile-ref))
@@ -166,7 +153,10 @@
             :mouse-released (fn [_]
                               (swap! mouse-down-a? not)))
     (add-watch selected-tool :tool-watcher (fn [_ _ _ _]
-                                             (repaint! canvas)))
+                                             (.invalidate canvas)
+                                             (.invalidate scroll)
+                                             (repaint! scroll)
+                                             (.revalidate scroll)))
     scroll))
 
 (defn show [f stuff]

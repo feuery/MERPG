@@ -107,12 +107,12 @@
            ;;                    (alert (str "These are set up in the REPL with merpg.mutable.relocation/defn-reloc - macro. The usage is explained in merpg/mutable.relocation.clj (https://github.com/feuery/MERPG/blob/master/src/merpg/mutable/relocation.clj#L26)")))])
 
            "Current tile"           
-           (bindable-canvas current-tile
+           (:canvas (bindable-canvas current-tile
                             (fn [tile]
                               (-> @tileset-atom
                                   (get (:tileset tile))
                                   (get (:x tile))
-                                  (get (:y tile)))))           
+                                  (get (:y tile))))))           
            "Maps"
            (bindable-list map-set-atom
                           current-map-atom

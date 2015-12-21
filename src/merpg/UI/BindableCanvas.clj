@@ -1,10 +1,14 @@
 (ns merpg.UI.BindableCanvas
   (:require [seesaw.core :refer :all]
             [merpg.IO.tileset :refer :all]
+            [merpg.2D.core :refer [img-width img-height]]
             [clojure.java.io :refer [file]]
             [clojure.stacktrace :refer [print-stack-trace]]
             [clojure.pprint :refer [pprint]])
-  (:import [javax.imageio ImageIO]))
+  (:import [javax.imageio ImageIO]
+           [javax.swing JComponent Scrollable]
+           [java.awt Dimension]
+           [merpg.java BindableCanvas]))
 
 (defn- save-img [img path]
   (ImageIO/write img "png" (file path)))
@@ -18,6 +22,18 @@
     (catch Exception ex
       false)))
 
+(extend BindableCanvas 
+      seesaw.config/Configurable
+      {:config!* (fn [target args]
+                   (try
+                     (doseq [[k v] (partition 2 args)]
+                       (.put (.statemap target) k v))
+                     (catch UnsupportedOperationException ex
+                       (pprint args)
+                       (throw ex))))
+       :config* (fn [target Name]
+                  (.get (.statemap target) Name))})
+
 (defn bindable-canvas [data-atom img-transformer-fn & {:keys [rest-to-bind]
                                                        :or {rest-to-bind []}}]
   (let [img-agent (agent (img-transformer-fn @data-atom)
@@ -25,11 +41,9 @@
                                           (println "Img-agent blew up in bindable-canvas")
                                           (print-stack-trace ex)))
         old-image (atom nil)
-        c (canvas :paint (fn canvas-painter [_ g]
-                           (try
-                             (.drawImage g @img-agent 0 0 nil)
-                             (catch RuntimeException ex
-                               (print-stack-trace ex)))))]
+        c (BindableCanvas. img-agent)
+        scroller (scrollable c)]
+    (config! c :preferred-size [(img-width @img-agent) :by (img-height @img-agent)])
 
     (doseq [d rest-to-bind]
       (add-watch d :bindable-canvas-updater (fn secondary-binder [_ _ _ _]
@@ -38,7 +52,15 @@
                                                     (send img-agent (fn [_] (img-transformer-fn da)))))
     (add-watch img-agent :repainter (fn repainter [_ _ _ _]
                                       (try
-                                        (repaint! c)
+                                        (println "Img-agentin koko: " [(img-width @img-agent) :by (img-height @img-agent)])
+                                        (println "Img-agent changed!")
+                                        ;; (repaint! c)
+                                        (.invalidate c)
+                                        (.invalidate scroller)
+                                        (repaint! scroller)
+                                        (.revalidate scroller)
                                         (catch Exception ex
                                           (print-stack-trace ex)))))
-    c))
+    {:canvas c
+     :scrollable scroller
+     }))

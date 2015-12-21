@@ -8,7 +8,7 @@
             [merpg.2D.core :refer :all]
             [merpg.UI.tool-box :refer :all]
             [merpg.util :refer [abs enqueue! dequeue!]]
-            [seesaw.core :refer [frame config! listen alert button repaint! border-panel input]]
+            [seesaw.core :refer [frame config! listen alert button repaint! border-panel input scrollable]]
             [seesaw.mouse :refer [location] :rename {location mouse-location}]
             [clojure.stacktrace :refer [print-stack-trace]]
             [clojure.pprint :refer :all])
@@ -33,12 +33,9 @@
         (println "Number " number " (" (class number) ") not converted to long")
         255)))
 
-;; map->img removed
-
 (defn default-tools [deftool mouse-map-a first-click second-click]
   (def -deftool deftool)
   (deftool :pen (fn [map current-tile x y layer]
-                  ;; (println "using pen" [current-tile x y layer])
                   (locking *out*
                     (println "USING :PEN")
                     (pprint current-tile)
@@ -97,20 +94,6 @@
                                      (-> Map zonetiles
                                          (assoc [layer layer-x layer-y] new-fn)))))))
 
-(defn make-scrollbar-with-update [scrollbar-val-atom & {:keys [vertical?
-                                                               on-adjustment] :or {vertical? false
-                                                                                   on-adjustment (fn [_] )}}]
-  (doto (JScrollBar. (if vertical? JScrollBar/VERTICAL JScrollBar/HORIZONTAL))
-                     ;; @TODO Implement here some auto-updating maths on how much of the map our current view can show)
-    (.addAdjustmentListener
-     (proxy [AdjustmentListener] []
-       (adjustmentValueChanged [e]
-         ;; (when-not (.getValueIsAdjusting e)
-         (let [to-screen-coord (comp - (partial * 50))
-               scrollbar-val (.getValue e)]
-           (reset! scrollbar-val-atom (to-screen-coord scrollbar-val))
-           (on-adjustment scrollbar-val)))))))
-
 (defn drag-location-scrollbar-transformer [ mouse-coord  scroll-coord]
   (let [toret (-> (fn [mouse-pos scroll-pos]
          (-> mouse-pos
@@ -121,9 +104,6 @@
              int))
       (map mouse-coord scroll-coord)
       vec)]
-    ;; (println "mouse " mouse-coord)
-    ;; (println "scroll " scroll-coord)
-    ;; (println "toret of drag-location-scrollbar-transformer: " toret)
     toret))
 
 (defn map-controller
@@ -146,30 +126,13 @@
 
   (let [map-width  10
         map-height  10        
-        canvas (bindable-canvas map-data-image (fn [& _]
-                                                  ;; (println "drawing hit-layer? " (= @selected-tool :hit-tool))
-                                                  
-                                                  ;; (map->img % @tileset-atom (= @selected-tool :hit-tool) first-click second-click
-                                                  ;;           :scroll-coords [@scroll-X-atom @scroll-Y-atom])
-                                                 ;; TODO it doesn't handle scrollbars atm
+        {scroll :scrollable 
+         canvas :canvas} (bindable-canvas map-data-image (fn [& _]
                                                  (try
                                                    (println "Rendering")
                                                    (.render map-renderer)
                                                    (catch Exception ex
-                                                     (print-stack-trace ex)))))
-        horizontal-scroll (make-scrollbar-with-update scroll-X-atom
-                                                      :on-adjustment (fn [_]
-                                                                       ;; noopping on map-data-image generates a notification on the atom
-                                                                       ;; and that refreshes the agent that renders our map
-                                                                       ;; which generates a notification for our canvas to draw our new
-                                                                       ;; map
-                                                                       (swap! map-data-image #(set-tile % 0 0 0
-                                                                                                        (get-tile % 0 0 0)))))
-        vertical-scroll (make-scrollbar-with-update scroll-Y-atom :vertical? true
-                                                    :on-adjustment (fn [_]
-                                                                     ;; In other words, sorry for this ugly hack :D
-                                                                     (swap! map-data-image #(set-tile % 0 0 0
-                                                                                                      (get-tile % 0 0 0)))))]
+                                                     (print-stack-trace ex)))))]
 
     ;; init tools
     (default-tools deftool mouse-map-a first-click second-click)
@@ -204,9 +167,7 @@
                               (swap! mouse-down-a? not)))
     (add-watch selected-tool :tool-watcher (fn [_ _ _ _]
                                              (repaint! canvas)))
-    (border-panel :south horizontal-scroll
-                  :east vertical-scroll
-                  :center canvas)))
+    scroll))
 
 (defn show [f stuff]
   (config! f :content stuff))

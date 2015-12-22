@@ -29,7 +29,6 @@ public class BindableCanvas extends JPanel implements Scrollable
     public BindableCanvas(Agent img_agent)
     {
 	this.img_agent = img_agent;
-	setBackground(Color.BLUE);
     }
 
     @Override
@@ -90,10 +89,17 @@ public class BindableCanvas extends JPanel implements Scrollable
 	    return;
 	}
 
-	g.setColor(Color.RED);
-	g.fill(new Rectangle(0, 0, img.getWidth(), img.getHeight()));
+	g.drawImage(img, 0, 0, null);
 
-	g.drawImage(img, 0, 0, null); 
+	g.setColor(Color.BLACK);
+
+	int border_width = 3;
+	//vertical border
+	g.fill(new Rectangle(getWidth()-border_width, 0, getWidth(), getHeight()));
+	//horizontal border
+	g.fill(new Rectangle(0, getHeight()-border_width, getWidth(), getHeight()));
+	
+	
 	System.out.println("Component drawn");
     }
 }

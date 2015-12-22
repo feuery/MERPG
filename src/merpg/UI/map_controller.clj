@@ -124,7 +124,6 @@
                                                    (.render map-renderer)
                                                    (catch Exception ex
                                                      (print-stack-trace ex)))) :rest-to-bind [selected-tool])]
-    (config! scroll :background :black)
 
     ;; init tools
     (default-tools deftool mouse-map-a first-click second-click)

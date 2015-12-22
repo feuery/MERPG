@@ -79,6 +79,8 @@ public class BindableCanvas extends JPanel implements Scrollable
 	Graphics2D g = (Graphics2D)gg;
 	BufferedImage img = (BufferedImage)img_agent.deref();
 
+	System.out.println("img's size at BindableCanvas.paintComponent: ["+img.getWidth()+" :by " +img.getHeight()+"]");
+
 	if(img == null) {
 	    System.out.println("img == null at BindableCanvas.paintComponent");
 	    return;
@@ -89,7 +91,7 @@ public class BindableCanvas extends JPanel implements Scrollable
 	}
 
 	g.setColor(Color.RED);
-	g.fill(new Rectangle(0, 0, getWidth(), getHeight()));
+	g.fill(new Rectangle(0, 0, img.getWidth(), img.getHeight()));
 
 	g.drawImage(img, 0, 0, null); 
 	System.out.println("Component drawn");

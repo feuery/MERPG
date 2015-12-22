@@ -123,7 +123,8 @@
                                                    (println "Rendering")
                                                    (.render map-renderer)
                                                    (catch Exception ex
-                                                     (print-stack-trace ex)))))]
+                                                     (print-stack-trace ex)))) :rest-to-bind [selected-tool])]
+    (config! scroll :background :black)
 
     ;; init tools
     (default-tools deftool mouse-map-a first-click second-click)
@@ -152,11 +153,6 @@
                              (swap! mouse-down-a? not))
             :mouse-released (fn [_]
                               (swap! mouse-down-a? not)))
-    (add-watch selected-tool :tool-watcher (fn [_ _ _ _]
-                                             (.invalidate canvas)
-                                             (.invalidate scroll)
-                                             (repaint! scroll)
-                                             (.revalidate scroll)))
     scroll))
 
 (defn show [f stuff]

@@ -57,6 +57,9 @@
                                         
                                         (.invalidate c)
                                         (.invalidate scroller)
+                                        (repaint! c)  ;; This makes it possible to add only the canvas to the UI-tree and still render stuff correctly
+                                        ;; It might be possible to optimize by sending an argument if you only wish to have a canvas or a scrollable canvas
+                                        ;; I need to re-familiarize myself on how Swing's scrollpanes repaint themselves
                                         (repaint! scroller)
                                         (.revalidate scroller)
 

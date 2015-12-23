@@ -3,6 +3,7 @@
             [merpg.IO.tileset :refer :all]
             [merpg.2D.core :refer [img-width img-height]]
             [clojure.java.io :refer [file]]
+            [clojure.core :refer :all]
             [clojure.stacktrace :refer [print-stack-trace]]
             [clojure.pprint :refer [pprint]])
   (:import [javax.imageio ImageIO]
@@ -65,6 +66,7 @@
 
                                         (catch Exception ex
                                           (print-stack-trace ex)))))
+    
     {:canvas c
      :scrollable scroller
      }))

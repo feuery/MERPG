@@ -10,6 +10,7 @@
 ;;     (println "Probably not uberjarring")))
 
 (defn -main [& args]
-  (def root {:maps (atom [(make-map 10 10 1)])})
+  (def root {:maps (atom (with-meta [(make-map 10 10 1)]
+                           {:tyyppi :root}))})
   (native!)
   (show-mapeditor (:maps root)))

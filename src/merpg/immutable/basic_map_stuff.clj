@@ -6,7 +6,9 @@
             [clojure.pprint :refer :all]))
 
 (defn tile [x y tileset rotation]
-  {:x x :y y :tileset tileset :rotation rotation})
+  (with-meta
+    {:x x :y y :tileset tileset :rotation rotation}
+    {:tyyppi :tile}))
 
 (defn make-thing [default w h & {:keys [opacity] :or {opacity 255}}]
   (with-meta

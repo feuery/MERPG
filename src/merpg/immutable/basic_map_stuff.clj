@@ -33,7 +33,11 @@
   ([layer]
      (-> layer meta :name))
   ([layer name]
-     (vary-meta layer assoc :name name)))
+   (vary-meta layer assoc :name name)))
+
+(defn map-name
+  [& args]
+  (apply layer-name args))
 
 (defn layer-visible
   ([layer]

@@ -3,40 +3,56 @@
             [seesaw.tree :refer :all]
             [seesaw.dev :refer :all]
             [clojure.core :refer :all]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import [javax.swing.tree DefaultTreeModel DefaultMutableTreeNode]))
 
-(defn our-renderer [renderer {:keys [value]}]
+(defn our-renderer [renderer {:keys [value] :as wut}]
   (try
     (let [text
           (if (contains? (meta value) :tyyppi)
             (str (:tyyppi (meta value)))
-            ":typerää"
-            ;; (if (> (count (str value)) 30)
-            ;;     (subs (str value) 0 30)
-            ;;     (str value)
-            ;;                             )
-            )]
+            (str value))]
       (config! renderer :text text))
     (catch Exception ex
-      #break
       (>pprint value)
       (throw ex))))
 
+(defn create [title parent-node]
+  (try
+    (let [child (DefaultMutableTreeNode. title)]
+      (when-not (nil? parent-node)
+        (.insert parent-node child 0))
+      child)
+    (catch NullPointerException ex
+      #break
+      (println "wtf?"))))
+    
+
+(defn build-model! [model children parent]
+  (doseq [child children]
+    (if (contains? (meta child) :tyyppi)
+      (let [node (create (-> child meta :tyyppi str)
+                  ;; child
+                  parent)]
+        (if (sequential? child)
+          (build-model! model child node))))))
+
 (defn adsasd []
-  (frame :width 400
-         :height 300
-         :visible? true
-         :content
-         (scrollable
-          (tree
-           :renderer our-renderer
-           :model (simple-tree-model
-                   (fn [value]
-                     (some #(= (-> value meta :tyyppi) %) [:root :map :layer]))
-                   identity
-                   (-> merpg.core/root :maps deref))
-           :size [200 :by 300]
-           :preferred-size [200 :by 300]
-           ))))
+  (let [root-node (create ":root" nil)
+        model (DefaultTreeModel. root-node)]
+    (build-model! model @(:maps merpg.core/root) root-node)
+    
+    (def tm model)
+    (frame :width 400
+           :height 300
+           :visible? true
+           :content
+           (scrollable
+            (tree
+             :renderer our-renderer
+             :model tm
+             :size [200 :by 300]
+             :preferred-size [200 :by 300])))))
+
 (merpg.core/-main)
 (adsasd)

@@ -3,7 +3,8 @@
             [seesaw.tree :refer :all]
             [seesaw.dev :refer :all]
             [clojure.core :refer :all]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [merpg.core :refer :all])
   (:import [javax.swing.tree DefaultTreeModel DefaultMutableTreeNode]))
 
 (defn our-renderer [renderer {:keys [value] :as wut}]
@@ -31,11 +32,20 @@
 (defn build-model! [model children parent]
   (doseq [child children]
     (if (contains? (meta child) :tyyppi)
-      (let [node (create (-> child meta :tyyppi str)
-                  ;; child
-                  parent)]
+      (let [node (create
+                  child
+                  parent
+                  )]
         (if (sequential? child)
           (build-model! model child node))))))
+
+(defn node-selected [e]
+  ;; To get the metadata of the selected object use
+  ;; (-> e seesaw.core/selection last .getUserObject meta)
+  (alert (str (selection e))))
+
+
+(-main)
 
 (defn adsasd []
   (let [root-node (create ":root" nil)
@@ -52,7 +62,6 @@
              :renderer our-renderer
              :model tm
              :size [200 :by 300]
-             :preferred-size [200 :by 300])))))
-
-(merpg.core/-main)
+             :preferred-size [200 :by 300]
+             :listen [:selection node-selected])))))
 (adsasd)

@@ -14,3 +14,6 @@
                            {:tyyppi :root}))})
   (native!)
   (show-mapeditor (:maps root)))
+
+(defn main []
+  (-main))

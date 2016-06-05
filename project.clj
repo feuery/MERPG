@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [seesaw "1.4.4"]
                  [environ "0.5.0"]
+                 [prismatic/schema "1.1.1"]
                  ;; [org.clojure/tools.nrepl "0.2.12"]
                  ]
   ;; :plugins [[cider/cider-nrepl "0.10.2"]]

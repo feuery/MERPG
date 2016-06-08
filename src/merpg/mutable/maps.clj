@@ -1,6 +1,7 @@
 (ns merpg.mutable.maps
   (:require [merpg.mutable.registry :as r]
             [merpg.mutable.layers :as l]
+            [merpg.macros.multi :refer [def-real-multi]]
             [seesaw.core :as s]
             [clojure.test :refer :all]
             [clojure.pprint :refer [pprint]]))
@@ -10,13 +11,13 @@
 
   Returns the id map is registered with"
   [W H layer-count]
-  (let [id (gensym "MAP__")
+  (let [id (keyword (gensym "MAP__"))
         layers (->> layer-count
                     range
                     (map (fn [_]
-                           (l/layer! W H)))
+                           (l/layer! W H :parent-id id)))
                     doall)
-        hit-layer (l/layer! W H :hit? true)] ;;we need hitlayer too
+        hit-layer (l/layer! W H :hit? true :parent-id id)] ;;we need hitlayer too
     (doseq [layer-id layers]
       (r/update-registry layer-id
                          (assoc layer-id :parent-id id)))

@@ -17,3 +17,5 @@
 /src/merpg/mutable/maps.clj~
 /src/merpg/mutable/registry.clj~
 /src/merpg/mutable/tiles.clj~
+/src/merpg/macros/test_registry.clj~
+/src/merpg/mutable/registry_views.clj~

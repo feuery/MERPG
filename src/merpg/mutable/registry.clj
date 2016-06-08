@@ -1,8 +1,13 @@
 (ns merpg.mutable.registry
   (:require [clojure.pprint :refer [pprint]]
-            [clojure.walk :refer [postwalk]]))
+            [clojure.walk :refer [postwalk]]
+            [reagi.core :as r]
+
+            [merpg.mutable.registry-views :as rv]))
 
 (def ^:dynamic registry (atom {}))
+
+(add-watch registry :layer-view-updater #(r/deliver rv/local-registry %4))
 
 (defn update-element!
   ([id fn]
@@ -14,7 +19,7 @@
    (swap! registry assoc id element)
    id)
   ([element]
-   (let [id (gensym)]
+   (let [id (keyword (gensym))]
      (register-element! id element))))
 
 (defn peek-registry [id]
@@ -42,3 +47,5 @@
     `(update-element! ~id
                       (fn [~element-sym]
                         ~@forms))))
+
+

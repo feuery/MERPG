@@ -57,7 +57,9 @@ public class map_renderer
 		    for(int y = 0; y < h_tiles; y++) {
 			Map<Keyword, Object> tile_data = layer.get(x).get(y);
 			Keyword tileset = (Keyword)tile_data.get(Keyword.intern("tileset"));
-			List<List<BufferedImage>> tileset_surfaces = (List<List<BufferedImage>>)peek_registry.invoke(tileset);
+
+			Map<Keyword, Object> tileset_meta = (Map<Keyword, Object>)peek_registry.invoke(tileset);
+			List<List<BufferedImage>> tileset_surfaces = (List<List<BufferedImage>>)tileset_meta.get(Keyword.intern("images"));
 			int tileset_x = ((Long)tile_data.get(Keyword.intern("x"))).intValue(),
 			    tileset_y = ((Long)tile_data.get(Keyword.intern("y"))).intValue(),
 			    rotation = ((Long)tile_data.get(Keyword.intern("rotation"))).intValue() * 90;
@@ -81,14 +83,14 @@ public class map_renderer
 	    
 
 	}
-	catch(Exception ex) {
-	    ex.printStackTrace();
-	}	
+		catch(Exception ex) {
+		    ex.printStackTrace();
+		}	
 
-	return final_surface;
+	    return final_surface;
     }
     
-    public static BufferedImage Rotate(BufferedImage img, int degrees)
+	public static BufferedImage Rotate(BufferedImage img, int degrees)
     {
 	double w = img.getWidth(), h = img.getHeight();
 	BufferedImage new_img = new BufferedImage((int)w, (int)h, BufferedImage.TYPE_INT_ARGB);

@@ -22,8 +22,7 @@
             [merpg.util :refer [vec-remove]]
             [merpg.2D.core :as dd]
 
-            [merpg.mutable.maps :refer [map!]])
-  (:import [merpg.java map_renderer]))
+            [merpg.mutable.maps :refer [map!]]))
 
 (defn do-resize! [map-atom width height
                   horizontal-anchor

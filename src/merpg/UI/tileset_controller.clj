@@ -1,6 +1,5 @@
 (ns merpg.UI.tileset-controller
   (:require [merpg.2D.core :refer :all]
-            [merpg.UI.map-controller :refer [screen->map]]
             [merpg.UI.BindableCanvas :refer :all]
             [merpg.immutable.basic-map-stuff :refer [tile]]
             [merpg.IO.tileset :refer [tileset-to-img]]

@@ -2,7 +2,8 @@
   (:require [reagi.core :as r]
             [seesaw.core :as s]
             [clojure.core.async :as a]
-            [clojure.pprint :refer [pprint]]))
+            [clojure.pprint :refer [pprint]])
+  (:import [merpg.java map_renderer]))
 
 (defn sort-by-multiple-keys [col & keys]
   (sort-by #(vec (map % keys)) col))
@@ -48,10 +49,12 @@
          (map first)
          vec)))
 
+
+
 (comment
   ;; Reset registry with these while repling
   (reset! merpg.mutable.registry/registry {})
-  (def id1 (merpg.mutable.maps/map! 4 4 3))
+  (def id1 (merpg.mutable.maps/map! 4 4 1))
   (def id2 (merpg.mutable.maps/map! 2 2 5)))
 
 (def local-registry (r/events))
@@ -66,6 +69,28 @@
                                               (= (-> % second :subtype) :layer)))
                                     (mapv first)
                                     (mapv #(registry-to-layer @local-registry %)))))))
+
+(def rendered-maps-watchers (atom {}))
+(defn add-rendered-map-watcher [f k]
+  (swap! rendered-maps-watchers assoc k f))
+
+(defn remove-rendered-map-watcher [k]
+  (swap! rendered-maps-watchers dissoc k))
+
+;; TODO optimize this to render only the selected map
+(def rendered-maps
+  "This contains all the rendered maps AS A pmapped SEQ - DO NOT USE GET HERE"
+  (->> local-registry
+       (r/map (fn [r]
+                (->> r
+                     (filter #(= (-> % second :type) :map))
+                     (map first)
+                     (pmap #(map_renderer/render %)))))
+       ;; Side-effecting hack to make it easyish to update the gui
+       (r/map (fn [r]
+                (doseq [[_ func] @rendered-maps-watchers]
+                  (func))
+                r))))
 
 (defn renderable-layers-of!
   "Returns layers associated with the map-id in a renderable form (with tiles)"

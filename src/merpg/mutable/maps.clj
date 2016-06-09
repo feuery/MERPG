@@ -25,8 +25,9 @@
     (r/update-registry hit-layer
                        (assoc hit-layer :parent-id id))
 
-    (r/register-element! {:name (str id)
-                          :zonetiles {[0 0] #(s/alert "TODO: design real zonetiles")}})
+    (r/register-element! id {:name (str id)
+                             :zonetiles {[0 0] #(s/alert "TODO: design real zonetiles")}
+                             :type :map})
 
     id))
 

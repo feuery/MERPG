@@ -1,13 +1,10 @@
 (ns merpg.core
   (:require [merpg.immutable.basic-map-stuff :refer [make-map]]
             [merpg.UI.main-layout :refer [show-mapeditor]]
-            [seesaw.core :refer [native!]])
+            [seesaw.core :refer [native!]]
+            [merpg.mutable.tileset]
+            [merpg.mutable.maps])
   (:gen-class))
-
-;; (try
-;;   (println "UB: " merpg.core.project/uberjarring)
-;;   (catch Exception exq
-;;     (println "Probably not uberjarring")))
 
 (defn -main [& args]
   (native!)
@@ -16,4 +13,4 @@
 (defn main []
   (-main))
 
-;; (main)
+(main)

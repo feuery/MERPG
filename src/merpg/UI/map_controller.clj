@@ -8,30 +8,14 @@
             [merpg.2D.core :refer :all]
             [merpg.UI.tool-box :refer :all]
             [merpg.util :refer [abs enqueue! dequeue!]]
-            [seesaw.core :refer [frame config! listen alert button repaint! border-panel input scrollable]]
+            [merpg.mutable.registry-views :refer [add-rendered-map-watcher remove-rendered-map-watcher rendered-maps]]
+            
+            [seesaw.core :refer [frame config! listen alert button repaint! border-panel input scrollable canvas]]
             [seesaw.mouse :refer [location] :rename {location mouse-location}]
             [clojure.stacktrace :refer [print-stack-trace]]
             [clojure.pprint :refer :all])
   (:import [javax.swing JScrollBar]
-           [merpg.java map_renderer]
            [java.awt.event AdjustmentListener]))
-
-(defn screen->map [coord]
-  (long (/ coord 50)))
-
-(defn get-coords [w h step]
-  (for [x (range 0 w step)
-        y (range 0 h step)]
-    [x y]))
-
-(defn to-long [number]
-  (try
-    (if (number? number)
-      number
-      (Long/parseLong number))
-    (catch ClassCastException ex
-        (println "Number " number " (" (class number) ") not converted to long")
-        255)))
 
 (defn default-tools [& _;; deftool mouse-map-qa first-click second-click
                      ]
@@ -97,24 +81,18 @@
                                        (-> Map zonetiles
                                            (assoc [layer layer-x layer-y] new-fn))))))))
 
-(defn drag-location-scrollbar-transformer [ mouse-coord]
-  (let [toret (-> (fn [mouse-pos]
-                    (-> mouse-pos
-                        (/ 50)
-                        double
-                        Math/floor
-                        int))
-                  (map mouse-coord)
-                  vec)]
-    toret))
-
 (defn map-controller
   "Returns the mainview, on which we can edit the map"
   []
-  (:canvas (bindable-canvas (atom nil)
-                   (fn [_]
-                     (draw-to-surface (image 100 100 :color "#FFFFFF")
-                                      (Draw "TODO map-controller is broken" [0 0]))))))
+  (let [c (canvas :paint (fn [_ g]
+                           ;; TODO fix to support multiple maps :D
+                           (.drawImage g (first @rendered-maps) nil 0 0)))]
+    (remove-rendered-map-watcher :map-controller)
+    (add-rendered-map-watcher #(do
+                                 ;; (println "Repainting canvas")
+                                 (repaint! c))
+                                 :map-controller)
+    (scrollable c)))
 
 (defn show [f stuff]
   (config! f :content stuff))

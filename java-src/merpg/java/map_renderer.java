@@ -12,159 +12,83 @@ import java.awt.Color;
 
 import javax.imageio.ImageIO;
 
-// TODO: hit tiles, this-tile-selected - rectangle of fill-tool
-
 public class map_renderer
 {
-    //We need a static method that kills all the running threads
-    public BufferedImage visible_buffer;
-    private BufferedImage drawing_buffer;
 
     private static final int TILEW = 50;
     
-    Atom map_atom, tileset_atom, selectedtool_atom;
-
-    int w=0, h=0; //tiles, not pixels
-    IFn layer_visible = Clojure.var("merpg.immutable.basic-map-stuff", "layer-visible"),
-	meta = Clojure.var("clojure.core", "meta"),
-	get_hitdata = Clojure.var("merpg.immutable.map-layer-editing", "get-hitdata");
+    static IFn renderable_layers_of = Clojure.var("merpg.mutable.registry-views", "renderable-layers-of!"),
+	peek_registry = Clojure.var("merpg.mutable.registry", "peek-registry"),
+	layer_metadata_of = Clojure.var("merpg.mutable.registry-views", "layer-metadata-of!");
     
-    public map_renderer(clojure.lang.Atom map_atom, Atom tileset_atom, Atom selectedtool_atom)
+    public map_renderer( )// clojure.lang.Atom map_atom, Atom tileset_atom, Atom selectedtool_atom)
+    { }
+
+    // an instance of reagi-events
+    public static BufferedImage render(Keyword map_id)
     {
-	// List<List<List<Map>>> is the type of whatever map_atom contains
-	List<List<List<Map>>> map = (List<List<List<Map>>>)map_atom.deref();
-
-	//Map<kw, List<List<BufferedImage>> is the type of tileset_atom
-	
-	w = map.get(0).size();
-	h = map.get(0).get(0).size();
-	
-	visible_buffer = new BufferedImage(w * 50, h * 50, BufferedImage.TYPE_INT_ARGB);
-	drawing_buffer = new BufferedImage(w * 50, h * 50, BufferedImage.TYPE_INT_ARGB);
-	
-	this.map_atom = map_atom;
-	this.tileset_atom = tileset_atom;
-	this.selectedtool_atom = selectedtool_atom;
-
-	System.out.println("I'm ready, size of map is " + w +", "+ h + " and size of the visible_buffer is " + (w * 50) + ", "+ (h*50));
-    }
-
-    public void resize_happened ()
-    {
-	List<List<List<Map>>> map = (List<List<List<Map>>>)map_atom.deref();
-
-	w = map.get(0).size();
-	h = map.get(0).get(0).size();
-	
-	visible_buffer = new BufferedImage(w * 50, h * 50, BufferedImage.TYPE_INT_ARGB);
-	drawing_buffer = new BufferedImage(w * 50, h * 50, BufferedImage.TYPE_INT_ARGB);
-    }
-
-    private boolean rendering=false;
-    
-    public BufferedImage render()
-    {
+	BufferedImage final_surface = null;
+	Graphics2D final_g = null;
 	try {
-	    System.out.println("Rendering");
-	    rendering = true;
+	    List<List<List<Map<Keyword, Object>>>> layers = (List<List<List<Map<Keyword, Object>>>>)renderable_layers_of.invoke(map_id);
+	    List<Map<Keyword, Object>> layer_metas = (List<Map<Keyword, Object>>)layer_metadata_of.invoke(map_id);
+	    int layer_count = layers.size();
+	    int W, H;
 
-	    List<List<List<Map<Keyword, Object>>>> map = (List<List<List<Map<Keyword, Object>>>>)map_atom.deref();
-	    Map<Keyword, List<List<BufferedImage>>> tileset_collection = (Map<Keyword, List<List<BufferedImage>>>)tileset_atom.deref();
+	    for(int l = 0; l < layer_count; l++) {
+		List<List<Map<Keyword, Object>>> layer = layers.get(l);
+		// pixels
+		int w_tiles = layer.size(),
+		    h_tiles = layer.get(0).size(),
+		    opacity = ((Long)layer_metas.get(l).get(Keyword.intern("opacity"))).intValue();
+
+		W = w_tiles * TILEW;
+		H = h_tiles * TILEW;
+		
+		BufferedImage layer_surface = new BufferedImage(W, H, BufferedImage.TYPE_INT_ARGB);
+		final_surface = final_surface == null? new BufferedImage(W, H, BufferedImage.TYPE_INT_ARGB): final_surface;
+		final_g = final_g == null? final_surface.createGraphics(): final_g;
+		Graphics2D g = layer_surface.createGraphics();
+
+		g.setColor(Color.BLACK);
+		g.fill(new Rectangle(0, 0, W, H));
+
+		for(int x = 0; x < w_tiles; x++) {
+		    for(int y = 0; y < h_tiles; y++) {
+			Map<Keyword, Object> tile_data = layer.get(x).get(y);
+			Keyword tileset = (Keyword)tile_data.get(Keyword.intern("tileset"));
+			List<List<BufferedImage>> tileset_surfaces = (List<List<BufferedImage>>)peek_registry.invoke(tileset);
+			int tileset_x = ((Long)tile_data.get(Keyword.intern("x"))).intValue(),
+			    tileset_y = ((Long)tile_data.get(Keyword.intern("y"))).intValue(),
+			    rotation = ((Long)tile_data.get(Keyword.intern("rotation"))).intValue() * 90;
+			BufferedImage tile_surface;
+
+			if(rotation != 0) 
+			    tile_surface = Rotate(tileset_surfaces.get(tileset_x).get(tileset_y), rotation);
+			else
+			    tile_surface = tileset_surfaces.get(tileset_x).get(tileset_y);
 			
-	    Graphics2D map_g = drawing_buffer.createGraphics();
-	    map_g.setColor(Color.BLACK);
-	    map_g.fill(new Rectangle(0,0, drawing_buffer.getWidth(), drawing_buffer.getHeight()));
-
-	    for(int layer = 0; layer < map.size(); layer++) {
-
-		if(layer_visible.invoke(map.get(layer)).equals(false)) continue;
-		Map<Keyword, Object> layerMeta = (Map<Keyword, Object>)meta.invoke(map.get(layer));				    
-		long opacity = (long)layerMeta.get(Keyword.intern("opacity"));
-				    
-		for(int x = 0; x < map.get(layer).size(); x++) {
-		    for(int y = 0; y < map.get(layer).get(x).size(); y++) {
-			// :tileset is a keyword, rest are integers
-			Keyword x_kw = Keyword.intern( "x"),
-			    y_kw = Keyword.intern( "y");
-
-			if (x_kw == null) {
-			    // System.out.println(x_kw+" is null");
-			    return visible_buffer;
-			}
-
-			if (y_kw == null) {
-			    // System.out.println(y_kw+" is null");
-			    return visible_buffer;
-			}
-			
-			Map<Keyword, Object> tile = map.get(layer).get(x).get(y);
-
-			if (tile == null) {
-			    // System.out.println("tile is null");
-			}
-
-			// System.out.println("Tile is "+tile+"");
-			// System.out.println("x_kw is "+x_kw);
-			// System.out.println("tile.get(x_kw) is " + tile.get(x_kw));
-		        
-			int tile_x = ((Long)tile.get(x_kw)).intValue(),
-			    tile_y = ((Long)tile.get(y_kw)).intValue(),
-			    rotation_degrees = ((Long)tile.get(Keyword.intern( "rotation"))).intValue() * 90;
-			Keyword tileset_index = (Keyword)tile.get(Keyword.intern( "tileset"));
-
-			List<List<BufferedImage>> tileset = tileset_collection.get(tileset_index);
-			BufferedImage imgtile = tileset.get(tile_x).get(tile_y);
-
-			if(rotation_degrees != 0) {
-			    imgtile = Rotate(imgtile, rotation_degrees);
-			}
-
-			if(opacity > 0) {
-			    if(opacity < 255) {
-				map_g.drawImage(SetOpacity(imgtile, (double)opacity), x * 50, y * 50, null);
-			    }
-			    else map_g.drawImage(imgtile, x * 50, y * 50, null);
-			}
-			    
+			g.drawImage(tile_surface, null, x * TILEW, y * TILEW);
 		    }
-		}
+		}			
+
+		if(opacity <= 0 || opacity >= 255)
+		    final_g.drawImage(layer_surface, null, 0, 0);
+		else final_g.drawImage(SetOpacity(layer_surface, (double)opacity), null, 0, 0);
 	    }
 
-	    Keyword selected_tool = (Keyword)selectedtool_atom.deref();
-
-	    if(selected_tool.equals(Keyword.intern("hit-tool"))) {
-		Object MAP = map_atom.deref();
-		for(int x = 0; x < w; x++)
-		    for(int y = 0; y < h; y++) {
-			
-			if(get_hitdata.invoke(MAP, x, y).equals(true)) {
-			    map_g.setColor(new Color(255, 0, 0, 112));
-			}
-			else map_g.setColor(new Color(0, 255, 0, 112));
-
-			map_g.fill(new Rectangle(x * TILEW, y * TILEW,
-						 TILEW, TILEW));
-		    }
-	    }
-
-	    System.out.println("Rendered. Swapping buffers");
-				
-	    Graphics2D gg = visible_buffer.createGraphics();
-	    gg.setColor(Color.BLACK);
-	    gg.drawImage(drawing_buffer, null, 0, 0);
+	    // TODO implement hit-data rendering when the new tool infrastructure is up and running
+	    
 
 	}
 	catch(Exception ex) {
 	    ex.printStackTrace();
-	}
-	finally {
-	    rendering = false;
-	}
+	}	
 
-	return visible_buffer;
+	return final_surface;
     }
     
-    public BufferedImage Rotate(BufferedImage img, int degrees)
+    public static BufferedImage Rotate(BufferedImage img, int degrees)
     {
 	double w = img.getWidth(), h = img.getHeight();
 	BufferedImage new_img = new BufferedImage((int)w, (int)h, BufferedImage.TYPE_INT_ARGB);
@@ -181,7 +105,7 @@ public class map_renderer
 	return new_img;	
     }
 
-    public BufferedImage SetOpacity(BufferedImage img, double opacity)
+    public static BufferedImage SetOpacity(BufferedImage img, double opacity)
     {
 	if(opacity > 255 || opacity < 0) throw new RuntimeException("Opacity should be in-between 0 <= opacity <= 255");
 	BufferedImage new_img = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);

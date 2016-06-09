@@ -43,8 +43,6 @@
 (defn get-content [f]  
   (let [current-tool-view (->> "TODO tools are broken"
                                make-widget)]
-    ;; TODO fix
-    ;; (def map-renderer (map_renderer. current-map-atom tileset-atom selected-tool))  
     (left-right-split
      (vertical-panel
       :items

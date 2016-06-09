@@ -4,4 +4,5 @@
 
 (defn tileset! [path]
   (r/register-element! (keyword (gensym "TILESET__")) {:name "New tileset"
-                                                       :images (load-tileset path)}))
+                                                       :images (load-tileset path)
+                                                       :type :tileset}))

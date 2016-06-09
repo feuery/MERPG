@@ -13,7 +13,7 @@
          (map #(get % key -1))
          (apply max))
     (println "Empty collection")))
-  
+
 (defn registry-to-layer
   [registry layer-id]
   (let [mapid (-> registry
@@ -55,23 +55,37 @@
   (def id2 (merpg.mutable.maps/map! 2 2 5)))
 
 (def local-registry (r/events))
-
 (def layers-view (->> local-registry
+                      ;; registry-to-layer builds up the data in a way that you can refer to layer 0's tile at [1 2] with the form (get-in @layers-view [0 1 2])
+                      ;; thus we can't simply (map second), that loads only the metadata
                       (r/map (fn [r]
+                               
                                (->> r
                                     (filter #(and
                                               (= (-> % second :type) :layer)
                                               (= (-> % second :subtype) :layer)))
-                                    (map first)
-                                    ;; registry-to-layer builds up the data in a way that you can refer to layer 0's tile at [1 2] with the form (get-in @layers-view [0 1 2])
-                                    ;; thus we can't simply (map second), that loads only the metadata
+                                    (mapv first)
                                     (mapv #(registry-to-layer @local-registry %)))))))
 
 (defn renderable-layers-of!
   "Returns layers associated with the map-id in a renderable form (with tiles)"
   [map-id]
+  ;; TODO we need an ordering to the layers
+  ;; and the process of sorting has to be implemented here
   (->> @layers-view
        (filterv #(= map-id
                       (-> %
                           (get-in [0 0])
                           :map-id)))))
+
+;; Eka asia aamulla, rakenna tähän automaaginen järjestys
+(defn layer-metadata-of!
+  "Returns layer-metadatas associated with the map-id"
+  [map-id]
+  (->> @local-registry
+
+       (filter #(and
+                  (= (-> % second :type) :layer)
+                  (= (-> % second :subtype) :layer)
+                  (= (-> % second :parent-id) map-id)))
+       (mapv second)))

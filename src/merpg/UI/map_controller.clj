@@ -86,7 +86,9 @@
   []
   (let [c (canvas :paint (fn [_ g]
                            ;; TODO fix to support multiple maps :D
-                           (.drawImage g (first @rendered-maps) nil 0 0)))]
+                           (if (realized? rendered-maps)
+                               (.drawImage g (first @rendered-maps) nil 0 0)
+                               (.drawImage g (image 100 100 :color "#FF0000") nil 0 0))))]
     (remove-rendered-map-watcher :map-controller)
     (add-rendered-map-watcher #(do
                                  ;; (println "Repainting canvas")

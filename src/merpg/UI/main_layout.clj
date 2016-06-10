@@ -1,7 +1,7 @@
 (ns merpg.UI.main-layout
   (:require [seesaw.core :refer [frame border-panel flow-panel make-widget dispose! config! show!
                                  vertical-panel left-right-split top-bottom-split alert
-                                 button menubar menu menu-item]]
+                                 button menubar menu menu-item label]]
             [environ.core :refer [env]]
             [seesaw.bind :as b]
             [seesaw.chooser :refer :all]
@@ -21,17 +21,8 @@
             [merpg.immutable.map-layer-editing :refer :all]
             [merpg.util :refer [vec-remove]]
             [merpg.2D.core :as dd]
-
+            [merpg.mutable.tools :refer [selected-tool-ui]]
             [merpg.mutable.maps :refer [map!]]))
-
-(defn do-resize! [map-atom width height
-                  horizontal-anchor
-                  vertical-anchor
-                  map-renderer]
-  (swap! map-atom #(resize % width height
-                           :horizontal-anchor horizontal-anchor
-                           :vertical-anchor vertical-anchor))
-  (.resize_happened map-renderer))
 
 (defn linux? []
   (= (System/getProperty "os.name") "Linux"))
@@ -40,8 +31,10 @@
   (.contains (System/getProperty "os.name") "Windows"))
 
 (defn get-content [f]  
-  (let [current-tool-view (->> "TODO tools are broken"
-                               make-widget)]
+  (let [current-tool-view (label :text (str @selected-tool-ui))]
+    (b/bind selected-tool-ui
+            (b/transform str)
+            (b/property current-tool-view :text))
     (left-right-split
      (vertical-panel
       :items
@@ -177,19 +170,13 @@
                                                             (reset! current-map-atom (get map-set @current-map-index-atom))))))
                                          (alert "TODO broken"))])])]))
 
-(defmacro building? [] ;;We do not care about $mbuild on runtime, only when `lein uberjar` is running
-  ;; (println "BUILDING-FLAG IS SET TO TRUE")
-  ;; (println "INVERT IT OR REPL DIES WITH YOU FRAME")
-  `(do false))
-
 (defn show-mapeditor []
   
   (def f (frame :width 800
                 :height 600
                 :visible? true
                 :menubar (make-menu)
-                :on-close (if (building?)
-                            :exit
-                            :hide)
-                ))
+                :on-close 
+                            ;; :exit
+                            :hide))
   (config! f :content (get-content f)))

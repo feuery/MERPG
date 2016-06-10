@@ -5,12 +5,18 @@
             [merpg.IO.tileset :refer [tileset-to-img]]
             [seesaw.core :refer :all]
             [seesaw.mouse :refer [location] :rename {location mouse-location}]
-            [clojure.pprint :refer :all])
+            [clojure.pprint :refer :all]
+
+            [merpg.mutable.tileset-rview :refer :all])
   (:import [javax.swing JScrollBar]
            [java.awt.event AdjustmentListener]))
 
 (defn tileset-controller []
-  (:canvas (bindable-canvas (atom nil)
-                   (fn [_]
-                     (draw-to-surface (image 100 100 :color "#FFFFFF")
-                                      (Draw "TODO tileset-controller is broken" [0 0]))))))
+  (let [c (canvas :paint
+                  (fn [_ g]
+                    (if (realized? rendered-tilesets)
+                      (.drawImage g (first @rendered-tilesets) nil 0 0)
+                      (.drawImage g (image 100 100 :color "#00FF00") nil 0 0))))]
+    (remove-rtileset-watcher :tileset)
+    (add-rtileset-watcher #(repaint! c) :tileset)
+    (scrollable c)))

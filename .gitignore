@@ -20,3 +20,6 @@
 /src/merpg/macros/test_registry.clj~
 /src/merpg/mutable/registry_views.clj~
 /src/merpg/mutable/tileset.clj~
+/src/merpg/mutable/tileset_rview.clj~
+/repl_demo_listing.clj
+/repl_demo_listing.clj~

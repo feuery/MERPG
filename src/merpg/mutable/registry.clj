@@ -14,13 +14,19 @@
    (swap! registry update id fn)))
 
 (defn register-element!
-  "Returns id"
+  "Returns id. Except for the [id element & rest] arity"
   ([id element]
    (swap! registry assoc id element)
    id)
   ([element]
    (let [id (keyword (gensym))]
-     (register-element! id element))))
+     (register-element! id element)))
+  ([id element & rest]
+   {:pre [(even? (count rest))]}
+
+   (register-element! id element)
+   (doseq [[key element] (partition 2 rest)]
+     (register-element! key element))))
 
 (defn peek-registry [id]
   (get @registry id))

@@ -6,7 +6,9 @@
 
 (defn layer!
   "Creates layer's tiles. Returns the id layer is registered with."
-  [W H & {:keys [hit? parent-id] :or {hit? false parent-id nil}}]
+  [W H & {:keys [hit? parent-id order] :or {hit? false
+                                            parent-id nil
+                                            order -1}}]
   (let [id (keyword (gensym "LAYER__"))]
     (doseq [[map-x map-y]
             (for [x (range W)
@@ -21,6 +23,7 @@
                              :visible? true
                              :type :layer
                              :parent-id parent-id
+                             :order order
                              :subtype (if hit?
                                         :hitlayer
                                         :layer)})))

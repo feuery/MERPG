@@ -9,6 +9,7 @@
             [merpg.UI.tool-box :refer :all]
             [merpg.util :refer [abs enqueue! dequeue!]]
             [merpg.mutable.registry-views :refer [add-rendered-map-watcher remove-rendered-map-watcher rendered-maps]]
+            [merpg.mutable.registry :refer [peek-registry]]
             
             [seesaw.core :refer [frame config! listen alert button repaint! border-panel input scrollable canvas]]
             [seesaw.mouse :refer [location] :rename {location mouse-location}]
@@ -86,9 +87,10 @@
   []
   (let [c (canvas :paint (fn [_ g]
                            ;; TODO fix to support multiple maps :D
-                           (if (realized? rendered-maps)
-                               (.drawImage g (first @rendered-maps) nil 0 0)
-                               (.drawImage g (image 100 100 :color "#FF0000") nil 0 0))))]
+                           (let [selected-map (peek-registry :selected-map)]
+                             (if (realized? rendered-maps)
+                               (.drawImage g (nth @rendered-maps selected-map) nil 0 0)
+                               (.drawImage g (image 100 100 :color "#FF0000") nil 0 0)))))]
     (remove-rendered-map-watcher :map-controller)
     (add-rendered-map-watcher #(do
                                  ;; (println "Repainting canvas")

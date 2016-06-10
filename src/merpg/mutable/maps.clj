@@ -9,13 +9,16 @@
 (defn map!
   "Map-constructor. Not to be confused with the HOF map. Or Hashmaps.
 
+  If no objects with :type :map exist in registry when calling this, this creates also :selected-layer, :selected-map and :selected-tool.
+
   Returns the id map is registered with"
   [W H layer-count]
-  (let [id (keyword (gensym "MAP__"))
+  (let [first? (not (some #(= (-> % second :type) :map) @r/registry))
+        id (keyword (gensym "MAP__"))
         layers (->> layer-count
                     range
-                    (map (fn [_]
-                           (l/layer! W H :parent-id id)))
+                    (map (fn [order]
+                           (l/layer! W H :parent-id id :order order)))
                     doall)
         hit-layer (l/layer! W H :hit? true :parent-id id)] ;;we need hitlayer too
     (doseq [layer-id layers]
@@ -29,6 +32,10 @@
                              :zonetiles {[0 0] #(s/alert "TODO: design real zonetiles")}
                              :type :map})
 
+    (when first?
+      (r/register-element! :selected-layer 0
+                           :selected-map 0
+                           :selected-tool :pen))
     id))
 
 (deftest map-testing

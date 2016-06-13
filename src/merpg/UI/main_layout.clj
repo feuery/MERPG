@@ -26,7 +26,8 @@
             [merpg.2D.core :as dd]
             [merpg.mutable.tools :as tools]
             [merpg.mutable.maps :refer [map!]]
-            [merpg.mutable.registry :as re]))
+            [merpg.mutable.registry :as re]
+            [merpg.mutable.to-registry-binding :as trb]))
 
 (defn linux? []
   (= (System/getProperty "os.name") "Linux"))
@@ -52,8 +53,6 @@
     (b/bind tools/all-tools-ui
             (b/transform tool-collection-to-buttons)
             (b/property all-tools-view :items))
-    (def selected-tileset-index (atom 0)) ;;registerify
-    (add-watch selected-tileset-index :asd #(alert %4))
     (left-right-split
      (vertical-panel
       :items
@@ -106,7 +105,7 @@
                           (alert "TODO move-down is broken"))])
        
        "Tilesets"
-       (atom-to-jlist tileset-meta-ui :selected-index-atom selected-tileset-index )
+       (atom-to-jlist tileset-meta-ui :selected-index-atom (trb/atom->registry-binding :selected-tileset))
        
        (button :text "Load tileset"
                :listen

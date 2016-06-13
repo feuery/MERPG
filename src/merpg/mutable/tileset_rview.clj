@@ -1,5 +1,6 @@
 (ns merpg.mutable.tileset-rview
   (:require [reagi.core :as r]
+            [clojure.core.async :as a]
             [merpg.mutable.registry :as re]
             [merpg.mutable.registry-views :as rv]
             [merpg.mutable.tools :as t]
@@ -16,17 +17,18 @@
   (when-let [{tileset :images} (re/peek-registry tileset-id)]
     (let [w (count tileset)
           h (count (first tileset))]
-      (dd/draw-to-surface (dd/image (* 50 w) (* 50 h))
-                          (dotimes [x w]
-                            (dotimes [y h]
-                              (dd/Draw (get-in tileset [x y]) [(* x 50)
-                                                            (* y 50)])))))))
+      [tileset-id (dd/draw-to-surface (dd/image (* 50 w) (* 50 h))
+                                      (dotimes [x w]
+                                        (dotimes [y h]
+                                          (dd/Draw (get-in tileset [x y]) [(* x 50)
+                                                                           (* y 50)]))))])))
 (def rendered-tilesets (->> rv/local-registry
                             (r/map (fn [r]
                                      (->> r
                                           (filter #(= (-> % second :type) :tileset))
-                                          first
-                                          (pmap render-tileset!))))
+                                          (map first)
+                                          (pmap render-tileset!)
+                                          (into {}))))
                             (r/map (fn [r]
                                      (doseq [[_ func] @rtilesets-watchers]
                                        (func))
@@ -37,4 +39,19 @@
                           (r/map (fn [r]
                                    (->> r
                                         (filterv #(= (-> % second :type) :tileset)))))))
-                                        
+
+
+(def selected-tileset-view (->> rv/local-registry
+                             (r/filter #(and (coll? %)
+                                             (contains? % :selected-tileset)))
+                             (r/map :selected-tileset)))
+
+(def c (a/chan))
+(def selected-tileset-ui (atom :nil :validator (complement coll?)))
+
+(r/subscribe selected-tileset-view c)
+
+(a/go-loop [data (a/<! c)]
+  (when (some? data)
+    (reset! selected-tileset-ui data)
+    (recur (a/<! c))))

@@ -11,3 +11,4 @@
 (r/register-element! :initial {:name "Initial tileset"
                                :images (load-tileset (image 50 50 :color "#0000FF"))
                                :type :tileset})
+(r/register-element! :selected-tileset :initial)

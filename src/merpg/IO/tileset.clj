@@ -17,8 +17,12 @@
          (map vec)
          vec)))
 
-(defn load-tileset [path]
-  (img-to-tileset (image path)))
+(defn load-tileset
+  "Path can be either string or bufferedimage"
+  [path]
+  (if (string? path)
+    (img-to-tileset (image path))
+    (img-to-tileset path)))
 
 (defn tileset-to-img [tileset]
   (if-not (nil? tileset)

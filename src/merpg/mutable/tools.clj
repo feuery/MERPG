@@ -1,34 +1,80 @@
 (ns merpg.mutable.tools
   (:require [reagi.core :as r]
             [clojure.core.async :as a]
+            [clojure.pprint :refer [pprint]]
             
             [merpg.mutable.registry :as re]
             [merpg.mutable.registry-views :as rv]))
 
 (defn deftool
   "There's yet no api for tools decided"
-  [id fn]
+  [id func]
   (re/register-element! id {:name (str id)
-                            :fn fn}))
+                            :type :tool
+                            :fn func}))
+
+(deftool :pen (fn [& _]
+                (println "You used pen!")))
+
+(deftool :hit-tool (fn [& _]
+                     (println "You used hit-tool!")))
+
+(deftool :rotater (fn [& _]
+                (println "You used rotater!")))
 
 ;; registry<->gui - binding follows...
 
 (defmacro make-atom-binding
   "Creates a reagi event stream with the name \"$id-view\" and an atom with the name \"$id-ui\" where the changes in the event stream will be propagated. This is backed by an core.async channel. This hack exists because seesaw.bind can't bind to an event stream but needs something one can set watches on. "
-  [id & forms]
+  [id {:keys [allow-seq?] :or [allow-seq? true]} & forms]
   (let [view-name (-> id (str "-view") symbol)
-        atom-name (-> id (str "-ui") symbol)]
+        atom-name (-> id (str "-ui") symbol)
+        atom-str (str atom-name)
+        atom-script `(def ~atom-name (atom nil :validator
+                                           ~(if-not allow-seq?
+                                               `(complement coll?)
+                                               `(constantly true))))]
+                                                   
     `(do
        (def ~view-name ~@forms)
-       (def ~atom-name (atom nil))
+       ~atom-script
        (def ch# (a/chan))
        (r/subscribe ~view-name ch#)
-       (a/go-loop [data# (a/<! ch#)]
-         (when (some? data#)
-           (reset! ~atom-name data#)
-           (recur (a/<! ch#)))))))
+       (a/go-loop []
+         
+           (if-let [asd# (a/<! ch#)]
+             (do
+               (reset! ~atom-name asd#)
+               (recur))
+             (println "it seems we got a nil on " ~atom-str))))))
 
-(make-atom-binding selected-tool
+;; (make-atom-binding selected-tool {:allow-seq? true}
+;;                    (->> rv/local-registry
+;;                         (r/filter #(and (coll? %)
+;;                             (contains? % :selected-tool)))
+;;                         (r/map :selected-tool)))
+
+
+(make-atom-binding all-tools {:allow-seq? true}
                    (->> rv/local-registry
-                        (r/map :selected-tool)
-                        (r/filter some?)))
+                        (r/map (fn [r]
+                                 (->> r
+                                      (filter #(= (-> % second :type) :tool))
+                                      (mapv first))))))
+
+(def selected-tool-view (->> rv/local-registry
+                             (r/filter #(and (coll? %)
+                                             (contains? % :selected-tool)))
+                             (r/map :selected-tool)))
+
+(def c (a/chan))
+(def selected-tool-ui (atom :nil :validator (complement coll?)))
+
+(r/subscribe selected-tool-view c)
+
+(a/go-loop [data (a/<! c)]
+  (when (some? data)
+    (reset! selected-tool-ui data)
+    (recur (a/<! c))))
+
+(println "tools.clj loaded")

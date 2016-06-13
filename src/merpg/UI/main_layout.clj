@@ -7,6 +7,7 @@
             [seesaw.chooser :refer :all]
             [clojure.stacktrace :refer [print-stack-trace]]
             [clojure.string :as str]
+            [clojure.pprint :refer [pprint]]
             [merpg.IO.tileset :refer [load-tileset img-to-tileset]]
             [merpg.IO.out :refer [dump-image read-image]]
             [merpg.UI.map-controller :refer [map-controller
@@ -21,8 +22,9 @@
             [merpg.immutable.map-layer-editing :refer :all]
             [merpg.util :refer [vec-remove]]
             [merpg.2D.core :as dd]
-            [merpg.mutable.tools :refer [selected-tool-ui]]
-            [merpg.mutable.maps :refer [map!]]))
+            [merpg.mutable.tools :as tools]
+            [merpg.mutable.maps :refer [map!]]
+            [merpg.mutable.registry :as re]))
 
 (defn linux? []
   (= (System/getProperty "os.name") "Linux"))
@@ -30,16 +32,28 @@
 (defn windows? []
   (.contains (System/getProperty "os.name") "Windows"))
 
+(defn tool-collection-to-buttons [tool-col]
+  (pprint tool-col)
+  (->> tool-col
+       (mapv (fn [s]
+               (button :text (str s)
+                       :listen [:action (fn [_]
+                                          (re/register-element! :selected-tool
+                                                                s))])))))
+
 (defn get-content [f]  
-  (let [current-tool-view (label :text (str @selected-tool-ui))]
-    (b/bind selected-tool-ui
+  (let [current-tool-view (label :text (str @tools/selected-tool-ui))
+        all-tools-view (vertical-panel :items (tool-collection-to-buttons @tools/all-tools-ui))]
+    (b/bind tools/selected-tool-ui
             (b/transform str)
             (b/property current-tool-view :text))
+    (b/bind tools/all-tools-ui
+            (b/transform tool-collection-to-buttons)
+            (b/property all-tools-view :items))
     (left-right-split
      (vertical-panel
       :items
-      [;; (tool-frame! tool-atom current-tool-fn selected-tool)
-       "TODO tool-frame is broken"
+      [all-tools-view
        "Current tool"
        current-tool-view
        

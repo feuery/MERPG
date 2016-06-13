@@ -10,5 +10,4 @@
                  [reagi "0.10.1"]]
   :main merpg.core
   :java-source-paths ["java-src"]
-  :profiles {:uberjar {:aot :all}}
-  )
+  :profiles {:uberjar {:aot :all}})

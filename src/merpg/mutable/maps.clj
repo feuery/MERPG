@@ -35,8 +35,11 @@
     (when first?
       (r/register-element! :selected-layer 0
                            :selected-map 0
-                           :selected-tool :pen))
+                           :selected-tool :pen)
+      (println ":selected-tool registered"))
     id))
+
+(map! 1 1 1) ;;initial 
 
 (deftest map-testing
   (binding [r/registry (atom {})]

@@ -16,6 +16,8 @@
 (defn register-element!
   "Returns id. Except for the [id element & rest] arity"
   ([id element]
+   {:pre [(or (not= id :selected-tool)
+              (not (coll? element)))]}
    (swap! registry assoc id element)
    id)
   ([element]

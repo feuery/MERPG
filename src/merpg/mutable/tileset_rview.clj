@@ -2,6 +2,7 @@
   (:require [reagi.core :as r]
             [merpg.mutable.registry :as re]
             [merpg.mutable.registry-views :as rv]
+            [merpg.mutable.tools :as t]
             [merpg.2D.core :as dd]))
 
 (def rtilesets-watchers (atom {}))
@@ -30,3 +31,10 @@
                                      (doseq [[_ func] @rtilesets-watchers]
                                        (func))
                                      r))))
+
+(t/make-atom-binding tileset-meta {:allow-seq? true}
+                     (->> rv/local-registry
+                          (r/map (fn [r]
+                                   (->> r
+                                        (filterv #(= (-> % second :type) :tileset)))))))
+                                        

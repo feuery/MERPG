@@ -9,6 +9,8 @@
             [clojure.string :as str]
             [clojure.pprint :refer [pprint]]
             [merpg.IO.tileset :refer [load-tileset img-to-tileset]]
+            [merpg.mutable.tileset :refer [tileset!]]
+            [merpg.mutable.tileset-rview :refer [tileset-meta-ui]]
             [merpg.IO.out :refer [dump-image read-image]]
             [merpg.UI.map-controller :refer [map-controller
                                              show]]
@@ -102,25 +104,19 @@
                           (alert "TODO move-down is broken"))])
        
        "Tilesets"
-       (:canvas (bindable-canvas (atom nil)
-                                 (fn [_]
-                                   (dd/draw-to-surface (dd/image 100 100 :color "#FFFFFF")
-                                                       (dd/Draw "TODO tilesets is broken" [0 0])))))
+       (atom-to-jlist tileset-meta-ui :transformator #(-> % second :name) )
        
        (button :text "Load tileset"
                :listen
                [:action (fn [_]
-                          (alert "TODO move-down is broken")
-                          (comment
-                            (choose-file :filters [["Tilesetit" ["png" "jpg" "jpeg"]]]
+                          (choose-file :filters [["Tilesetit" ["png" "jpg" "jpeg"]]]
                                          :remember-directory? true
                                          :multi? true :success-fn
                                          (fn [_ files]
                                            (let [tilesets (->> files
                                                                (map str)
-                                                               (map load-tileset))]
-                                             (doseq [ts tilesets]
-                                               (swap! tileset-atom assoc (keyword (gensym)) ts)))))))])
+                                                               (mapv tileset!))]
+                                             (println "Loaded tilesets!")))))])
        (button :text "Remove tileset"
                :listen
                [:action (fn [_]

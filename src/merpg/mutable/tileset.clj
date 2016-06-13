@@ -8,6 +8,6 @@
                                                        :images (load-tileset path)
                                                        :type :tileset}))
 
-(r/register-element! :initial {:name "New tileset"
+(r/register-element! :initial {:name "Initial tileset"
                                :images (load-tileset (image 50 50 :color "#0000FF"))
                                :type :tileset})

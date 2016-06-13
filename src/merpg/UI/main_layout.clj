@@ -52,6 +52,8 @@
     (b/bind tools/all-tools-ui
             (b/transform tool-collection-to-buttons)
             (b/property all-tools-view :items))
+    (def selected-tileset-index (atom 0)) ;;registerify
+    (add-watch selected-tileset-index :asd #(alert %4))
     (left-right-split
      (vertical-panel
       :items
@@ -104,7 +106,7 @@
                           (alert "TODO move-down is broken"))])
        
        "Tilesets"
-       (atom-to-jlist tileset-meta-ui :transformator #(-> % second :name) )
+       (atom-to-jlist tileset-meta-ui :selected-index-atom selected-tileset-index )
        
        (button :text "Load tileset"
                :listen

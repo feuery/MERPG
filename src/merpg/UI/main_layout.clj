@@ -20,6 +20,7 @@
             [merpg.UI.BindableList :refer :all]
             [merpg.UI.property-editor :refer :all]
             [merpg.UI.dialogs.resize-dialog :refer [resize-dialog]]
+            [merpg.UI.current-tile-view :refer :all]
             [merpg.immutable.basic-map-stuff :refer :all]
             [merpg.immutable.map-layer-editing :refer :all]
             [merpg.util :refer [vec-remove]]
@@ -66,10 +67,8 @@
                           (alert "TODO Resize is currently broken"))])
 
        "Current tile"           
-       (:canvas (bindable-canvas (atom nil)
-                                 (fn [_]
-                                   (dd/draw-to-surface (dd/image 100 100 :color "#FFFFFF")
-                                                       (dd/Draw "TODO current tile is broken" [0 0])))))
+       (current-tile-view)
+       
        "Maps"
        (atom-to-jlist map-metas-ui :selected-index-atom (trb/atom->registry-binding :selected-map))
         

@@ -3,6 +3,7 @@
             [merpg.mutable.registry-views :as rv]
             [merpg.mutable.layers :as l]
             [merpg.mutable.tools :as tt]
+            [merpg.mutable.tiles :as ti]
             [merpg.macros.multi :refer [def-real-multi]]
             [seesaw.core :as s]
             [reagi.core :as r]
@@ -37,8 +38,9 @@
 
     (when first?
       (re/register-element! :selected-layer (first layers)
-                           :selected-map id
-                           :selected-tool :pen))
+                            :selected-map id
+                            :selected-tool :pen
+                            :selected-tile (ti/tile 0 0 :initial 0)))
     id))
 
 (map! 1 1 1) ;;initial 

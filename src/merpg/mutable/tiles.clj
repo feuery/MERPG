@@ -1,11 +1,18 @@
 (ns merpg.mutable.tiles
-  (:require [merpg.mutable.registry :as r]
+  (:require [merpg.mutable.registry :as re]
+            [merpg.mutable.registry-views :as rv]
+            [merpg.2D.core :refer :all]
+            [reagi.core :as r]
             [schema.core :as s]))
+
+(defn tile [x y tileset rotation]
+  (zipmap [:x :y :tileset :rotation]
+          [x y tileset rotation]))
 
 (defn tile!
   "Returns id tile is registered with"
   [x y tileset rotation map-x map-y parent-id]
-  (r/register-element! (zipmap
+  (re/register-element! (zipmap
                         [:x
                          :y
                          :tileset
@@ -20,9 +27,31 @@
   "Returns id tile is registered with"
   [can-hit? :- s/Bool
    map-x map-y parent-id]
-  (r/register-element!
+  (re/register-element!
    (zipmap [:can-hit?
             :map-x :map-y
             :parent-id]
            [can-hit? map-x map-y parent-id])))
 
+(defn render-tile! [tile]
+  (let [{:keys [x y tileset]} tile
+        {imgs :images} (re/peek-registry tileset)]
+    (get-in imgs [x y])))
+
+(def current-tile-watchers (atom {}))
+(defn add-current-tile-watcher [f k]
+  (swap! current-tile-watchers assoc k f))
+
+(defn remove-current-tile-watcher [k]
+  (swap! current-tile-watchers dissoc k))
+
+(def selected-tile (->> rv/local-registry
+                        (r/filter #(and (coll? %)
+                                        (contains? % :selected-tile)))
+                        (r/map :selected-tile)
+                        (r/map render-tile!)
+                        (r/map (fn [d]
+                                 (doseq [[_ func] @current-tile-watchers]
+                                   (func))
+                                 d))))
+                        

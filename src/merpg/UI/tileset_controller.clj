@@ -33,8 +33,8 @@
                                                         vec)))))
                    :mouse-dragged (fn [e]
                                     (let [[x-pxl y-pxl] (mouse-location e)
-                                          [x-tile y-tile] [(/ x-pxl 50)
-                                                           (/ y-pxl 50)]]
+                                          [x-tile y-tile] [(long (/ x-pxl 50))
+                                                           (long (/ y-pxl 50))]]
                                       (when-not (get-in @mouse-visited-map [x-tile y-tile])
                                         (post-mouse-event! x-pxl y-pxl :tileset-controller)
                                         (swap! mouse-visited-map update-in [x-tile y-tile] not))))])]

@@ -25,7 +25,7 @@
             [merpg.util :refer [vec-remove]]
             [merpg.2D.core :as dd]
             [merpg.mutable.tools :as tools]
-            [merpg.mutable.maps :refer [map!]]
+            [merpg.mutable.maps :refer [map! map-metas-ui]]
             [merpg.mutable.layers :refer [layer-metas-ui]]
             [merpg.mutable.registry :as re]
             [merpg.mutable.to-registry-binding :as trb]))
@@ -71,10 +71,8 @@
                                    (dd/draw-to-surface (dd/image 100 100 :color "#FFFFFF")
                                                        (dd/Draw "TODO current tile is broken" [0 0])))))
        "Maps"
-       (:canvas (bindable-canvas (atom nil)
-                                 (fn [_]
-                                   (dd/draw-to-surface (dd/image 100 100 :color "#FFFFFF")
-                                                       (dd/Draw "TODO map-list is broken" [0 0])))))
+       (atom-to-jlist map-metas-ui :selected-index-atom (trb/atom->registry-binding :selected-map))
+        
        (button :text "Add map"
                :listen
                [:action (fn [_]

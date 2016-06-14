@@ -1,8 +1,11 @@
 (ns merpg.mutable.maps
-  (:require [merpg.mutable.registry :as r]
+  (:require [merpg.mutable.registry :as re]
+            [merpg.mutable.registry-views :as rv]
             [merpg.mutable.layers :as l]
+            [merpg.mutable.tools :as tt]
             [merpg.macros.multi :refer [def-real-multi]]
             [seesaw.core :as s]
+            [reagi.core :as r]
             [clojure.test :refer :all]
             [clojure.pprint :refer [pprint]]))
 
@@ -13,7 +16,7 @@
 
   Returns the id map is registered with"
   [W H layer-count]
-  (let [first? (not (some #(= (-> % second :type) :map) @r/registry))
+  (let [first? (not (some #(= (-> % second :type) :map) @re/registry))
         id (keyword (gensym "MAP__"))
         layers (->> layer-count
                     range
@@ -22,18 +25,18 @@
                     doall)
         hit-layer (l/layer! W H :hit? true :parent-id id)] ;;we need hitlayer too
     (doseq [layer-id layers]
-      (r/update-registry layer-id
+      (re/update-registry layer-id
                          (assoc layer-id :parent-id id)))
 
-    (r/update-registry hit-layer
+    (re/update-registry hit-layer
                        (assoc hit-layer :parent-id id))
 
-    (r/register-element! id {:name (str id)
+    (re/register-element! id {:name (str id)
                              :zonetiles {[0 0] #(s/alert "TODO: design real zonetiles")}
                              :type :map})
 
     (when first?
-      (r/register-element! :selected-layer (first layers)
+      (re/register-element! :selected-layer (first layers)
                            :selected-map id
                            :selected-tool :pen))
     id))
@@ -41,11 +44,11 @@
 (map! 1 1 1) ;;initial 
 
 (deftest map-testing
-  (binding [r/registry (atom {})]
+  (binding [re/registry (atom {})]
     (let [layer-count 3
           map-id (map! 10 10 layer-count)]
-      (is (count @r/registry) 409)
-      (let [layers (->> @r/registry
+      (is (count @re/registry) 409)
+      (let [layers (->> @re/registry
                     (filter #(and (= (:type (second %)) :layer)
                                   (= (:parent-id (second %)) map-id)))
                     (map second))
@@ -54,3 +57,10 @@
         (is (not (nil? hit-layer)))
         (is (count hit-data) 1)
         (is (count layers) layer-count)))))
+
+(tt/make-atom-binding map-metas {:allow-seq? true}
+                      (->> rv/local-registry
+                           (r/map (fn [r]
+                                    (->> r
+                                         (filterv #(= (-> % second :type) :map))
+                                         (into {}))))))

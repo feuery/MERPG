@@ -5,6 +5,8 @@
             [merpg.immutable.map-layer-editing :refer [get-tile
                                                        set-tile]]
             [merpg.mutable.tool :refer :all]
+            [merpg.events.mouse :refer [post-mouse-event!]]
+            [merpg.UI.draggable-canvas :refer :all]
             [merpg.2D.core :refer :all]
             [merpg.UI.tool-box :refer :all]
             [merpg.util :refer [abs enqueue! dequeue!]]
@@ -82,20 +84,28 @@
                                        (-> Map zonetiles
                                            (assoc [layer layer-x layer-y] new-fn))))))))
 
+(defn map-surface! []
+  (let [selected-map (peek-registry :selected-map)]
+    (if (realized? rendered-maps)    
+      (get @rendered-maps selected-map)
+      (image 100 100 :color "#FF0000"))))
+
 (defn map-controller
   "Returns the mainview, on which we can edit the map"
   []
-  (let [c (canvas :paint (fn [_ g]
-                           ;; TODO fix to support multiple maps :D
-                           (let [selected-map (peek-registry :selected-map)]
-                             (if (realized? rendered-maps)
-                               (.drawImage g (get @rendered-maps selected-map) nil 0 0)
-                               (.drawImage g (image 100 100 :color "#FF0000") nil 0 0)))))]
+  (let [c (draggable-canvas :paint-fn
+                            (fn [_ g]
+                              (.drawImage g (map-surface!) nil 0 0))
+                            :surface-provider map-surface!
+                            :draggable-fn (fn [e]
+                                            (let [[x y] (mouse-location e)]
+                                              (post-mouse-event! x y :map-controller))))]
+    
     (remove-rendered-map-watcher :map-controller)
     (add-rendered-map-watcher #(do
                                  ;; (println "Repainting canvas")
                                  (repaint! c))
-                                 :map-controller)
+                              :map-controller)
     (scrollable c)))
 
 (defn show [f stuff]

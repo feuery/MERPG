@@ -13,8 +13,10 @@
                             :type :tool
                             :fn func}))
 
-(deftool :pen (fn [& _]
-                (println "You used pen!")))
+(deftool :pen (fn [tile-id]
+                (locking *out*
+                  (println "You used pen!")
+                  (println "Tile-id: " tile-id))))
 
 (deftool :hit-tool (fn [& _]
                      (println "You used hit-tool!")))

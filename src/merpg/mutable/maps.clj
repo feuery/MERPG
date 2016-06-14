@@ -4,6 +4,7 @@
             [merpg.mutable.layers :as l]
             [merpg.mutable.tools :as tt]
             [merpg.mutable.tiles :as ti]
+            [merpg.events.mouse :as m]
             [merpg.macros.multi :refer [def-real-multi]]
             [seesaw.core :as s]
             [reagi.core :as r]
@@ -66,3 +67,20 @@
                                     (->> r
                                          (filterv #(= (-> % second :type) :map))
                                          (into {}))))))
+
+(def map-events (->> m/mouse-events
+                      (r/filter #(= (:source %) :map-controller))
+                      (r/map (fn [{:keys [tile-x tile-y]}]
+                               (let [layer-order-nr (-> (re/peek-registry :selected-layer)
+                                                        re/peek-registry
+                                                        :order)
+                                     {:keys [tile-id] :as tile} (get-in @rv/layers-view [layer-order-nr tile-x tile-y])
+                                     tool-id (re/peek-registry :selected-tool)
+                                     {tool-fn :fn} (re/peek-registry tool-id)]
+                                 (if (fn? tool-fn)
+                                   (do
+                                     (tool-fn tile-id)
+                                     {:success? true
+                                      :coords [tile-x tile-y]})
+                                   {:success? false
+                                    :coords [tile-x tile-y]}))))))

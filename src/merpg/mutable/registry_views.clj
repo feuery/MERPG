@@ -24,8 +24,11 @@
                    ;; get relevant tiles
                    (filter #(and (= (-> % second :type) :tile)
                                  (= (-> % second :parent-id) layer-id)))
-                   ;; drop ids and assoc map-ids to tiles
-                   (map (comp #(assoc % :map-id mapid) second)))]
+                   ;; assoc map-ids their own ids to tiles
+                   (map #(update % 1 assoc
+                                 :map-id mapid
+                                 :tile-id (first %)))
+                   (map second))]
     (if (empty? tiles)
       ;; Exception so that the tests fail.
       ;; Was it just returning nil, tests would incorrectly succeed

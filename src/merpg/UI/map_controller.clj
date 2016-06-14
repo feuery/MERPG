@@ -89,7 +89,7 @@
                            ;; TODO fix to support multiple maps :D
                            (let [selected-map (peek-registry :selected-map)]
                              (if (realized? rendered-maps)
-                               (.drawImage g (nth @rendered-maps selected-map) nil 0 0)
+                               (.drawImage g (get @rendered-maps selected-map) nil 0 0)
                                (.drawImage g (image 100 100 :color "#FF0000") nil 0 0)))))]
     (remove-rendered-map-watcher :map-controller)
     (add-rendered-map-watcher #(do

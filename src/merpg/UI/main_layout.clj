@@ -26,6 +26,7 @@
             [merpg.2D.core :as dd]
             [merpg.mutable.tools :as tools]
             [merpg.mutable.maps :refer [map!]]
+            [merpg.mutable.layers :refer [layer-metas-ui]]
             [merpg.mutable.registry :as re]
             [merpg.mutable.to-registry-binding :as trb]))
 
@@ -36,7 +37,6 @@
   (.contains (System/getProperty "os.name") "Windows"))
 
 (defn tool-collection-to-buttons [tool-col]
-  (pprint tool-col)
   (->> tool-col
        (mapv (fn [s]
                (button :text (str s)
@@ -81,10 +81,7 @@
                           (alert "TODO map-adding is broken"))])
        
        "Layers"
-       (:canvas (bindable-canvas (atom nil)
-                                 (fn [_]
-                                   (dd/draw-to-surface (dd/image 100 100 :color "#FFFFFF")
-                                                       (dd/Draw "TODO layer-list is broken" [0 0])))))
+       (atom-to-jlist layer-metas-ui :selected-index-atom (trb/atom->registry-binding :selected-layer))
        
        (button :text "New layer"
                :listen
@@ -189,5 +186,5 @@
                 :menubar (make-menu)
                 :on-close 
                             ;; :exit
-                            :hide))
+                :hide))
   (config! f :content (get-content f)))

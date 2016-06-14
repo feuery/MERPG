@@ -93,8 +93,9 @@
        (r/map (fn [r]
                 (->> r
                      (filter #(= (-> % second :type) :map))
-                     (map first)
-                     (pmap #(map_renderer/render %)))))
+                     (pmap #(do
+                              [(first %) (map_renderer/render (first %))]))
+                     (into {}))))
        ;; Side-effecting hack to make it easyish to update the gui
        (r/map (fn [r]
                 (doseq [[_ func] @rendered-maps-watchers]

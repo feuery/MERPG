@@ -33,10 +33,9 @@
                              :type :map})
 
     (when first?
-      (r/register-element! :selected-layer 0
-                           :selected-map 0
-                           :selected-tool :pen)
-      (println ":selected-tool registered"))
+      (r/register-element! :selected-layer (first layers)
+                           :selected-map id
+                           :selected-tool :pen))
     id))
 
 (map! 1 1 1) ;;initial 

@@ -112,7 +112,6 @@
                           (get-in [0 0])
                           :map-id)))))
 
-;; Eka asia aamulla, rakenna tähän automaaginen järjestys
 (defn layer-metadata-of!
   "Returns layer-metadatas associated with the map-id"
   [map-id]

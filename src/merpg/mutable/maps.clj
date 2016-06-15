@@ -68,13 +68,21 @@
                                          (filterv #(= (-> % second :type) :map))
                                          (into {}))))))
 
+(defn get-edited-tile! [tile-x tile-y]
+  (let [tool-id (re/peek-registry :selected-tool)]
+    (if (= tool-id :hit-tool)
+      (let [{:keys [tile-id] :as tile} (get-in @l/current-hitlayer-data [tile-x tile-y])]
+        tile-id)
+      (let [layer-order-nr (-> (re/peek-registry :selected-layer)
+                               re/peek-registry
+                               :order)
+            {:keys [tile-id] :as tile} (get-in @l/layers-view [layer-order-nr tile-x tile-y])]
+        tile-id))))
+
 (def map-events (->> m/mouse-events
                       (r/filter #(= (:source %) :map-controller))
                       (r/map (fn [{:keys [tile-x tile-y]}]
-                               (let [layer-order-nr (-> (re/peek-registry :selected-layer)
-                                                        re/peek-registry
-                                                        :order)
-                                     {:keys [tile-id] :as tile} (get-in @l/layers-view [layer-order-nr tile-x tile-y])
+                               (let [tile-id (get-edited-tile! tile-x tile-y)
                                      tool-id (re/peek-registry :selected-tool)
                                      {tool-fn :fn} (re/peek-registry tool-id)]
                                  (if (fn? tool-fn)

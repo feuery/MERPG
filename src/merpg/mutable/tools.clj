@@ -21,14 +21,17 @@
                                                       :y (:y selected-tile)
                                                       :tileset (:tileset selected-tile)
                                                       :rotation 0)]
-                                        (pprint tr)
                                         tr)))))
 
-(deftool :hit-tool (fn [& _]
-                     (println "You used hit-tool!")))
+(deftool :hit-tool (fn [tile-id]
+                     (re/update-registry tile-id
+                                         (update tile-id :can-hit? not))))
 
-(deftool :rotater (fn [& _]
-                (println "You used rotater!")))
+(deftool :rotater (fn [tile-id]
+                    (re/update-registry tile-id
+                                        (update tile-id :rotation #(mod (inc %) 4)))))
+                                                                     
+                      
 
 ;; registry<->gui - binding follows...
 

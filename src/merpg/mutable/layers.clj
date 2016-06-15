@@ -83,6 +83,21 @@
                                     (sort-by #(-> % second :order))
                                     (map first)
                                     (mapv #(rv/registry-to-layer @rv/local-registry %)))))))
+
+(def current-hitlayer (->> rv/local-registry
+                           (r/map (fn [r]
+                                    (->> r
+                                         (filter #(and
+                                                   (= (-> % second :type) :layer)
+                                                   (= (-> % second :subtype) :hitlayer)
+                                                   (= (-> % second :parent-id) (re/peek-registry :selected-map))))
+                                         first)))))
+
+(def current-hitlayer-data (->> current-hitlayer
+                                (r/filter some?)
+                                (r/map first)
+                                (r/map #(rv/registry-to-layer @rv/local-registry %))))
+
 (defn renderable-layers-of!
   "Returns layers associated with the map-id in a renderable form (with tiles)"
   [map-id]

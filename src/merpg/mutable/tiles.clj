@@ -30,8 +30,9 @@
   (re/register-element!
    (zipmap [:can-hit?
             :map-x :map-y
-            :parent-id]
-           [can-hit? map-x map-y parent-id])))
+            :parent-id
+            :type]
+           [can-hit? map-x map-y parent-id :tile])))
 
 (defn render-tile! [tile]
   (let [{:keys [x y tileset]} tile

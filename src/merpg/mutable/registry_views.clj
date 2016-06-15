@@ -29,7 +29,7 @@
                                  :map-id mapid
                                  :tile-id (first %)))
                    (map second))]
-    (if (empty? tiles)
+    (when (empty? tiles)
       ;; Exception so that the tests fail.
       ;; Was it just returning nil, tests would incorrectly succeed
       (throw (Exception. "tiles is empty@registry-to-layer")))

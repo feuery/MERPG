@@ -4,6 +4,7 @@
             [merpg.immutable.basic-map-stuff :refer :all]
             [merpg.immutable.map-layer-editing :refer [get-tile
                                                        set-tile]]
+            [merpg.mutable.layers :refer [current-hitlayer current-hitlayer-data]]
             [merpg.mutable.tool :refer :all]
             [merpg.events.mouse :refer [post-mouse-event!]]
             [merpg.UI.draggable-canvas :refer :all]
@@ -84,10 +85,30 @@
                                        (-> Map zonetiles
                                            (assoc [layer layer-x layer-y] new-fn))))))))
 
+(defn render-hitlayer! [w h]
+  (when (realized? current-hitlayer-data)
+    (let [hit-layer @current-hitlayer-data]
+      (-> (draw-to-surface (image w h)
+                       (doseq [[x y] (for [x (range (long (/ w 50)))
+                                           y (range (long (/ h 50)))]
+                                       [x y])]
+                         (with-color 
+                          (if (:can-hit? (get-in hit-layer [x y]))
+                            "#00FF00"
+                            "#FF0000")
+                           (Rect (* x 50) (* y 50) 50 50 :fill? true))))
+          (set-opacity 110)))))
+        
+
 (defn map-surface! []
   (let [selected-map (peek-registry :selected-map)]
     (if (realized? rendered-maps)    
-      (get @rendered-maps selected-map)
+      (let [img (get @rendered-maps selected-map)]
+        (if (= (peek-registry :selected-tool) :hit-tool)
+          (draw-to-surface img
+                           (Draw (render-hitlayer! (img-width img)
+                                                   (img-height)) [0 0]))
+          img))
       (image 100 100 :color "#FF0000"))))
 
 (defn map-controller

@@ -9,9 +9,10 @@
 
 (defn layer!
   "Creates layer's tiles. Returns the id layer is registered with."
-  [W H & {:keys [hit? parent-id order] :or {hit? false
+  [W H & {:keys [hit? parent-id order name] :or {hit? false
                                             parent-id nil
-                                            order -1}}]
+                                                 order -1
+                                                 name "New layer"}}]
   (let [id (keyword (gensym "LAYER__"))]
     (doseq [[map-x map-y]
             (for [x (range W)
@@ -21,7 +22,7 @@
         (t/hit-tile! false map-x map-y id)
         (t/tile! 0 0 :initial 0 map-x map-y id)))
 
-    (re/register-element! id {:name "New layer"
+    (re/register-element! id {:name name
                              :opacity 255
                              :visible? true
                              :type :layer
@@ -38,7 +39,9 @@
                                          (filterv #(and
                                                    (= (-> % second :parent-id) (re/peek-registry :selected-map))
                                                    (= (-> % second :type) :layer)
-                                                   (= (-> % second :subtype) :layer))))))))
+                                                   (= (-> % second :subtype) :layer)))
+                                         (sort-by #(-> % second :order))
+                                         reverse)))))
 
 (deftest layer-testing
   (binding [re/registry (atom {})]
@@ -67,3 +70,25 @@
                                                  (map re/peek-registry ))]
                              (doseq [tile real-tiles]
                                (is (:rotation tile) 1))))))))
+
+(def layers-view (->> rv/local-registry
+                      ;; registry-to-layer builds up the data in a way that you can refer to layer 0's tile at [1 2] with the form (get-in @layers-view [0 1 2])
+                      ;; thus we can't simply (map second), that loads only the metadata
+                      (r/map (fn [r]
+                               (->> r
+                                    (filter #(and
+                                              (= (-> % second :type) :layer)
+                                              (= (-> % second :subtype) :layer)
+                                              (= (-> % second :parent-id) (re/peek-registry :selected-map))))
+                                    (sort-by #(-> % second :order))
+                                    (map first)
+                                    (mapv #(rv/registry-to-layer @rv/local-registry %)))))))
+(defn renderable-layers-of!
+  "Returns layers associated with the map-id in a renderable form (with tiles)"
+  [map-id]
+
+  (->> @layers-view
+       (filterv #(= map-id
+                      (-> %
+                          (get-in [0 0])
+                          :map-id)))))

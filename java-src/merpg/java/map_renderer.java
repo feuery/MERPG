@@ -17,7 +17,7 @@ public class map_renderer
 
     private static final int TILEW = 50;
     
-    static IFn renderable_layers_of = Clojure.var("merpg.mutable.registry-views", "renderable-layers-of!"),
+    static IFn renderable_layers_of = Clojure.var("merpg.mutable.layers", "renderable-layers-of!"),
 	peek_registry = Clojure.var("merpg.mutable.registry", "peek-registry"),
 	layer_metadata_of = Clojure.var("merpg.mutable.registry-views", "layer-metadata-of!");
     

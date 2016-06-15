@@ -7,16 +7,22 @@
             [merpg.mutable.registry-views :as rv]))
 
 (defn deftool
-  "There's yet no api for tools decided"
+  "The func shall receive the tile-id of the tile it's been used on as a parameter. This will probably break with the hitlayer-tool, but that'll be tested when the time is right"
   [id func]
   (re/register-element! id {:name (str id)
                             :type :tool
                             :fn func}))
 
 (deftool :pen (fn [tile-id]
-                (locking *out*
-                  (println "You used pen!")
-                  (println "Tile-id: " tile-id))))
+                (let [selected-tile (re/peek-registry :selected-tile)]
+                  (re/update-registry tile-id
+                                      (let [tr (assoc tile-id
+                                                      :x (:x selected-tile)
+                                                      :y (:y selected-tile)
+                                                      :tileset (:tileset selected-tile)
+                                                      :rotation 0)]
+                                        (pprint tr)
+                                        tr)))))
 
 (deftool :hit-tool (fn [& _]
                      (println "You used hit-tool!")))

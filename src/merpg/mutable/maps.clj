@@ -23,7 +23,7 @@
         layers (->> layer-count
                     range
                     (map (fn [order]
-                           (l/layer! W H :parent-id id :order order)))
+                           (l/layer! W H :parent-id id :order order :name (str "Layer " order))))
                     doall)
         hit-layer (l/layer! W H :hit? true :parent-id id)] ;;we need hitlayer too
     (doseq [layer-id layers]
@@ -74,7 +74,7 @@
                                (let [layer-order-nr (-> (re/peek-registry :selected-layer)
                                                         re/peek-registry
                                                         :order)
-                                     {:keys [tile-id] :as tile} (get-in @rv/layers-view [layer-order-nr tile-x tile-y])
+                                     {:keys [tile-id] :as tile} (get-in @l/layers-view [layer-order-nr tile-x tile-y])
                                      tool-id (re/peek-registry :selected-tool)
                                      {tool-fn :fn} (re/peek-registry tool-id)]
                                  (if (fn? tool-fn)

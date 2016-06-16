@@ -37,9 +37,9 @@
                            (r/map (fn [r]
                                     (->> r
                                          (filterv #(and
-                                                   (= (-> % second :parent-id) (re/peek-registry :selected-map))
-                                                   (= (-> % second :type) :layer)
-                                                   (= (-> % second :subtype) :layer)))
+                                                    (= (-> % second :parent-id) (re/peek-registry :selected-map))
+                                                    (= (-> % second :type) :layer)
+                                                    (= (-> % second :subtype) :layer)))
                                          (sort-by #(-> % second :order))
                                          reverse)))))
 

@@ -70,7 +70,7 @@
        (current-tile-view)
        
        "Maps"
-       (atom-to-jlist map-metas-ui :selected-index-atom (trb/atom->registry-binding :selected-map))
+       (atom-to-jlist map-metas-ui :key :selected-map)
         
        (button :text "Add map"
                :listen
@@ -78,7 +78,7 @@
                           (alert "TODO map-adding is broken"))])
        
        "Layers"
-       (atom-to-jlist layer-metas-ui :selected-index-atom (trb/atom->registry-binding :selected-layer))
+       (atom-to-jlist layer-metas-ui :key :selected-layer)
        
        (button :text "New layer"
                :listen
@@ -99,7 +99,7 @@
                           (alert "TODO move-down is broken"))])
        
        "Tilesets"
-       (atom-to-jlist tileset-meta-ui :selected-index-atom (trb/atom->registry-binding :selected-tileset))
+       (atom-to-jlist tileset-meta-ui :key :selected-tileset)
        
        (button :text "Load tileset"
                :listen

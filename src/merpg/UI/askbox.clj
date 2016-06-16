@@ -2,6 +2,9 @@
   (:require [clojure.pprint :refer [pprint]]
             [seesaw.core :refer :all]
             [seesaw.bind :as b]))
+
+(defn in? [vec val]
+  (some (partial = val) vec))
     
 
 (defn numeric-input [min max data-atom key-to-bind]
@@ -33,9 +36,14 @@
                             :jees? true}))
 
 (defn ask-box [viewmodel-atom & {:keys [visible?] :or {visible? true}}]
-  
   (let [gridded-widgets (concat
                          (->> @viewmodel-atom
+                              (filter (fn [[_ val]]
+                                        (in? [java.lang.String
+                                              java.lang.Integer
+                                              java.lang.Long
+                                              java.lang.Boolean
+                                              clojure.lang.Keyword] (class val))))
                               (mapv (fn [[key val]]
                                       [(str key)
                                        (condp = (class val)
@@ -52,7 +60,10 @@
                                          java.lang.Boolean (checkbox :selected? val
                                                                      :listen
                                                                      [:item-state-changed (fn [e]
-                                                                                            (swap! viewmodel-atom assoc key (selection e)))]))]))
+                                                                                            (swap! viewmodel-atom assoc key (selection e)))])
+                                         clojure.lang.Keyword (text :text (str val)
+                                                                    :editable? false
+                                                                    :enabled? false))]))
                               flatten
                               vec)
                          ["" (button :id :ok :text "Ok")])

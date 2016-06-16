@@ -92,3 +92,16 @@
                                       :coords [tile-x tile-y]})
                                    {:success? false
                                     :coords [tile-x tile-y]}))))))
+(defn mapwidth! [map-id]
+  (let [layer (get @l/layers-view-per-maps map-id)]
+    (-> layer
+        first
+        count)))
+
+(defn mapheight! [map-id]
+  (let [layer (get @l/layers-view-per-maps map-id)]
+    (-> layer
+        first
+        first
+        count)))
+       

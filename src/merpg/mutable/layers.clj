@@ -32,6 +32,13 @@
                                         :hitlayer
                                         :layer)})))
 
+(defn mapvals
+  "Maps function over hashmap's values"
+  [f m]
+  (into {}
+        (for [[k v] m]
+          [k (f v)])))
+
 (tt/make-atom-binding layer-metas {:allow-seq? true}
                       (->> rv/local-registry
                            (r/map (fn [r]
@@ -71,18 +78,34 @@
                              (doseq [tile real-tiles]
                                (is (:rotation tile) 1))))))))
 
-(def layers-view (->> rv/local-registry
-                      ;; registry-to-layer builds up the data in a way that you can refer to layer 0's tile at [1 2] with the form (get-in @layers-view [0 1 2])
-                      ;; thus we can't simply (map second), that loads only the metadata
+(def layers-view-per-maps (->> rv/local-registry
+                               (r/map (fn [r]
+                                        (->> r
+                                             (filter #(and
+                                                       (= (-> % second :type) :layer)
+                                                       (= (-> % second :subtype) :layer)))
+                                             (partition-by #(-> % second :parent-id))
+                                             (map #(do ;; [:map-id :layer-ids]
+                                                     [(-> % first second :parent-id)  %]))
+                                             (into {})
+                                             (mapvals (fn [layers]
+                                                        (sort-by #(-> % second :order) layers)))
+                                             
+                                             (mapvals #(->> %
+                                                            (pmap (comp
+                                                                   (fn [layer-id]
+                                                                     (rv/registry-to-layer @rv/local-registry layer-id))
+                                                                   ;; registry-to-layer builds up the data in a way that you can refer to layer 0's tile at [1 2] with the form (get-in @layers-view [0 1 2])
+                                                                   ;; thus we can't simply (map second), that loads only the metadata
+                                                                   first))
+                                                            vec)))))))
+
+(def layers-view (->> layers-view-per-maps
                       (r/map (fn [r]
-                               (->> r
-                                    (filter #(and
-                                              (= (-> % second :type) :layer)
-                                              (= (-> % second :subtype) :layer)
-                                              (= (-> % second :parent-id) (re/peek-registry :selected-map))))
-                                    (sort-by #(-> % second :order))
-                                    (map first)
-                                    (mapv #(rv/registry-to-layer @rv/local-registry %)))))))
+                               (get r (re/peek-registry :selected-map))))))
+
+(defn layer-count! [map-id]
+  (count (first (get @layers-view-per-maps map-id))))
 
 (def current-hitlayer (->> rv/local-registry
                            (r/map (fn [r]

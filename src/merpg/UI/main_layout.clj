@@ -23,13 +23,15 @@
             [merpg.UI.property-editor :refer :all]
             [merpg.UI.dialogs.resize-dialog :refer [resize-dialog]]
             [merpg.UI.current-tile-view :refer :all]
-            [merpg.immutable.basic-map-stuff :refer :all]
-            [merpg.immutable.map-layer-editing :refer :all]
+            ;; [merpg.immutable.basic-map-stuff :refer :all]
+            ;; [merpg.immutable.map-layer-editing :refer :all]
             [merpg.util :refer [vec-remove]]
             [merpg.2D.core :as dd]
             [merpg.mutable.tools :as tools]
-            [merpg.mutable.maps :refer [map! map-metas-ui]]
-            [merpg.mutable.layers :refer [layer-metas-ui]]
+            [merpg.mutable.maps :refer [map! map-metas-ui
+                                        mapwidth! mapheight!]]
+            [merpg.mutable.layers :refer [layer-metas-ui layer!
+                                          layer-count!]]
             [merpg.mutable.registry :as re]
             [merpg.mutable.to-registry-binding :as trb]))
 
@@ -114,7 +116,11 @@
        (button :text "New layer"
                :listen
                [:action (fn [_]
-                          (alert "TODO new-layer is broken"))])
+                          (let [smap (re/peek-registry :selected-map)]
+                            (layer! (mapwidth! smap)
+                                    (mapheight! smap)
+                                    :parent-id smap
+                                    :order (inc (layer-count! smap)))))])
 
        (button :text "Remove layer"
                :listen

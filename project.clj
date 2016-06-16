@@ -4,7 +4,7 @@
   :license {:name "MIT License"
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [seesaw "1.4.4"]
+                 [seesaw "1.4.5"]
                  [environ "0.5.0"]
                  [prismatic/schema "1.1.1"]
                  [reagi "0.10.1"]]

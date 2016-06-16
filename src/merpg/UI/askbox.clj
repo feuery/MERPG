@@ -1,14 +1,15 @@
 (ns merpg.UI.askbox
   (:require [clojure.pprint :refer [pprint]]
             [seesaw.core :refer :all]
-            [seesaw.bind :as b]))
+            [seesaw.bind :as b]
+            [clojure.core.async :as a]))
 
 (defn in? [vec val]
   (some (partial = val) vec))
     
 
 (defn numeric-input [min max data-atom key-to-bind]
-  (let [val (key-to-bind @data-atom)
+  (let [val (get @data-atom key-to-bind)
         val (if (< val min)
               min
               (if (> val max)
@@ -35,7 +36,10 @@
                             :age "asd"
                             :jees? true}))
 
-(defn ask-box [viewmodel-atom & {:keys [visible?] :or {visible? true}}]
+(defn ask-box [viewmodel-atom & {:keys [visible?
+                                        completed-chan]
+                                 :or {visible? true
+                                      completed-chan (a/chan)}}]
   (let [gridded-widgets (concat
                          (->> @viewmodel-atom
                               (filter (fn [[_ val]]
@@ -70,11 +74,21 @@
         
         layout (grid-panel :columns 2
                            :items gridded-widgets)
+        finished (atom false)
         f (frame :content layout
                  :visible? visible?
-                 :on-close :dispose)]
+                 :on-close :dispose
+                 :listen
+                 [:window-closed (fn [_]
+                                   (a/go
+                                     (if-not @finished
+                                       (a/>! completed-chan false))))])]
     (listen (select f [:#ok])
             :action (fn [_]
+                      (a/go
+                        (swap! finished not)
+                        (a/>! completed-chan true))
                       (dispose! f)))
     (-> f
-        pack!)))
+        pack!)
+    completed-chan))

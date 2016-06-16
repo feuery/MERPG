@@ -13,6 +13,14 @@
   ([id fn]
    (swap! registry update id fn)))
 
+(defn remove-element! [id]
+  (swap! registry dissoc id)
+  (let [removeable-ids (->> @registry
+                            (filter #(-> % second :parent-id (= id)))
+                            (map first))]
+    (doseq [id removeable-ids]
+      (remove-element! id))))
+
 (defn register-element!
   "Returns id. Except for the [id element & rest] arity"
   ([id element]

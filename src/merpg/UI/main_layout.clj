@@ -1,9 +1,10 @@
 (ns merpg.UI.main-layout
   (:require [seesaw.core :refer [frame border-panel flow-panel make-widget dispose! config! show!
-                                 vertical-panel left-right-split top-bottom-split alert
+                                 confirm vertical-panel left-right-split top-bottom-split alert
                                  button menubar menu menu-item label]]
             [environ.core :refer [env]]
             [seesaw.bind :as b]
+            [clojure.core.async :as a]
             [seesaw.chooser :refer :all]
             [clojure.stacktrace :refer [print-stack-trace]]
             [clojure.string :as str]
@@ -12,6 +13,7 @@
             [merpg.mutable.tileset :refer [tileset!]]
             [merpg.mutable.tileset-rview :refer [tileset-meta-ui]]
             [merpg.IO.out :refer [dump-image read-image]]
+            [merpg.UI.askbox :refer [ask-box]]
             [merpg.UI.map-controller :refer [map-controller
                                              show]]
             [merpg.UI.tileset-controller :refer :all]
@@ -75,7 +77,36 @@
        (button :text "Add map"
                :listen
                [:action (fn [_]
-                          (alert "TODO map-adding is broken"))])
+                          (let [viewmodel (atom {"Map's name" ""
+                                           "Map's width" 0
+                                                 "Map's height" 0
+                                                 "Amount of layers" 0})
+                                c (ask-box viewmodel)]
+                            (a/go
+                              (let [result (a/<! c)]
+                                (if result
+                                  (let[{name "Map's name"
+                                     w "Map's width"
+                                     h "Map's height"
+                                     l "Amount of layers"} @viewmodel]
+                                (when (->> [w h l]
+                                           (every? #(> % 0)))
+                                  (println "Creating map with params " [w h l])
+                                  (println "map created with id " (map! w h l)))))))))])
+
+       (button :text "Remove map"
+               :listen
+               [:action (fn [_]
+                          (let [selected-map (-> :selected-map
+                                                 re/peek-registry ;; id
+                                                 re/peek-registry)] ;;data
+                            (when (confirm (str "You're about to IRRECOVERABLY delete map with a name " (:name selected-map) "\n\nDo you wish to proceed?"))
+                              (re/remove-element! (re/peek-registry :selected-map))
+                              (let [new-map-id (-> @map-metas-ui
+                                                   first
+                                                   first)]
+                                (re/register-element! :selected-map new-map-id)))))])
+                                
        
        "Layers"
        (atom-to-jlist layer-metas-ui :key :selected-layer)

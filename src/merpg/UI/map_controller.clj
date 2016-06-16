@@ -104,7 +104,8 @@
   (let [selected-map (peek-registry :selected-map)]
     (if (realized? rendered-maps)    
       (let [img (get @rendered-maps selected-map)]
-        (if (= (peek-registry :selected-tool) :hit-tool)
+        (if (and (some? img)
+                 (= (peek-registry :selected-tool) :hit-tool))
           (draw-to-surface img
                            (Draw (render-hitlayer! (img-width img)
                                                    (img-height)) [0 0]))

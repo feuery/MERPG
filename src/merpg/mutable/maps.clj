@@ -75,7 +75,8 @@
         tile-id)
       (let [layer-order-nr (-> (re/peek-registry :selected-layer)
                                re/peek-registry
-                               :order)
+                               :order
+                               dec)
             {:keys [tile-id] :as tile} (get-in @l/layers-view [layer-order-nr tile-x tile-y])]
         tile-id))))
 

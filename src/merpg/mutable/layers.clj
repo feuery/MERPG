@@ -94,7 +94,7 @@
                                              (mapvals #(->> %
                                                             (pmap (comp
                                                                    (fn [layer-id]
-                                                                     (rv/registry-to-layer @rv/local-registry layer-id))
+                                                                      (rv/registry-to-layer @rv/local-registry layer-id))
                                                                    ;; registry-to-layer builds up the data in a way that you can refer to layer 0's tile at [1 2] with the form (get-in @layers-view [0 1 2])
                                                                    ;; thus we can't simply (map second), that loads only the metadata
                                                                    first))
@@ -102,7 +102,8 @@
 
 (def layers-view (->> layers-view-per-maps
                       (r/map (fn [r]
-                               (get r (re/peek-registry :selected-map))))))
+                               (-> r
+                                   (get (re/peek-registry :selected-map)))))))
 
 (defn layer-count! [map-id]
   (count (first (get @layers-view-per-maps map-id))))

@@ -78,35 +78,39 @@
                              (doseq [tile real-tiles]
                                (is (:rotation tile) 1))))))))
 
-(def layers-view-per-maps (->> rv/local-registry
-                               (r/map (fn [r]
-                                        (->> r
-                                             (filter #(and
-                                                       (= (-> % second :type) :layer)
-                                                       (= (-> % second :subtype) :layer)))
-                                             (partition-by #(-> % second :parent-id))
-                                             (map #(do ;; [:map-id :layer-ids]
-                                                     [(-> % first second :parent-id)  %]))
-                                             (into {})
-                                             (mapvals (fn [layers]
-                                                        (sort-by #(-> % second :order) layers)))
-                                             
-                                             (mapvals #(->> %
-                                                            (pmap (comp
-                                                                   (fn [layer-id]
-                                                                      (rv/registry-to-layer @rv/local-registry layer-id))
-                                                                   ;; registry-to-layer builds up the data in a way that you can refer to layer 0's tile at [1 2] with the form (get-in @layers-view [0 1 2])
-                                                                   ;; thus we can't simply (map second), that loads only the metadata
-                                                                   first))
-                                                            vec)))))))
+(def indexable-layers-view (->> rv/local-registry
+                                (r/map (fn [r]
+                                         (->> r
+                                              (filter #(and
+                                                        (= (-> % second :type) :layer)
+                                                        (= (-> % second :subtype) :layer)))
+                                              ;; sort them by their map-ids so that (into {}) won't barf
+                                              (sort-by #(-> % second :parent-id))
+                                              ;; partition them by their map-ids to make (into {}) possible
+                                              (partition-by #(-> % second :parent-id))
+                                              (mapv #(do ;;[map-id :layer-ids]
+                                                       [(-> % first second :parent-id)  %]))
+                                              (into {})
+                                              (mapvals (partial into {}))
+                                              (mapvals (fn [layer-map]
+                                                         (->> layer-map
+                                                              (mapv (fn [[layer-id _]]
+                                                                      [layer-id (rv/registry-to-layer @rv/local-registry layer-id)]))
+                                                              (into {})))))))))
 
-(def layers-view (->> layers-view-per-maps
+(defn get-renderable-layer! [mapid layerid]
+  (if (realized? indexable-layers-view)
+    (get-in @indexable-layers-view [mapid layerid])
+    nil))
+
+
+(def layers-view (->> indexable-layers-view
                       (r/map (fn [r]
-                               (-> r
-                                   (get (re/peek-registry :selected-map)))))))
+                               (get-in r [(re/peek-registry :selected-map)
+                                          (re/peek-registry :selected-layer)])))))
 
 (defn layer-count! [map-id]
-  (count (first (get @layers-view-per-maps map-id))))
+  (count (get @indexable-layers-view map-id)))
 
 (def current-hitlayer (->> rv/local-registry
                            (r/map (fn [r]
@@ -120,7 +124,8 @@
 (def current-hitlayer-data (->> current-hitlayer
                                 (r/filter some?)
                                 (r/map first)
-                                (r/map #(rv/registry-to-layer @rv/local-registry %))))
+                                (r/map #(rv/registry-to-layer @rv/local-registry %))))         
+       
 
 (defn renderable-layers-of!
   "Returns layers associated with the map-id in a renderable form (with tiles)"

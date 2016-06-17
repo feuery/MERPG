@@ -15,6 +15,8 @@
 
 (deftool :pen (fn [tile-id]
                 (let [selected-tile (re/peek-registry :selected-tile)]
+                  (println "tile-id " tile-id)
+                  (pprint selected-tile)
                   (re/update-registry tile-id
                                       (let [tr (assoc tile-id
                                                       :x (:x selected-tile)

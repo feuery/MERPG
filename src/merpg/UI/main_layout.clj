@@ -125,7 +125,15 @@
        (button :text "Remove layer"
                :listen
                [:action (fn [_]
-                          (alert "TODO remove-layer is broken"))])
+                          (let [selected-layer (-> :selected-layer
+                                                   re/peek-registry
+                                                   re/peek-registry)]
+                            (when (confirm (str "You're about to IRRECOVERABLY delete layer with a name " (:name selected-layer) "\n\nDo you wish to proceed?"))
+                              (re/remove-element! (re/peek-registry :selected-layer))
+                              (let [new-layer-id (-> @layer-metas-ui
+                                                     first
+                                                     first)]
+                                (re/register-element! :selected-layer new-layer-id)))))])
        (button :text "Move up"
                :listen
                [:action (fn [_]

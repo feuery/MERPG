@@ -73,11 +73,8 @@
     (if (= tool-id :hit-tool)
       (let [{:keys [tile-id] :as tile} (get-in @l/current-hitlayer-data [tile-x tile-y])]
         tile-id)
-      (let [layer-order-nr (-> (re/peek-registry :selected-layer)
-                               re/peek-registry
-                               :order
-                               dec)
-            {:keys [tile-id] :as tile} (get-in @l/layers-view [layer-order-nr tile-x tile-y])]
+      (let [{:keys [tile-id] :as tile} (get-in @l/layers-view [ tile-x tile-y])]
+        (pprint [tile-x tile-y])
         tile-id))))
 
 (def map-events (->> m/mouse-events
@@ -94,15 +91,18 @@
                                    {:success? false
                                     :coords [tile-x tile-y]}))))))
 (defn mapwidth! [map-id]
-  (let [layer (get @l/layers-view-per-maps map-id)]
+  (let [layer (get @l/indexable-layers-view map-id)]
     (-> layer
         first
+        second
         count)))
 
 (defn mapheight! [map-id]
-  (let [layer (get @l/layers-view-per-maps map-id)]
+  (let [;; map-id :MAP__10802
+        layer (get @l/indexable-layers-view map-id)]
     (-> layer
         first
+        second
         first
         count)))
        

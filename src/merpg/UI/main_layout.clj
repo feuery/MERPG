@@ -147,7 +147,7 @@
                                 max-ord (apply max orders)]
                             (when (<= (inc selected-order) max-ord)
                               (when (< (inc selected-order) max-ord)
-                                (let [upper-id (->> @l/layer-metas-ui
+                                (if-let [upper-id (->> @l/layer-metas-ui
                                                     (filter #(-> % second :order (= (inc selected-order))))
                                                     (map first)
                                                     first)]
@@ -161,7 +161,20 @@
        (button :text "Move down"
                :listen
                [:action (fn [_]
-                          (alert "TODO move-down is broken"))])
+                          (let [selected-layer (re/peek-registry :selected-layer)
+                                selected-order (-> selected-layer
+                                                   re/peek-registry
+                                                   :order)]
+                            (when (>= (dec selected-order) 0)
+                              (when (> (dec selected-order) 0)
+                                (if-let [lower-id (->> @l/layer-metas-ui
+                                                       (filter #(-> % second :order (= (dec selected-order))))
+                                                       (map first)
+                                                       first)]
+                                  (re/update-registry lower-id
+                                                      (update lower-id :order inc))))
+                              (re/update-registry selected-layer
+                                                  (update selected-layer :order dec)))))])
        
        "Tilesets"
        (atom-to-jlist tileset-meta-ui :key :selected-tileset)

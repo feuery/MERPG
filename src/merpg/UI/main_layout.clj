@@ -30,7 +30,7 @@
             [merpg.mutable.tools :as tools]
             [merpg.mutable.maps :refer [map! map-metas-ui
                                         mapwidth! mapheight!]]
-            [merpg.mutable.layers :refer [layer-metas-ui layer!
+            [merpg.mutable.layers :as l :refer [layer-metas-ui layer!
                                           layer-count!]]
             [merpg.mutable.registry :as re]
             [merpg.mutable.to-registry-binding :as trb]))
@@ -137,7 +137,27 @@
        (button :text "Move up"
                :listen
                [:action (fn [_]
-                          (alert "TODO move-up is broken"))])
+                          (let [selected-layer (re/peek-registry :selected-layer)
+                                selected-order (-> selected-layer
+                                                   re/peek-registry
+                                                   :order)
+                                orders (->> @l/layer-metas-ui
+                                            (map second)
+                                            (map :order))
+                                max-ord (apply max orders)]
+                            (when (<= (inc selected-order) max-ord)
+                              (when (< (inc selected-order) max-ord)
+                                (let [upper-id (->> @l/layer-metas-ui
+                                                    (filter #(-> % second :order (= (inc selected-order))))
+                                                    (map first)
+                                                    first)]
+                                  ;; lower the upper
+                                  (re/update-registry upper-id
+                                                      (update upper-id :order dec))))
+                              ;; raise the lower
+                              
+                              (re/update-registry selected-layer
+                                                  (update selected-layer :order inc)))))])
        (button :text "Move down"
                :listen
                [:action (fn [_]

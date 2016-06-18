@@ -106,8 +106,10 @@
                             (let [w (img-width (first layer-surfaces))
                                   h (img-height (first layer-surfaces))]
                               [map-id (reduce (fn [map-surface layer-surface]
-                                                (draw-to-surface map-surface
-                                                                 (Draw layer-surface [0 0])))
+                                                (if (some? layer-surface)
+                                                  (draw-to-surface map-surface
+                                                                   (Draw layer-surface [0 0]))
+                                                  map-surface))
                                               (image w h)
                                               layer-surfaces)])))
                      (into {}))))

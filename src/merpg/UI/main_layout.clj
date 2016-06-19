@@ -193,23 +193,24 @@
        (button :text "Remove tileset"
                :listen
                [:action (fn [_]
-                          (alert "TODO move-down is broken")                              
-                          (comment
-                            (dosync
-                             (let [m @current-map-atom
-                                   coordinates (for [l (range (layer-count m))
-                                                     x (range (width m))
-                                                     y (range (height m))
-                                                     :when (= (:tileset (get-tile m l x y)) @current-tileset-index-atom)]
-                                                 [l x y])]
-                               (doseq [[l x y] coordinates]
-                                 (swap! current-map-atom
-                                        set-tile
-                                        l x y
-                                        (tile 0 0 :initial 0))))
-                             (ref-set current-tile (tile 0 0 :initial 0))
-                             (swap! tileset-atom dissoc @current-tileset-index-atom)
-                             (reset! current-tileset-index-atom (first (keys @tileset-atom))))))])
+                          (let [selected-tileset (re/peek-registry :selected-tileset)]
+                            (if-not (= selected-tileset :initial)
+                              (let [{:keys [name]} (re/peek-registry selected-tileset)
+                                    tiles-to-update (->> @re/registry
+                                                         (filter (fn [[_ val]]
+                                                                   (and
+                                                                    (= (:type val) :tile)
+                                                                    (= (:tileset val) selected-tileset))))
+                                                         (map first))]
+                                (when (confirm (str "You're about to IRRECOVERABLY delete tileset with a name " name "\n\nDo you wish to proceed?"))
+                                  (re/remove-element! selected-tileset)
+                                  (doseq [tile-id tiles-to-update]
+                                    (re/update-registry tile-id
+                                                        (assoc tile-id
+                                                               :x 0
+                                                               :y 0
+                                                               :tileset :initial)))))
+                              (alert "You can't remove tileset :initial"))))])
        (button :text "Close"
                :listen
                [:action (fn [_]

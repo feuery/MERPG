@@ -90,19 +90,6 @@
                                       :coords [tile-x tile-y]})
                                    {:success? false
                                     :coords [tile-x tile-y]}))))))
-(defn mapwidth! [map-id]
-  (let [layer (get @l/indexable-layers-view map-id)]
-    (-> layer
-        first
-        second
-        count)))
 
-(defn mapheight! [map-id]
-  (let [;; map-id :MAP__10802
-        layer (get @l/indexable-layers-view map-id)]
-    (-> layer
-        first
-        second
-        first
-        count)))
-       
+
+

@@ -22,8 +22,8 @@ public class map_renderer
 	peek_registry = Clojure.var("merpg.mutable.registry", "peek-registry"),
 	layer_metadata_of = Clojure.var("merpg.mutable.registry-views", "layer-metadata-of!"),
 	get_renderable_layer = Clojure.var("merpg.mutable.layers", "get-renderable-layer!"),
-	mapwidth = Clojure.var("merpg.mutable.maps", "mapwidth!"),
-	mapheight = Clojure.var("merpg.mutable.maps", "mapheight!");
+	mapwidth = Clojure.var("merpg.mutable.layers", "mapwidth!"),
+	mapheight = Clojure.var("merpg.mutable.layers", "mapheight!");
     static Keyword tileset = Keyword.intern("tileset"),
 	rotation_kw = Keyword.intern("rotation"),
 	images = Keyword.intern("images"),
@@ -111,7 +111,7 @@ public class map_renderer
 	    else return SetOpacity(final_surface, (double)opacity_l);
 	}
 	catch(Exception ex) {
-	    System.out.println(ex);
+	    ex.printStackTrace();
 	    return new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB);
 	}
     }

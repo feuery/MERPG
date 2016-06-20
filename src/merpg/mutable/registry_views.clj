@@ -6,9 +6,6 @@
             [merpg.2D.core :refer :all])
   (:import [merpg.java map_renderer]))
 
-(defn sort-by-multiple-keys [col & keys]
-  (sort-by #(vec (map % keys)) col))
-
 (defn highest-key [col key]
   (if-not (empty? col)
     (->> col
@@ -17,35 +14,6 @@
     (println "Empty collection")))
 
 (def local-registry (r/events))
-
-(defn registry-to-layer
-  [registry layer-id]
-  (let [mapid (-> registry
-                  (get layer-id)
-                  :parent-id)
-        meta (get @local-registry layer-id)
-        tiles (->> registry
-                   ;; get relevant tiles
-                   (filter #(and (= (-> % second :type) :tile)
-                                 (= (-> % second :parent-id) layer-id)))
-                   ;; assoc map-ids their own ids to tiles
-                   (map #(update % 1 assoc
-                                 :map-id mapid
-                                 :tile-id (first %)
-                                 :meta meta))
-                   (map second))]
-    (when (empty? tiles)
-      ;; Exception so that the tests fail.
-      ;; Was it just returning nil, tests would incorrectly succeed
-      (throw (Exception. "tiles is empty@registry-to-layer")))
-    
-    (let [;; sort by map-x map-y for easy partitioning
-          tiles (sort-by-multiple-keys tiles :map-x :map-y)
-          w (inc (highest-key tiles :map-x))
-          h (inc (highest-key tiles :map-y))]
-      (->> tiles
-           (partition w)
-           (mapv vec)))))
 
 (defn layer-ids
   "Skips hit-layer"
@@ -103,15 +71,17 @@
                                             
                                                                 )) layer-ids)]))
                      (map (fn [[map-id layer-surfaces]]
-                            (let [w (img-width (first layer-surfaces))
-                                  h (img-height (first layer-surfaces))]
-                              [map-id (reduce (fn [map-surface layer-surface]
-                                                (if (some? layer-surface)
-                                                  (draw-to-surface map-surface
-                                                                   (Draw layer-surface [0 0]))
-                                                  map-surface))
-                                              (image w h)
-                                              layer-surfaces)])))
+                            (if (and (some? layer-surfaces)
+                                     (some? (first layer-surfaces)))
+                              (let [w (img-width (first layer-surfaces))
+                                    h (img-height (first layer-surfaces))]
+                                [map-id (reduce (fn [map-surface layer-surface]
+                                                  (if (some? layer-surface)
+                                                    (draw-to-surface map-surface
+                                                                     (Draw layer-surface [0 0]))
+                                                    map-surface))
+                                                (image w h)
+                                                layer-surfaces)]))))
                      (into {}))))
        ;; Side-effecting hack to make it easyish to update the gui
        (r/map (fn [r]

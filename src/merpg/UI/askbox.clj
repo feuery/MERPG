@@ -47,8 +47,9 @@
                                               java.lang.Integer
                                               java.lang.Long
                                               java.lang.Boolean
-                                              clojure.lang.Keyword] (class val))))
-                              (mapv (fn [[key val]]
+                                              clojure.lang.Keyword
+                                              clojure.lang.PersistentVector] (class val))))
+                              (mapv (fn [[key val :as asd]]
                                       [(str key)
                                        (condp = (class val)
                                          java.lang.String (text :text (str val)
@@ -56,10 +57,10 @@
                                                                 [:key-released (fn [e]
                                                                                  (swap! viewmodel-atom assoc key (text e)))])
                                          ;; binds itself to the atom
-                                         java.lang.Long (numeric-input 0 100
+                                         java.lang.Long (numeric-input 0 255
                                                                        viewmodel-atom key)
                                          ;; binds itself to the atom
-                                         java.lang.Integer (numeric-input 0 100
+                                         java.lang.Integer (numeric-input 0 255
                                                                           viewmodel-atom key)
                                          java.lang.Boolean (checkbox :selected? val
                                                                      :listen
@@ -67,7 +68,15 @@
                                                                                             (swap! viewmodel-atom assoc key (selection e)))])
                                          clojure.lang.Keyword (text :text (str val)
                                                                     :editable? false
-                                                                    :enabled? false))]))
+                                                                    :enabled? false)
+                                         clojure.lang.PersistentVector
+                                         (do
+                                           (swap! viewmodel-atom assoc key (first val))
+                                           (combobox :model val
+                                                                                 :listen
+                                                                                 [:selection
+                                                                                  (fn [e]
+                                                                                    (swap! viewmodel-atom assoc key (selection e)))])))]))
                               flatten
                               vec)
                          ["" (button :id :ok :text "Ok")])

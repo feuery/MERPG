@@ -5,7 +5,10 @@
             [merpg.mutable.registry :as re]
             [merpg.mutable.registry-views :as rv]
             [merpg.mutable.tiles :as t]
-            [merpg.mutable.tools :as tt]))
+            [merpg.mutable.tools :as tt]
+            [merpg.UI.askbox :refer [in?]]))
+
+(println "Loading merpg.mutable.layers")
 
 (defn layer!
   "Creates layer's tiles. Returns the id layer is registered with."
@@ -63,20 +66,86 @@
         visible? true)
       
       (re/update-registry layer-id
-                         ;; I'll create CES/core.async based registry views soon...ish
-                         (let [tiles (->> @re/registry
-                                          (filter #(and (= (:parent-id (second %)) layer-id)
-                                                        (= (:type (second %)) :tile)))
-                                          (map first))]
-                           ;; Increase rotation to 1
-                           (doseq [tile-id tiles]
-                             (re/update-registry tile-id
-                                                (update tile-id :rotation inc)))
-                           ;; Make sure the updates are in the registry
-                           (let [real-tiles (->> tiles
-                                                 (map re/peek-registry ))]
-                             (doseq [tile real-tiles]
-                               (is (:rotation tile) 1))))))))
+                          ;; I'll create CES/core.async based registry views soon...ish
+                          (let [tiles (->> @re/registry
+                                           (filter #(and (= (:parent-id (second %)) layer-id)
+                                                         (= (:type (second %)) :tile)))
+                                           (map first))]
+                            ;; Increase rotation to 1
+                            (doseq [tile-id tiles]
+                              (re/update-registry tile-id
+                                                  (update tile-id :rotation inc)))
+                            ;; Make sure the updates are in the registry
+                            (let [real-tiles (->> tiles
+                                                  (map re/peek-registry ))]
+                              (doseq [tile real-tiles]
+                                (is (:rotation tile) 1))))))))
+
+(defn sort-by-multiple-keys [col & keys]
+  (sort-by #(vec (map % keys)) col))
+
+;; these can't depend on indexable-layers-view which depends on registry-to-layer which depends on these
+(defn mapwidth! [map-id]
+  (let [layer-ids (->> @rv/local-registry
+                       (filter #(and (= (-> % second :subtype) :layer)
+                                     (= (-> % second :parent-id) map-id)))
+                       (map first))
+        tiles (->> @rv/local-registry
+                   (filter #(and (= (-> % second :type) :tile)
+                                 (in? layer-ids (-> % second :parent-id))))
+                   (map second))
+        xs (->> tiles
+                (map :map-x)
+                (into #{}))]
+    (inc (apply max xs))))
+
+(defn mapheight! [map-id]
+  (let [layer-ids (->> @rv/local-registry
+                       (filter #(and (= (-> % second :type) :layer)
+                                     (= (-> % second :parent-id) map-id)))
+                       (map first))
+        tiles (->> @rv/local-registry
+                   try
+                   (filter #(and (= (-> % second :type) :tile)
+                                 (in? layer-ids (-> % second :parent-id))))
+                   (map (comp :map-y second))
+                   (into #{}))]
+    (inc (apply max tiles))))
+
+(defn registry-to-layer
+  [registry layer-id]
+  (let [mapid (-> registry
+                  (get layer-id)
+                  :parent-id)
+        meta (get @rv/local-registry layer-id)
+        tiles (->> registry
+                   ;; get relevant tiles
+                   (filter #(and (= (-> % second :type) :tile)
+                                 (= (-> % second :parent-id) layer-id)))
+                   ;; assoc map-ids their own ids to tiles
+                   (map #(update % 1 assoc
+                                 :map-id mapid
+                                 :tile-id (first %)
+                                 :meta meta))
+                   (map second))]
+    (when (empty? tiles)
+      ;; Exception so that the tests fail.
+      ;; Was it just returning nil, tests would incorrectly succeed
+      (throw (Exception. "tiles is empty@registry-to-layer")))
+    
+    (let [;; sort by map-x map-y for easy partitioning
+          tiles (sort-by-multiple-keys tiles :map-x :map-y)
+          w (mapwidth! mapid)
+          h (mapheight! mapid)]
+      ;; (println "@registry-to-layer")
+      ;; (println [w h])
+      (if (zero? w) (println "w is zero on " mapid))
+      
+      (if (and (pos? w)
+               (pos? h))
+        (->> tiles
+             (partition w)
+             (mapv vec))))))
 
 (def indexable-layers-view (->> rv/local-registry
                                 (r/map (fn [r]
@@ -95,7 +164,7 @@
                                               (mapvals (fn [layer-map]
                                                          (->> layer-map
                                                               (mapv (fn [[layer-id _]]
-                                                                      [layer-id (rv/registry-to-layer @rv/local-registry layer-id)]))
+                                                                      [layer-id (registry-to-layer @rv/local-registry layer-id)]))
                                                               (into {})))))))))
 
 (defn get-renderable-layer! [mapid layerid]
@@ -124,7 +193,7 @@
 (def current-hitlayer-data (->> current-hitlayer
                                 (r/filter some?)
                                 (r/map first)
-                                (r/map #(rv/registry-to-layer @rv/local-registry %))))         
+                                (r/map #(registry-to-layer @rv/local-registry %))))         
        
 
 (defn renderable-layers-of!
@@ -136,3 +205,5 @@
                       (-> %
                           (get-in [0 0])
                           :map-id)))))
+
+(println "Loaded merpg.mutable.layers")

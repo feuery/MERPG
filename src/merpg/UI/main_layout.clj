@@ -28,12 +28,14 @@
             [merpg.util :refer [vec-remove]]
             [merpg.2D.core :as dd]
             [merpg.mutable.tools :as tools]
-            [merpg.mutable.maps :refer [map! map-metas-ui
-                                        mapwidth! mapheight!]]
+            [merpg.mutable.maps :refer [map! map-metas-ui]]
+            ;; [merpg.mutable.map-dimensions :refer ]
             [merpg.mutable.layers :as l :refer [layer-metas-ui layer!
-                                          layer-count!]]
+                                                mapwidth! mapheight!
+                                                layer-count!]]
             [merpg.mutable.registry :as re]
-            [merpg.mutable.to-registry-binding :as trb]))
+            [merpg.mutable.to-registry-binding :as trb]
+            [merpg.mutable.resize-algorithms :refer [resize!]]))
 
 (defn linux? []
   (= (System/getProperty "os.name") "Linux"))
@@ -68,7 +70,30 @@
        (button :text "Resize map"
                :listen
                [:action (fn [_]
-                          (alert "TODO Resize is currently broken"))])
+                          (let [w (->> :selected-map
+                                       re/peek-registry
+                                       mapwidth!)
+                                h (->> :selected-map
+                                       re/peek-registry
+                                       mapheight!)
+                                vm (atom {"Map's width" w
+                                          "Map's height" h
+                                          "Side of horizontal action" [:left :right]
+                                          "Side of vertical action" [:top :bottom]})
+                                c (ask-box vm)]
+                            (a/go
+                              (when (a/<! c)
+                                (let [{w "Map's width"
+                                       h "Map's height"
+                                       horizontal-anchor "Side of horizontal action"
+                                       vertical-anchor "Side of vertical action"} @vm]
+                                  (resize! (re/peek-registry :selected-map)
+                                           w
+                                           h
+                                           horizontal-anchor
+                                           vertical-anchor))))))])
+                                  
+                                         
 
        "Current tile"           
        (current-tile-view)

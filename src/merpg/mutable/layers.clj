@@ -10,6 +10,16 @@
 
 (println "Loading merpg.mutable.layers")
 
+(defn layer-meta [name parent-id order hit?]
+  {:name name
+   :opacity 255
+   :visible? true
+   :type :layer
+   :parent-id parent-id
+   :order order
+   :subtype (if hit?
+              :hitlayer
+              :layer)})
 (defn layer!
   "Creates layer's tiles. Returns the id layer is registered with."
   [W H & {:keys [hit? parent-id order name] :or {hit? false
@@ -25,15 +35,7 @@
         (t/hit-tile! false map-x map-y id)
         (t/tile! 0 0 :initial 0 map-x map-y id)))
 
-    (re/register-element! id {:name name
-                             :opacity 255
-                             :visible? true
-                             :type :layer
-                             :parent-id parent-id
-                             :order order
-                             :subtype (if hit?
-                                        :hitlayer
-                                        :layer)})))
+    (re/register-element! id (layer-meta name parent-id order hit?))))
 
 (defn mapvals
   "Maps function over hashmap's values"
@@ -97,7 +99,9 @@
         xs (->> tiles
                 (map :map-x)
                 (into #{}))]
-    (inc (apply max xs))))
+    (if (empty? xs)
+      0
+      (inc (apply max xs)))))
 
 (defn mapheight! [map-id]
   (let [layer-ids (->> @rv/local-registry
@@ -110,11 +114,14 @@
                                  (in? layer-ids (-> % second :parent-id))))
                    (map (comp :map-y second))
                    (into #{}))]
-    (inc (apply max tiles))))
+    (if-not (empty? tiles)
+      (inc (apply max tiles))
+      0)))
 
 (defn registry-to-layer
-  [registry layer-id]
-  (let [mapid (-> registry
+  [layer-id]
+  (let [registry @rv/local-registry
+        mapid (-> registry
                   (get layer-id)
                   :parent-id)
         meta (get @rv/local-registry layer-id)
@@ -137,18 +144,27 @@
           tiles (sort-by-multiple-keys tiles :map-x :map-y)
           w (mapwidth! mapid)
           h (mapheight! mapid)]
-      ;; (println "@registry-to-layer")
-      ;; (println [w h])
-      (if (zero? w) (println "w is zero on " mapid))
-      
-      (if (and (pos? w)
-               (pos? h))
-        (->> tiles
-             (partition w)
-             (mapv vec))))))
+      ;; (->> tiles
+      ;;      (map :map-x)
+      ;;      pprint)
+      ;; (locking *out*
+      ;;   (println "@registry-to-layer")               
+      ;;   (println [w h])
+        (if (zero? w) (println "w is zero on " mapid))
+        
+        (if (and (pos? w)
+                 (pos? h))
+          ;; tiles sisältää roskadataa
+          (let [toret (->> tiles
+                           (partition w)
+                           (mapv vec))]
+            ;; (println "@registry-to-layer, real w is " (count toret) ", assumed w is " w)
+            ;; (pprint toret)
+            toret)))))
 
 (def indexable-layers-view (->> rv/local-registry
                                 (r/map (fn [r]
+                                         ;; (println "Regenerating indexable-layers-view")
                                          (->> r
                                               (filter #(and
                                                         (= (-> % second :type) :layer)
@@ -164,12 +180,14 @@
                                               (mapvals (fn [layer-map]
                                                          (->> layer-map
                                                               (mapv (fn [[layer-id _]]
-                                                                      [layer-id (registry-to-layer @rv/local-registry layer-id)]))
+                                                                      [layer-id (registry-to-layer layer-id)]))
                                                               (into {})))))))))
 
 (defn get-renderable-layer! [mapid layerid]
   (if (realized? indexable-layers-view)
-    (get-in @indexable-layers-view [mapid layerid])
+    (let [toret (get-in @indexable-layers-view [mapid layerid])]
+      ;; (println "@get-renderable-layer: W of " mapid " is " (mapwidth! mapid) ". Width of the datastructure is " (count toret))
+      toret)
     nil))
 
 
@@ -193,7 +211,7 @@
 (def current-hitlayer-data (->> current-hitlayer
                                 (r/filter some?)
                                 (r/map first)
-                                (r/map #(registry-to-layer @rv/local-registry %))))         
+                                (r/map #(registry-to-layer %))))         
        
 
 (defn renderable-layers-of!

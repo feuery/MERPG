@@ -31,3 +31,4 @@
 /src/merpg/events/mouse.clj~
 /src/merpg/UI/draggable_canvas.clj~
 /src/merpg/UI/askbox.clj~
+/src/merpg/mutable/resize_algorithms.clj~

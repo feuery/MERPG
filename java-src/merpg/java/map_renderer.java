@@ -64,12 +64,6 @@ public class map_renderer
 	    }
 
 	    Map<Keyword, Object> meta = (Map<Keyword, Object>)layer.get(0).get(0).get(meta_kw);
-	    // System.out.println("---Here's some meta------------");
-	    // for(Keyword k: meta.keySet()) {
-	    // 	System.out.println(k + " = " + meta.get(k));
-	    // }
-	    // System.out.println("-------------------------------");
-
 	    boolean visible_p = ((Boolean)meta.get(visible)).booleanValue();
 	    
 	    int W_tiles = toLong(mapwidth.invoke(map_id)),
@@ -86,23 +80,39 @@ public class map_renderer
 	    final_g.setColor(Color.BLACK);
 	    final_g.fill(new Rectangle(0, 0, W_pixels, H_pixels));
 
-	    for(int x = 0; x < W_tiles; x++) {
-		for(int y = 0; y < H_tiles; y++) {
-		    Map<Keyword, Object> tiledata = layer.get(x).get(y);
-		    Keyword current_tileset = (Keyword)tiledata.get(tileset);
-		    Map<Keyword, Object> tileset_meta = (Map<Keyword, Object>)peek_registry.invoke(current_tileset);
-		    List<List<BufferedImage>> tileset_surfaces = (List<List<BufferedImage>>)tileset_meta.get(images);		    
-		    int tilex = toLong(tiledata.get(x_kw));
-		    int tiley = toLong(tiledata.get(y_kw));
-		    int rotation = toLong(tiledata.get(rotation_kw)) * 90;
-		    BufferedImage tile_surface;
+	    System.out.println("According to mapwidth!, mapw is " + W_tiles+", but according to the data structure, the width is " +layer.size());
 
-		    if(rotation != 0) 
-			tile_surface = Rotate(tileset_surfaces.get(tilex).get(tiley), rotation);
-		    else
-			tile_surface = tileset_surfaces.get(tilex).get(tiley);
+	    for(int x = 0; x < layer.size(); x++) {
+		for(int y = 0; y < layer.get(x).size(); y++) {
+		    try {
+			Map<Keyword, Object> tiledata = layer.get(x).get(y);
+			Keyword current_tileset = (Keyword)tiledata.get(tileset);
+			Map<Keyword, Object> tileset_meta = (Map<Keyword, Object>)peek_registry.invoke(current_tileset);
+			List<List<BufferedImage>> tileset_surfaces = (List<List<BufferedImage>>)tileset_meta.get(images);
+			System.out.println("---Here's some meta------------");
+			for(Keyword k: tiledata.keySet()) {
+				System.out.println(k + " = " + tiledata.get(k));
+			}
+			System.out.println("-------------------------------");
+			int tilex = toLong(tiledata.get(x_kw));
+			int tiley = toLong(tiledata.get(y_kw));
+			int rotation = toLong(tiledata.get(rotation_kw)) * 90;
+			BufferedImage tile_surface;
+
+			if(rotation != 0) 
+			    tile_surface = Rotate(tileset_surfaces.get(tilex).get(tiley), rotation);
+			else
+			    tile_surface = tileset_surfaces.get(tilex).get(tiley);
 			
-		    final_g.drawImage(tile_surface, null, x * TILEW, y * TILEW);
+			final_g.drawImage(tile_surface, null, x * TILEW, y * TILEW);
+		    }
+		    catch(IndexOutOfBoundsException ex) {
+			System.out.println("Index out of bounds");
+			System.out.println("x, y: " + x + ", " + y);
+			System.out.println("W_tiles, H_tiles: " + W_tiles + ", "+ H_tiles);
+			System.out.println("w: " + layer.size());
+			System.out.println("h: " + layer.get(x).size());
+		    }
 		}
 	    }
 

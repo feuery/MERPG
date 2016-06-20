@@ -11,8 +11,8 @@
 
 (defn tile!
   "Returns id tile is registered with"
-  [x y tileset rotation map-x map-y parent-id]
-  (re/register-element! (zipmap
+  [x y tileset rotation map-x map-y parent-id & {:keys [debug?] :or {debug? false}}]
+  (let [id (re/register-element! (zipmap
                         [:x
                          :y
                          :tileset
@@ -21,7 +21,10 @@
                          :map-y
                          :parent-id
                          :type]
-                        [x y tileset rotation map-x map-y parent-id :tile])))
+                        [x y tileset rotation map-x map-y parent-id :tile]))]
+    (when debug?
+      (println "Created a tile with id " id))
+    id))
 
 (s/defn ^:always-validate hit-tile!
   "Returns id tile is registered with"

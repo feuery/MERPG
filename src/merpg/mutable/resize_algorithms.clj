@@ -6,10 +6,14 @@
 
             [clojure.pprint :refer :all]))
 
-(defn resize! [map-id new-w new-h]
-  (throw (Exception. "Not implemented")))
+(def-real-multi resize! [map-id new-w new-h vertical-anchor horizontal-anchor]
+  {:va vertical-anchor
+   :ha horizontal-anchor})
 
-(defn resize!-bottom-right [map-id new-w new-h]
+(defmethod resize!
+  {:va :right
+   :ha :bottom}
+  [map-id new-w new-h vertical-anchor horizontal-anchor]
   (locking *out*
     (let [layer-ids (->> @re/registry
                          (filter #(and (= (-> % second :type) :layer)
@@ -42,7 +46,10 @@
                                                  :rotation (:rotation tile))))
                     (println "Tile-id at " [map-id new-layer-id x-ind y-ind] " is nil")))))))))))
 
-(defn resize!-top-left [map-id new-w new-h]
+(defmethod resize!
+  {:va :left
+   :ha  :top}
+  [map-id new-w new-h vertical-anchor horizontal-anchor]
   (locking *out*
     (let [layer-ids (->> @re/registry
                          (filter #(and (= (-> % second :type) :layer)
@@ -77,7 +84,10 @@
                                                  :rotation (:rotation tile))))
                     (println "Tile-id at " [map-id new-layer-id x-ind y-ind] " is nil")))))))))))
 
-(defn resize!-top-right [map-id new-w new-h]
+(defmethod resize!
+  {:va :right
+   :ha :top}
+  [map-id new-w new-h vertical-anchor horizontal-anchor]
   (locking *out*
     (let [layer-ids (->> @re/registry
                          (filter #(and (= (-> % second :type) :layer)
@@ -111,8 +121,10 @@
                                                  :rotation (:rotation tile))))
                     (println "Tile-id at " [map-id new-layer-id x-ind y-ind] " is nil")))))))))))
 
-
-(defn resize!-bottom-left [map-id new-w new-h]
+(defmethod resize!
+  {:va :left
+   :ha :bottom}
+  [map-id new-w new-h vertical-anchor horizontal-anchor]
   (locking *out*
     (let [layer-ids (->> @re/registry
                          (filter #(and (= (-> % second :type) :layer)

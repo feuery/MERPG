@@ -55,34 +55,6 @@
                                          (sort-by #(-> % second :order))
                                          reverse)))))
 
-(deftest layer-testing
-  (binding [re/registry (atom {})]
-    (let [layer-id (layer! 4 4)
-          {name :name
-           opacity :opacity
-           visible? :visible?} (re/peek-registry layer-id)]
-      (are [x y] (= x y)
-        (count @re/registry) 17
-        name "New layer"
-        opacity 255
-        visible? true)
-      
-      (re/update-registry layer-id
-                          ;; I'll create CES/core.async based registry views soon...ish
-                          (let [tiles (->> @re/registry
-                                           (filter #(and (= (:parent-id (second %)) layer-id)
-                                                         (= (:type (second %)) :tile)))
-                                           (map first))]
-                            ;; Increase rotation to 1
-                            (doseq [tile-id tiles]
-                              (re/update-registry tile-id
-                                                  (update tile-id :rotation inc)))
-                            ;; Make sure the updates are in the registry
-                            (let [real-tiles (->> tiles
-                                                  (map re/peek-registry ))]
-                              (doseq [tile real-tiles]
-                                (is (:rotation tile) 1))))))))
-
 (defn sort-by-multiple-keys [col & keys]
   (sort-by #(vec (map % keys)) col))
 
@@ -164,7 +136,7 @@
 
 (def indexable-layers-view (->> rv/local-registry
                                 (r/map (fn [r]
-                                         ;; (println "Regenerating indexable-layers-view")
+                                         ;; (if (re/is-render-allowed?)
                                          (->> r
                                               (filter #(and
                                                         (= (-> % second :type) :layer)
@@ -181,7 +153,8 @@
                                                          (->> layer-map
                                                               (mapv (fn [[layer-id _]]
                                                                       [layer-id (registry-to-layer layer-id)]))
-                                                              (into {})))))))))
+                                                              (into {})))))
+                                         ))))
 
 (defn get-renderable-layer! [mapid layerid]
   (if (realized? indexable-layers-view)
@@ -212,16 +185,5 @@
                                 (r/filter some?)
                                 (r/map first)
                                 (r/map #(registry-to-layer %))))         
-       
-
-(defn renderable-layers-of!
-  "Returns layers associated with the map-id in a renderable form (with tiles)"
-  [map-id]
-
-  (->> @layers-view
-       (filterv #(= map-id
-                      (-> %
-                          (get-in [0 0])
-                          :map-id)))))
 
 (println "Loaded merpg.mutable.layers")

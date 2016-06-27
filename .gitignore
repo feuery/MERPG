@@ -32,3 +32,5 @@
 /src/merpg/UI/draggable_canvas.clj~
 /src/merpg/UI/askbox.clj~
 /src/merpg/mutable/resize_algorithms.clj~
+/test/merpg/mutable/layers_test.clj~
+/test/merpg/mutable/maps_test.clj~

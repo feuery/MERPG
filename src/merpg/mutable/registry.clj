@@ -6,8 +6,16 @@
             [merpg.mutable.registry-views :as rv]))
 
 (def ^:dynamic registry (atom {}))
+(def render-allowed? (atom false))
+
+(defn is-render-allowed? []
+  @render-allowed?) ;; I can't be arsed to trick the java type checked to use atoms correctly
 
 (add-watch registry :layer-view-updater #(r/deliver rv/local-registry %4))
+
+(defn query! [fun]
+  (->> @registry
+       (filter #(fun (-> % second)))))
 
 (defn update-element!
   ([id fn]

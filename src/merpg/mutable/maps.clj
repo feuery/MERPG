@@ -34,8 +34,8 @@
                        (assoc hit-layer :parent-id id))
 
     (re/register-element! id {:name (str id)
-                             :zonetiles {[0 0] #(s/alert "TODO: design real zonetiles")}
-                             :type :map})
+                              :zonetiles {[0 0] #(s/alert "TODO: design real zonetiles")}
+                              :type :map})
 
     (when first?
       (re/register-element! :selected-layer (first layers)
@@ -45,21 +45,6 @@
     id))
 
 (map! 1 1 1) ;;initial 
-
-(deftest map-testing
-  (binding [re/registry (atom {})]
-    (let [layer-count 3
-          map-id (map! 10 10 layer-count)]
-      (is (count @re/registry) 409)
-      (let [layers (->> @re/registry
-                    (filter #(and (= (:type (second %)) :layer)
-                                  (= (:parent-id (second %)) map-id)))
-                    (map second))
-            hit-data (filter #(= (:subtype %) :hitlayer) layers)
-            hit-layer (first hit-data)]
-        (is (not (nil? hit-layer)))
-        (is (count hit-data) 1)
-        (is (count layers) layer-count)))))
 
 (tt/make-atom-binding map-metas {:allow-seq? true}
                       (->> rv/local-registry

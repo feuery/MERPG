@@ -1,16 +1,10 @@
 (ns merpg.UI.map-controller
-  (:require [merpg.UI.BindableCanvas :refer :all]
-            [merpg.IO.tileset :refer [load-tileset]]
-            [merpg.immutable.basic-map-stuff :refer :all]
-            [merpg.immutable.map-layer-editing :refer [get-tile
-                                                       set-tile]]
+  (:require [merpg.IO.tileset :refer [load-tileset]]
             [merpg.mutable.layers :refer [current-hitlayer current-hitlayer-data]]
-            [merpg.mutable.tool :refer :all]
             [merpg.events.mouse :refer [post-mouse-event!]]
             [merpg.UI.draggable-canvas :refer :all]
             [merpg.2D.core :refer :all]
             [merpg.UI.tool-box :refer :all]
-            [merpg.util :refer [abs enqueue! dequeue!]]
             [merpg.mutable.registry-views :refer [add-rendered-map-watcher remove-rendered-map-watcher rendered-maps]]
             [merpg.mutable.registry :refer [peek-registry]]
             

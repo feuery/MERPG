@@ -1,13 +1,12 @@
 (ns merpg.UI.tileset-controller
   (:require [merpg.2D.core :refer :all]
             [merpg.UI.draggable-canvas :refer :all]
-            [merpg.immutable.basic-map-stuff :refer [tile]]
             [merpg.events.mouse :refer [post-mouse-event!]]
             [merpg.IO.tileset :refer [tileset-to-img]]
             [seesaw.core :refer :all]
             [seesaw.mouse :refer [location] :rename {location mouse-location}]
             [clojure.pprint :refer :all]
-
+            
             [merpg.mutable.tileset-rview :refer :all])
   (:import [javax.swing JScrollBar]
            [java.awt.event AdjustmentListener]))

@@ -3,7 +3,9 @@
             [clojure.walk :refer [postwalk]]
             [reagi.core :as r]
 
-            [merpg.mutable.registry-views :as rv]))
+            [merpg.mutable.registry-views :as rv]
+            [merpg.macros.multi :refer :all]
+            [merpg.UI.askbox :refer [in?]]))
 
 (def ^:dynamic registry (atom {}))
 (def render-allowed? (atom false))
@@ -72,4 +74,7 @@
                       (fn [~element-sym]
                         ~@forms))))
 
-
+(defn children-of! [id & {:keys [exclude-types] :or {exclude-types []}}]
+  (query! #(and (= (:parent-id %) id)
+                (not (in? exclude-types (:type %))))))
+       

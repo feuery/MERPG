@@ -13,7 +13,8 @@
 
 (re/register-element! :initial {:name "Initial tileset"
                                :images (load-tileset (image 50 50 :color "#0000FF"))
-                               :type :tileset})
+                                :type :tileset
+                                :parent-id :root})
 (re/register-element! :selected-tileset :initial)
 
 (def tileset-events (->> m/mouse-events

@@ -19,13 +19,12 @@
             [merpg.UI.tileset-controller :refer :all]
             [merpg.UI.tool-box :refer [tool-frame!]]
             [merpg.UI.BindableList :refer :all]
-            ;; [merpg.UI.dialogs.resize-dialog :refer [resize-dialog]]
             [merpg.UI.current-tile-view :refer :all]
+            [merpg.UI.tree :refer [domtree]]
             [merpg.util :refer [vec-remove]]
             [merpg.2D.core :as dd]
             [merpg.mutable.tools :as tools]
             [merpg.mutable.maps :refer [map! map-metas-ui]]
-            ;; [merpg.mutable.map-dimensions :refer ]
             [merpg.mutable.layers :as l :refer [layer-metas-ui layer!
                                                 mapwidth! mapheight!
                                                 layer-count!]]
@@ -93,10 +92,11 @@
 
        "Current tile"           
        (current-tile-view)
+
+       "Document Tree"
+       (domtree)
        
-       "Maps"
-       (atom-to-jlist map-metas-ui :key :selected-map)
-        
+       "Maps"        
        (button :text "Add map"
                :listen
                [:action (fn [_]
@@ -115,7 +115,7 @@
                                 (when (->> [w h l]
                                            (every? #(> % 0)))
                                   (println "Creating map with params " [w h l])
-                                  (println "map created with id " (map! w h l)))))))))])
+                                  (println "map created with id " (map! w h l :name name)))))))))])
 
        (button :text "Remove map"
                :listen
@@ -131,9 +131,7 @@
                                 (re/register-element! :selected-map new-map-id)))))])
                                 
        
-       "Layers"
-       (atom-to-jlist layer-metas-ui :key :selected-layer)
-       
+       "Layers"       
        (button :text "New layer"
                :listen
                [:action (fn [_]
@@ -197,9 +195,7 @@
                               (re/update-registry selected-layer
                                                   (update selected-layer :order dec)))))])
        
-       "Tilesets"
-       (atom-to-jlist tileset-meta-ui :key :selected-tileset)
-       
+       "Tilesets"       
        (button :text "Load tileset"
                :listen
                [:action (fn [_]

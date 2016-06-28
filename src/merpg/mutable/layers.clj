@@ -23,7 +23,7 @@
 (defn layer!
   "Creates layer's tiles. Returns the id layer is registered with."
   [W H & {:keys [hit? parent-id order name] :or {hit? false
-                                            parent-id nil
+                                                 parent-id nil
                                                  order -1
                                                  name "New layer"}}]
   (let [id (keyword (gensym "LAYER__"))]
@@ -35,7 +35,10 @@
         (t/hit-tile! false map-x map-y id)
         (t/tile! 0 0 :initial 0 map-x map-y id)))
 
-    (re/register-element! id (layer-meta name parent-id order hit?))))
+    (re/register-element! id (layer-meta (if hit?
+                                           "Hitlayer"
+                                           name)
+                                         parent-id order hit?))))
 
 (defn mapvals
   "Maps function over hashmap's values"

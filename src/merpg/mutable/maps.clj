@@ -17,7 +17,7 @@
   If no objects with :type :map exist in registry when calling this, this creates also :selected-layer, :selected-map and :selected-tool.
 
   Returns the id map is registered with"
-  [W H layer-count]
+  [W H layer-count & {:keys [name] :or {name "New map"}}]
   (let [first? (not (some #(= (-> % second :type) :map) @re/registry))
         id (keyword (gensym "MAP__"))
         layers (->> layer-count
@@ -33,8 +33,9 @@
     (re/update-registry hit-layer
                        (assoc hit-layer :parent-id id))
 
-    (re/register-element! id {:name (str id)
+    (re/register-element! id {:name name
                               :zonetiles {[0 0] #(s/alert "TODO: design real zonetiles")}
+                              :parent-id :root
                               :type :map})
 
     (when first?
@@ -44,7 +45,7 @@
                             :selected-tile (ti/tile 0 0 :initial 0)))
     id))
 
-(map! 1 1 1) ;;initial 
+(map! 1 1 1 :name "Initial map") 
 
 (tt/make-atom-binding map-metas {:allow-seq? true}
                       (->> rv/local-registry

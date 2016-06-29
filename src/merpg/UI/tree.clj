@@ -74,7 +74,7 @@
         :map (re/register-element! :selected-map (:id selected-object))
         :layer (do
                  (pprint selected-object)
-                 (re/register-element! :selected-map (:map-id selected-object)
+                 (re/register-element! :selected-map (:parent-id selected-object)
                                        :selected-layer (:id selected-object)))))))
 
 (def domtree-updaters (atom []))

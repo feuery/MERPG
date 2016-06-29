@@ -6,8 +6,18 @@
             [clojure.core :refer :all]
             [clojure.pprint :refer :all]
             [clojure.string :as str]
-            [merpg.mutable.registry :as re])
+            [merpg.mutable.registry :as re]
+            [merpg.macros.multi :refer :all]
+            [reagi.core :as r]
+            [merpg.mutable.registry-views :as rv])
   (:import [javax.swing.tree DefaultTreeModel DefaultMutableTreeNode]))
+
+(def-real-multi popupmenu [val] (or
+                                 (:type val)
+                                 val))
+
+(defmethod popupmenu nil [val]
+  (alert (str "No popupmenu defined for " (pr-str val) " (" (class val) ")")))
 
 (defn- our-renderer [renderer {:keys [value] :as wut}]
   (try    
@@ -21,14 +31,13 @@
       (pprint value)
       (throw ex))))
 
-(defn. create [title parent-node]
+(defn- create [title parent-node]
   (try
     (let [child (DefaultMutableTreeNode. title)]
       (when-not (nil? parent-node)
         (.insert parent-node child 0))
       child)
     (catch NullPointerException ex
-      #break
       (println "wtf?"))))
     
 
@@ -50,18 +59,34 @@
       
       (.setSelectionPath src selPath)
       (if (> selRow -1)
-        (.setSelectionRow src selRow)))))
-      
-      ;; (.show popmenu src x y))))
-    ;; (-> e selection last .getUserObject pr-str alert)
+        (.setSelectionRow src selRow))
+      (let [selected-object (-> src selection
+                                last
+                                .getUserObject)
+            popup (popupmenu selected-object)]
+        (if (some? popup)
+          (.show popup src x y))))))
+
+(def domtree-updaters (atom []))
+
+(def model (->> rv/local-registry
+                (r/map (fn [r]
+                         (let [root-node (create ":root" nil)
+                               model (DefaultTreeModel. root-node)]
+                           (build-model! model (re/children-of r :root) root-node)
+                           model)))
+                (r/map (fn [r]
+                         (doseq [f @domtree-updaters]
+                           (f))
+                         r))))
 
 (defn domtree []
-  (let [root-node (create ":root" nil)
-        model (DefaultTreeModel. root-node)]
-    (build-model! model (re/children-of! :root) root-node)
-    (tree
-     :renderer our-renderer
-     :model model
-     :size [200 :by 300]
-     :preferred-size [200 :by 300]
-     :listen [:mouse-clicked node-selected])))
+  (let [t (tree
+           :renderer our-renderer
+           :model @model
+           :size [200 :by 300]
+           :preferred-size [200 :by 300]
+           :listen [:mouse-clicked node-selected])]
+    (swap! domtree-updaters conj (fn []
+                                   (config! t :model @model)))
+    t))

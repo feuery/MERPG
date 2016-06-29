@@ -28,6 +28,10 @@
             [merpg.mutable.layers :as l :refer [layer-metas-ui layer!
                                                 mapwidth! mapheight!
                                                 layer-count!]]
+            [merpg.UI.layers-ui]
+            [merpg.UI.root-ui]
+            [merpg.UI.tileset-ui]
+            [merpg.UI.maps-ui]
             [merpg.mutable.registry :as re]
             [merpg.mutable.to-registry-binding :as trb]
             [merpg.mutable.resize-algorithms :refer [resize!]]))
@@ -95,139 +99,7 @@
 
        "Document Tree"
        (domtree)
-       
-       "Maps"        
-       (button :text "Add map"
-               :listen
-               [:action (fn [_]
-                          (let [viewmodel (atom {"Map's name" ""
-                                           "Map's width" 0
-                                                 "Map's height" 0
-                                                 "Amount of layers" 0})
-                                c (ask-box viewmodel)]
-                            (a/go
-                              (let [result (a/<! c)]
-                                (if result
-                                  (let[{name "Map's name"
-                                     w "Map's width"
-                                     h "Map's height"
-                                     l "Amount of layers"} @viewmodel]
-                                (when (->> [w h l]
-                                           (every? #(> % 0)))
-                                  (println "Creating map with params " [w h l])
-                                  (println "map created with id " (map! w h l :name name)))))))))])
 
-       (button :text "Remove map"
-               :listen
-               [:action (fn [_]
-                          (let [selected-map (-> :selected-map
-                                                 re/peek-registry ;; id
-                                                 re/peek-registry)] ;;data
-                            (when (confirm (str "You're about to IRRECOVERABLY delete map with a name " (:name selected-map) "\n\nDo you wish to proceed?"))
-                              (re/remove-element! (re/peek-registry :selected-map))
-                              (let [new-map-id (-> @map-metas-ui
-                                                   first
-                                                   first)]
-                                (re/register-element! :selected-map new-map-id)))))])
-                                
-       
-       "Layers"       
-       (button :text "New layer"
-               :listen
-               [:action (fn [_]
-                          (let [smap (re/peek-registry :selected-map)]
-                            (layer! (mapwidth! smap)
-                                    (mapheight! smap)
-                                    :parent-id smap
-                                    :order (inc (layer-count! smap)))))])
-
-       (button :text "Remove layer"
-               :listen
-               [:action (fn [_]
-                          (let [selected-layer (-> :selected-layer
-                                                   re/peek-registry
-                                                   re/peek-registry)]
-                            (when (confirm (str "You're about to IRRECOVERABLY delete layer with a name " (:name selected-layer) "\n\nDo you wish to proceed?"))
-                              (re/remove-element! (re/peek-registry :selected-layer))
-                              (let [new-layer-id (-> @layer-metas-ui
-                                                     first
-                                                     first)]
-                                (re/register-element! :selected-layer new-layer-id)))))])
-       (button :text "Move up"
-               :listen
-               [:action (fn [_]
-                          (let [selected-layer (re/peek-registry :selected-layer)
-                                selected-order (-> selected-layer
-                                                   re/peek-registry
-                                                   :order)
-                                orders (->> @l/layer-metas-ui
-                                            (map second)
-                                            (map :order))
-                                max-ord (apply max orders)]
-                            (when (<= (inc selected-order) max-ord)
-                              (when (< (inc selected-order) max-ord)
-                                (if-let [upper-id (->> @l/layer-metas-ui
-                                                    (filter #(-> % second :order (= (inc selected-order))))
-                                                    (map first)
-                                                    first)]
-                                  ;; lower the upper
-                                  (re/update-registry upper-id
-                                                      (update upper-id :order dec))))
-                              ;; raise the lower
-                              
-                              (re/update-registry selected-layer
-                                                  (update selected-layer :order inc)))))])
-       (button :text "Move down"
-               :listen
-               [:action (fn [_]
-                          (let [selected-layer (re/peek-registry :selected-layer)
-                                selected-order (-> selected-layer
-                                                   re/peek-registry
-                                                   :order)]
-                            (when (>= (dec selected-order) 0)
-                              (when (> (dec selected-order) 0)
-                                (if-let [lower-id (->> @l/layer-metas-ui
-                                                       (filter #(-> % second :order (= (dec selected-order))))
-                                                       (map first)
-                                                       first)]
-                                  (re/update-registry lower-id
-                                                      (update lower-id :order inc))))
-                              (re/update-registry selected-layer
-                                                  (update selected-layer :order dec)))))])
-       
-       "Tilesets"       
-       (button :text "Load tileset"
-               :listen
-               [:action (fn [_]
-                          (choose-file :filters [["Tilesetit" ["png" "jpg" "jpeg"]]]
-                                         :remember-directory? true
-                                         :multi? true :success-fn
-                                         (fn [_ files]
-                                           (let [tilesets (->> files
-                                                               (map str)
-                                                               (mapv tileset!))]
-                                             (println "Loaded tilesets!")))))])
-       (button :text "Remove tileset"
-               :listen
-               [:action (fn [_]
-                          (let [selected-tileset (re/peek-registry :selected-tileset)]
-                            (if-not (= selected-tileset :initial)
-                              (let [{:keys [name]} (re/peek-registry selected-tileset)
-                                    tiles-to-update (->> @re/registry
-                                                         (filter (fn [[_ val]]
-                                                                   (and
-                                                                    (= (:type val) :tile)
-                                                                    (= (:tileset val) selected-tileset))))
-                                                         (map first))]
-                                (when (confirm (str "You're about to IRRECOVERABLY delete tileset with a name " name "\n\nDo you wish to proceed?"))
-                                  (re/remove-element! selected-tileset)
-                                  (doseq [tile-id tiles-to-update]
-                                    (re/update-registry tile-id
-                                                        (assoc tile-id
-                                                               :x 0
-                                                               :y 0
-                                                               :tileset :initial)))))
-                              (alert "You can't remove tileset :initial"))))])
        (button :text "Close"
                :listen
                [:action (fn [_]

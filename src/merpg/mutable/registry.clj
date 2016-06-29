@@ -15,9 +15,11 @@
 
 (add-watch registry :layer-view-updater #(r/deliver rv/local-registry %4))
 
-(defn query! [fun]
-  (->> @registry
+(defn query [fun registry]
+  (->> registry
        (filter #(fun (-> % second)))))
+(defn query! [fun]
+  (query fun @registry))
 
 (defn update-element!
   ([id fn]
@@ -36,7 +38,12 @@
   ([id element]
    {:pre [(or (not= id :selected-tool)
               (not (coll? element)))]}
-   (swap! registry assoc id element)
+   ;; element has to know its own id due to how popupmenu in the domtree works
+   (let [element (if (coll? element)
+                   (assoc element :id id)
+                   element)]
+     (swap! registry assoc id element))
+   
    id)
   ([element]
    (let [id (keyword (gensym))]
@@ -74,7 +81,10 @@
                       (fn [~element-sym]
                         ~@forms))))
 
+(defn children-of [registry id & {:keys [exclude-types] :or {exclude-types []}}]
+  (query #(and (= (:parent-id %) id)
+               (not (in? exclude-types (:type %)))) registry))
+
 (defn children-of! [id & {:keys [exclude-types] :or {exclude-types []}}]
-  (query! #(and (= (:parent-id %) id)
-                (not (in? exclude-types (:type %))))))
+  (children-of @registry id :exclude-types exclude-types))
        

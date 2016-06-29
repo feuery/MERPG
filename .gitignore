@@ -34,3 +34,6 @@
 /src/merpg/mutable/resize_algorithms.clj~
 /test/merpg/mutable/layers_test.clj~
 /test/merpg/mutable/maps_test.clj~
+/src/merpg/UI/layers_ui.clj~
+/src/merpg/UI/root_ui.clj~
+/src/merpg/UI/tileset_ui.clj~

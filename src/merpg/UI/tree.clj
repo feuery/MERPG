@@ -51,21 +51,31 @@
 (defn node-selected [e]
   ;; To get the metadata of the selected object use
   ;; (-> e seesaw.core/selection last .getUserObject meta)
-  (when (javax.swing.SwingUtilities/isRightMouseButton e)
-    (let [src (to-widget e)
-          [x y] (location e)
-          selRow (.getRowForLocation src x y)
-          selPath (.getPathForLocation src x y)]
-      
-      (.setSelectionPath src selPath)
-      (if (> selRow -1)
-        (.setSelectionRow src selRow))
-      (let [selected-object (-> src selection
-                                last
-                                .getUserObject)
-            popup (popupmenu selected-object)]
-        (if (some? popup)
-          (.show popup src x y))))))
+  (let [src (to-widget e)
+        [x y] (location e)
+        selRow (.getRowForLocation src x y)
+        selPath (.getPathForLocation src x y)]
+    
+    (.setSelectionPath src selPath)
+    (if (> selRow -1)
+      (.setSelectionRow src selRow))
+    (let [selected-object (-> src selection
+                              last
+                              .getUserObject)
+          popup (popupmenu selected-object)]
+      (if (and (some? popup)
+               (javax.swing.SwingUtilities/isRightMouseButton e))
+        (.show popup src x y))
+
+      ;; Update the selected-* kw in registry
+
+      (condp = (:type selected-object)
+        :tileset (re/register-element! :selected-tileset (:id selected-object))
+        :map (re/register-element! :selected-map (:id selected-object))
+        :layer (do
+                 (pprint selected-object)
+                 (re/register-element! :selected-map (:map-id selected-object)
+                                       :selected-layer (:id selected-object)))))))
 
 (def domtree-updaters (atom []))
 

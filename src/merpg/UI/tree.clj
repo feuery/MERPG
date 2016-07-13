@@ -9,7 +9,8 @@
             [merpg.mutable.registry :as re]
             [merpg.macros.multi :refer :all]
             [reagi.core :as r]
-            [merpg.mutable.registry-views :as rv])
+            [merpg.mutable.registry-views :as rv]
+            [merpg.mutable.layers :refer [sort-by-multiple-keys]])
   (:import [javax.swing.tree DefaultTreeModel DefaultMutableTreeNode]))
 
 (def-real-multi popupmenu [val] (or
@@ -42,11 +43,28 @@
     
 
 (defn- build-model! [model children parent]
-  (doseq [[id val] children]
+  (let [non-collection-kids (filter #(not (coll? (second %))) children)
+
+        ;; an elaborate way of ordering this data first by :type, then by :order
+        children (->> children
+                      (filter #(coll? (second %)))
+                      (into {})
+                      (sort-by (fn [[_ val]]
+                                 (:type val)))
+                      (partition-by (fn [[k val]]
+                                      (:type val)))
+                      (map (partial sort-by :order))
+                      flatten
+                      (partition 2)
+                      (mapv vec)
+                      (into {})
+                      (concat non-collection-kids)
+                      (into {}))]
+    (doseq [[id val] children]
       (let [node (create val parent)
             new-children (re/children-of! id :exclude-types [:tile])]
         (if-not (empty? new-children)
-          (build-model! model new-children node)))))
+          (build-model! model new-children node))))))
 
 (defn node-selected [e]
   ;; To get the metadata of the selected object use

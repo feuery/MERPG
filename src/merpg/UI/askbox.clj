@@ -2,7 +2,8 @@
   (:require [clojure.pprint :refer [pprint]]
             [seesaw.core :refer :all]
             [seesaw.bind :as b]
-            [clojure.core.async :as a]))
+            [clojure.core.async :as a]
+            [merpg.UI.events :refer [allow-events]]))
 
 (defn in? [vec val]
   (some (partial = val) vec))
@@ -24,17 +25,15 @@
                 :size [100 :by 30])]
     (b/bind s
             (b/tee 
-             (b/b-swap! data-atom #(assoc %1 key-to-bind %2))
+             (b/b-swap! data-atom #(do
+                                     (allow-events
+                                      (assoc %1 key-to-bind %2))))
              (b/bind (b/transform str) t)))
     
     (flow-panel :items [(border-panel :center s
                                       :east (str max)
                                       :west (str min))
                         t])))
-
-(def viewmodel-atom (atom {:asdf 0
-                            :age "asd"
-                            :jees? true}))
 
 (defn ask-box [viewmodel-atom & {:keys [visible?
                                         completed-chan]
@@ -55,7 +54,8 @@
                                          java.lang.String (text :text (str val)
                                                                 :listen
                                                                 [:key-released (fn [e]
-                                                                                 (swap! viewmodel-atom assoc key (text e)))])
+                                                                                 (allow-events
+                                                                                  (swap! viewmodel-atom assoc key (text e))))])
                                          ;; binds itself to the atom
                                          java.lang.Long (numeric-input 0 255
                                                                        viewmodel-atom key)
@@ -65,7 +65,8 @@
                                          java.lang.Boolean (checkbox :selected? val
                                                                      :listen
                                                                      [:item-state-changed (fn [e]
-                                                                                            (swap! viewmodel-atom assoc key (selection e)))])
+                                                                                            (allow-events
+                                                                                             (swap! viewmodel-atom assoc key (selection e))))])
                                          clojure.lang.Keyword (text :text (str val)
                                                                     :editable? false
                                                                     :enabled? false)
@@ -76,7 +77,8 @@
                                                                                  :listen
                                                                                  [:selection
                                                                                   (fn [e]
-                                                                                    (swap! viewmodel-atom assoc key (selection e)))])))]))
+                                                                                    (allow-events
+                                                                                     (swap! viewmodel-atom assoc key (selection e))))])))]))
                               flatten
                               vec)
                          ["" (button :id :ok :text "Ok")])

@@ -44,7 +44,8 @@
     
 
 (defn- build-model! [model children parent]
-  (let [non-collection-kids (filter #(not (coll? (second %))) children)
+  (let [;; children (re/children-of! :root)
+        non-collection-kids (filter #(not (coll? (second %))) children)
 
         ;; an elaborate way of ordering this data first by :type, then by :order
         children (->> children
@@ -54,13 +55,14 @@
                                  (:type val)))
                       (partition-by (fn [[k val]]
                                       (:type val)))
-                      (map (partial sort-by :order))
+                      (map #(sort-by (fn [e] (-> e second :order)) %))
                       flatten
                       (partition 2)
                       (mapv vec)
                       (into {})
                       (concat non-collection-kids)
                       (into {}))]
+    ;; (pprint children))
     (doseq [[id val] children]
       (let [node (create val parent)
             new-children (re/children-of! id :exclude-types [:tile])]

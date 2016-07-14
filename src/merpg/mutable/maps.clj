@@ -6,6 +6,7 @@
             [merpg.mutable.tiles :as ti]
             [merpg.events.mouse :as m]
             [merpg.macros.multi :refer [def-real-multi]]
+            [merpg.UI.events :as e]
             [seesaw.core :as s]
             [reagi.core :as r]
             [clojure.test :refer :all]
@@ -33,16 +34,17 @@
     (re/update-registry hit-layer
                        (assoc hit-layer :parent-id id))
 
-    (re/register-element! id {:name name
-                              :zonetiles {[0 0] #(s/alert "TODO: design real zonetiles")}
-                              :parent-id :root
-                              :type :map})
+    (e/allow-events
+     (re/register-element! id {:name name
+                               :zonetiles {[0 0] #(s/alert "TODO: design real zonetiles")}
+                               :parent-id :root
+                               :type :map})
 
-    (when first?
-      (re/register-element! :selected-layer (first layers)
-                            :selected-map id
-                            :selected-tool :pen
-                            :selected-tile (ti/tile 0 0 :initial 0)))
+     (when first?
+       (re/register-element! :selected-layer (first layers)
+                             :selected-map id
+                             :selected-tool :pen
+                             :selected-tile (ti/tile 0 0 :initial 0))))
     id))
 
 (map! 1 1 1 :name "Initial map") 

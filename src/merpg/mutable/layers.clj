@@ -6,7 +6,8 @@
             [merpg.mutable.registry-views :as rv]
             [merpg.mutable.tiles :as t]
             [merpg.mutable.tools :as tt]
-            [merpg.UI.askbox :refer [in?]]))
+            [merpg.UI.askbox :refer [in?]]
+            [merpg.UI.events :as e]))
 
 (println "Loading merpg.mutable.layers")
 
@@ -35,10 +36,11 @@
         (t/hit-tile! false map-x map-y id)
         (t/tile! 0 0 :initial 0 map-x map-y id)))
 
-    (re/register-element! id (layer-meta (if hit?
-                                           "Hitlayer"
-                                           name)
-                                         parent-id order hit?))))
+    (e/allow-events
+     (re/register-element! id (layer-meta (if hit?
+                                            "Hitlayer"
+                                            name)
+                                          parent-id order hit?)))))
 
 (defn mapvals
   "Maps function over hashmap's values"

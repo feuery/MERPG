@@ -2,15 +2,17 @@
   (:require [reagi.core :as r]
 
             [merpg.IO.tileset :refer :all]
+            [merpg.UI.events :as e]
             [merpg.2D.core :refer [image]]
             [merpg.mutable.registry :as re]
             [merpg.events.mouse :as m]))
 
 (defn tileset! [path]
-  (re/register-element! (keyword (gensym "TILESET__")) {:name "New tileset"
-                                                        :images (load-tileset path)
-                                                        :parent-id :root
-                                                        :type :tileset}))
+  (e/allow-events
+   (re/register-element! (keyword (gensym "TILESET__")) {:name "New tileset"
+                                                         :images (load-tileset path)
+                                                         :parent-id :root
+                                                         :type :tileset})))
 
 (re/register-element! :initial {:name "Initial tileset"
                                :images (load-tileset (image 50 50 :color "#0000FF"))

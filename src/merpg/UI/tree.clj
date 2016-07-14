@@ -6,6 +6,7 @@
             [clojure.core :refer :all]
             [clojure.pprint :refer :all]
             [clojure.string :as str]
+            [merpg.UI.events :as e]
             [merpg.mutable.registry :as re]
             [merpg.macros.multi :refer :all]
             [reagi.core :as r]
@@ -95,26 +96,25 @@
                  (re/register-element! :selected-map (:parent-id selected-object)
                                        :selected-layer (:id selected-object)))))))
 
-(def domtree-updaters (atom []))
-
-(def model (->> rv/local-registry
-                (r/map (fn [r]
-                         (let [root-node (create ":root" nil)
-                               model (DefaultTreeModel. root-node)]
-                           (build-model! model (re/children-of r :root) root-node)
-                           model)))
-                (r/map (fn [r]
-                         (doseq [f @domtree-updaters]
-                           (f))
-                         r))))
+    ;;;; EIHÄN MEIL OO DEFAULTTREEMODELISSA MUUTA KU METADATAAAA
+    ;;;; Rerakenna malli ainoastaan kun tilesettejä tai mappeja tulee lisää
+    ;;;; kaikki muut tapahtumat voi ohittaa
 
 (defn domtree []
-  (let [t (tree
+  (let [root-node (create ":root" nil)
+        model (DefaultTreeModel. root-node)
+
+        t (tree
            :renderer our-renderer
-           :model @model
            :size [200 :by 300]
            :preferred-size [200 :by 300]
            :listen [:mouse-clicked node-selected])]
-    (swap! domtree-updaters conj (fn []
-                                   (config! t :model @model)))
+    (build-model! model (re/children-of! :root) root-node)
+    (config! t :model model)
+
+    (add-watch re/registry :domtree (fn [& _]
+                                      (when e/*rebuild-dom?*
+                                        (.removeAllChildren root-node)
+                                        (build-model! model (re/children-of! :root) root-node)
+                                        (.reload model root-node))))
     t))

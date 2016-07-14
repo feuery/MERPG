@@ -66,4 +66,13 @@
                             [:action (fn [_]
                                        (let [id (:id val)
                                              atom (tbr/atom->registry-binding id)]
+                                         (swap! atom assoc :meta
+                                                {:opacity
+                                                 {:max 255}
+                                                 :order
+                                                 {:max (count (re/children-of! (:parent-id val)))}
+                                                 :parent-id {:visible? false}
+                                                 :subtype {:visible? false}
+                                                 :type {:visible? false}
+                                                 :id {:visible? false}})
                                          (ask-box atom)))])]))

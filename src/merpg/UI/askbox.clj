@@ -7,39 +7,50 @@
 
 (defn in? [vec val]
   (some (partial = val) vec))
-    
 
-(defn numeric-input [min max data-atom key-to-bind]
-  (let [val (get @data-atom key-to-bind)
+(defn numeric-input [data-atom key-to-bind & {:keys [meta] :or {meta {:max 255
+                                                                      :min 0}}}]
+  (let [{:keys [max min] :or {max 255
+                              min 0}} meta
+        val (long (get @data-atom key-to-bind))
         val (if (< val min)
               min
               (if (> val max)
                 max
                 val))
-        s (slider :value val
-                  :max max
-                  :min min)
-        t (text :text (str val)
-                :editable? false
-                :enabled? false
-                :size [100 :by 30])]
-    (b/bind s
-            (b/tee 
-             (b/b-swap! data-atom #(do
-                                     (allow-events
-                                      (assoc %1 key-to-bind %2))))
-             (b/bind (b/transform str) t)))
-    
-    (flow-panel :items [(border-panel :center s
-                                      :east (str max)
-                                      :west (str min))
-                        t])))
+        s (spinner :model (spinner-model val :from min :to max :by 1))]
+    (b/bind s (b/b-swap! data-atom #(do
+                                      (allow-events
+                                       (assoc %1 key-to-bind %2)))))
+    (flow-panel :items [(str min) s (str max)])))
 
-(defn ask-box [viewmodel-atom & {:keys [visible?
-                                        completed-chan]
-                                 :or {visible? true
-                                      completed-chan (a/chan)}}]
-  (let [gridded-widgets (concat
+(defn ask-box
+  "Constructs a dialog with a grid with viewmodel-atom's values presented as editable components. Edits are applied immediately. If viewmodel-atom has a :meta - key, there you can put constraints:
+
+For numeric data, assuming data 
+{:name \"Me\"
+ :age 22}
+
+the following viewmodel-atom
+{:name \"Me\"
+ :age 22
+ :meta
+  {:age 
+   {:min 0
+    :max 30}}} 
+
+would limit the key :age in-between 0 and 30. 
+
+Currently supported meta constraints:
+
+:max, :min - limit numeric input range - applies to Integers and Longs
+:visible? - hide the component completely - applies to everything"
+  [viewmodel-atom & {:keys [visible?
+                            completed-chan]
+                     :or {visible? true
+                          completed-chan (a/chan)}}]
+  (let [{:keys [meta]} @viewmodel-atom
+        gridded-widgets (concat
                          (->> @viewmodel-atom
                               (filter (fn [[_ val]]
                                         (in? [java.lang.String
@@ -49,6 +60,9 @@
                                               clojure.lang.Keyword
                                               clojure.lang.PersistentVector] (class val))))
                               (mapv (fn [[key val :as asd]]
+                                      (let [component-meta (get meta key)
+                                            {:keys [visible?] :or {visible? true}} component-meta]
+                                        (if visible?
                                       [(str key)
                                        (condp = (class val)
                                          java.lang.String (text :text (str val)
@@ -57,11 +71,11 @@
                                                                                  (allow-events
                                                                                   (swap! viewmodel-atom assoc key (text e))))])
                                          ;; binds itself to the atom
-                                         java.lang.Long (numeric-input 0 255
-                                                                       viewmodel-atom key)
+                                         java.lang.Long (numeric-input viewmodel-atom key
+                                                                       :meta (get meta key))
                                          ;; binds itself to the atom
-                                         java.lang.Integer (numeric-input 0 255
-                                                                          viewmodel-atom key)
+                                         java.lang.Integer (numeric-input viewmodel-atom key
+                                                                          :meta (get meta key))
                                          java.lang.Boolean (checkbox :selected? val
                                                                      :listen
                                                                      [:item-state-changed (fn [e]
@@ -78,7 +92,8 @@
                                                                                  [:selection
                                                                                   (fn [e]
                                                                                     (allow-events
-                                                                                     (swap! viewmodel-atom assoc key (selection e))))])))]))
+                                                                                     (swap! viewmodel-atom assoc key (selection e))))])))]))))
+                              (filter some?)
                               flatten
                               vec)
                          ["" (button :id :ok :text "Ok")])

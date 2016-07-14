@@ -36,9 +36,9 @@
                             [:action (fn [_]
                                        (let [id (:id val)
                                              atom (tbr/atom->registry-binding id)]
+                                         (swap! atom assoc :meta
+                                                {:images {:visible? false}
+                                                 :type {:visible? false}
+                                                 :parent-id {:visible? false}
+                                                 :id {:visible? false}})
                                          (ask-box atom)))])]))
-;; Exception in thread "AWT-EventQueue-0" java.lang.IllegalArgumentException: No method in multimethod 'popupmenu' for dispatch value: :tileset
-;; laita add map ja load tileset :rootin kontekstimenuun
-;; toteuta layereille dommipuuhun sortti :orderin mukaan
-;; keksi joku kikkakolmonen päivittää dommipuun malli rakentamatta koko viewiä fyysisesti uudelleen
-

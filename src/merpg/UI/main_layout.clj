@@ -78,7 +78,14 @@
                                 vm (atom {"Map's width" w
                                           "Map's height" h
                                           "Side of horizontal action" [:left :right]
-                                          "Side of vertical action" [:top :bottom]})
+                                          "Side of vertical action" [:top :bottom]
+                                          :meta
+                                          {"Map's width"
+                                           {:max 20
+                                            :min 0}
+                                           "Map's height"
+                                           {:max 20
+                                            :min 0}}})
                                 c (ask-box vm)]
                             (a/go
                               (when (a/<! c)

@@ -37,5 +37,9 @@
                             [:action (fn [_]
                                        (let [id (:id val)
                                              atom (tbr/atom->registry-binding id)]
+                                         (swap! atom assoc :meta
+                                                {:parent-id {:visible? false}
+                                                 :type {:visible? false}
+                                                 :id {:visible? false}})
                                          (ask-box atom)))])]))
 

@@ -11,7 +11,7 @@
             [clojure.pprint :refer [pprint]]
             [merpg.IO.tileset :refer [load-tileset img-to-tileset]]
             [merpg.mutable.tileset :refer [tileset!]]
-            [merpg.mutable.tileset-rview :refer [tileset-meta-ui]]
+            [merpg.mutable.tileset-rview :refer [tileset-meta-ui] :as tr]
             [merpg.IO.out :refer [dump-image read-image]]
             [merpg.UI.askbox :refer [ask-box]]
             [merpg.UI.map-controller :refer [map-controller
@@ -124,15 +124,14 @@
                   [(menu-item :text "Save game image"
                               :listen
                               [:action (fn [_]
-                                         (comment
-                                           (choose-file :filters [["Kartat" ["memap"]]]
-                                                        :remember-directory? true
-                                                        :type :save
-                                                        :multi? false
-                                                        :success-fn
-                                                        (fn [_ file]
-                                                          (dump-image (.getAbsolutePath file) @map-list-atom @tileset-map-atom))))
-                                         (alert "TODO broken"))])
+                                         (choose-file :filters [["Kartat" ["memap"]]]
+                                                      :remember-directory? true
+                                                      :all-files? false
+                                                      :type :save
+                                                      :multi? false
+                                                      :success-fn 
+                                                      (fn [_ file]
+                                                        (dump-image (.getAbsolutePath file) @re/registry @tr/rendered-tilesets))))])
                    (menu-item :text "Load game image"
                               :listen
                               [:action (fn [_]

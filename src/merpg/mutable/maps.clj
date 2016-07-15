@@ -36,7 +36,6 @@
 
     (e/allow-events
      (re/register-element! id {:name name
-                               :zonetiles {[0 0] #(s/alert "TODO: design real zonetiles")}
                                :parent-id :root
                                :type :map})
 

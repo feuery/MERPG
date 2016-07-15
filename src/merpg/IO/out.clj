@@ -1,7 +1,9 @@
 (ns merpg.IO.out
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [merpg.IO.tileset :refer :all])
+            [clojure.pprint :refer [pprint]]
+            [merpg.IO.tileset :refer :all]
+            [merpg.UI.askbox :refer [in?]])
   (:import [java.util.zip ZipEntry ZipOutputStream ZipInputStream ZipFile]
            [javax.imageio ImageIO]))
 
@@ -32,27 +34,35 @@
           
 
 
-(defn dump-image [filename map-list tileset-list]
-  (let [counter (atom -1)
-        filename (if (.endsWith filename ".zip")
-                   filename
-                   (str filename ".zip"))]
-    (with-open [file (io/output-stream filename)
-                zip  (ZipOutputStream. file)
-                wrt  (io/writer zip)]
-      (binding [*out* wrt
-                *print-meta* true]
-        (doseq [[name tileset] tileset-list]
+(defn dump-image [filename registry-snapshot rendered-tilesets] 
+  (try
+    (let [registry-snapshot (->> (dissoc registry-snapshot nil)
+                                 (filter #(not (in? [:tool :tileset] (-> %
+                                                                         second
+                                                                         :type))))
+                                 (into {}))
+          filename (if (.endsWith filename ".zip")
+                     filename
+                     (str filename ".zip"))]
+      (with-open [file (io/output-stream filename)
+                  zip  (ZipOutputStream. file)
+                  wrt  (io/writer zip)]
+        (binding [*out* wrt]
           (doto zip
-            (with-entry (str (str/replace (str name) ":" "") ".png") zipfile
-              (ImageIO/write (tileset-to-img tileset) "png" zipfile))))
-        (reset! counter -1)
-        (doseq [map map-list]
+            (with-entry "registry" _
+              (pr registry-snapshot))))
+        (doseq [[key tileset] rendered-tilesets]
           (doto zip
-            (with-entry (str "Map " (swap! counter inc) ".memap") _
-              (pr map))))))
+            (with-entry (str key ".png") zipfile
+              (ImageIO/write tileset "png" zipfile)))))
+      
       (.renameTo (io/file filename)
-                 (io/file (str/replace filename ".zip" ".memap")))))
+                 (io/file (str/replace filename ".zip" ".memap"))))
+    (println "Saved " (str/replace filename ".zip" ".memap"))
+    true
+    (catch Exception ex
+      (pprint ex)
+      false)))
 
 (defn entries [zipfile]
   (enumeration-seq (.entries zipfile)))

@@ -150,6 +150,7 @@
                 :visible? true
                 :menubar (make-menu)
                 :on-close 
-                            ;; :exit
-                :hide))
+                :exit
+                ;; :hide
+                ))
   (config! f :content (get-content f)))

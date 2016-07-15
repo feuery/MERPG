@@ -13,25 +13,29 @@
                             :type :tool
                             :fn func}))
 
-(deftool :pen (fn [tile-id]
-                (let [selected-tile (re/peek-registry :selected-tile)]
-                  (println "tile-id " tile-id)
-                  (pprint selected-tile)
-                  (re/update-registry tile-id
-                                      (let [tr (assoc tile-id
-                                                      :x (:x selected-tile)
-                                                      :y (:y selected-tile)
-                                                      :tileset (:tileset selected-tile)
-                                                      :rotation 0)]
-                                        tr)))))
+(defn load-default-tools! []
 
-(deftool :hit-tool (fn [tile-id]
-                     (re/update-registry tile-id
-                                         (update tile-id :can-hit? not))))
-
-(deftool :rotater (fn [tile-id]
+  (deftool :pen (fn [tile-id]
+                  (let [selected-tile (re/peek-registry :selected-tile)]
+                    (println "tile-id " tile-id)
+                    (pprint selected-tile)
                     (re/update-registry tile-id
-                                        (update tile-id :rotation #(mod (inc %) 4)))))
+                                        (let [tr (assoc tile-id
+                                                        :x (:x selected-tile)
+                                                        :y (:y selected-tile)
+                                                        :tileset (:tileset selected-tile)
+                                                        :rotation 0)]
+                                          tr)))))
+
+  (deftool :hit-tool (fn [tile-id]
+                       (re/update-registry tile-id
+                                           (update tile-id :can-hit? not))))
+
+  (deftool :rotater (fn [tile-id]
+                      (re/update-registry tile-id
+                                          (update tile-id :rotation #(mod (inc %) 4))))))
+
+(load-default-tools!)
                                                                      
                       
 

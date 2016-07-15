@@ -7,12 +7,19 @@
             [merpg.mutable.registry :as re]
             [merpg.events.mouse :as m]))
 
-(defn tileset! [path]
-  (e/allow-events
-   (re/register-element! (keyword (gensym "TILESET__")) {:name "New tileset"
-                                                         :images (load-tileset path)
-                                                         :parent-id :root
-                                                         :type :tileset})))
+(defn tileset!
+  ([path]
+   (e/allow-events
+    (re/register-element! (keyword (gensym "TILESET__")) {:name "New tileset"
+                                                          :images (load-tileset path)
+                                                          :parent-id :root
+                                                          :type :tileset})))
+  ([id name image]
+   (e/allow-events
+    (re/register-element! id {:name name
+                              :images (img-to-tileset image)
+                              :parent-id :root
+                              :type :tileset}))))
 
 (re/register-element! :initial {:name "Initial tileset"
                                :images (load-tileset (image 50 50 :color "#0000FF"))

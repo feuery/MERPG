@@ -13,6 +13,10 @@
 (defn is-render-allowed? []
   @render-allowed?) ;; I can't be arsed to trick the java type checked to use atoms correctly
 
+;; implement a way to temporarily cease propagating registry to the reagi streams?
+;; it might be necessary if they lock the app when heavily reorganizing registry
+;; ie. onload
+
 (add-watch registry :layer-view-updater #(r/deliver rv/local-registry %4))
 
 (defn query [fun registry]

@@ -12,7 +12,7 @@
             [merpg.IO.tileset :refer [load-tileset img-to-tileset]]
             [merpg.mutable.tileset :refer [tileset!]]
             [merpg.mutable.tileset-rview :refer [tileset-meta-ui] :as tr]
-            [merpg.IO.out :refer [dump-image read-image]]
+            [merpg.IO.out :refer [dump-image read-image!]]
             [merpg.UI.askbox :refer [ask-box]]
             [merpg.UI.map-controller :refer [map-controller
                                              show]]
@@ -135,19 +135,13 @@
                    (menu-item :text "Load game image"
                               :listen
                               [:action (fn [_]
-                                         (comment
-                                           (choose-file :filters [["Kartat" ["memap"]]]
+                                         (choose-file :filters [["Kartat" ["memap"]]]
+                                                      :all-files? false
                                                         :remember-directory? true
                                                         :multi? false
                                                         :success-fn
                                                         (fn [_ file]
-                                                          (let [{map-set :maps
-                                                                 tilesets :tilesets} (read-image (.getAbsolutePath file))]
-                                                            (reset! map-list-atom map-set)
-                                                            (reset! tileset-map-atom tilesets)
-                                                            (reset! current-map-index-atom 0)
-                                                            (reset! current-map-atom (get map-set @current-map-index-atom))))))
-                                         (alert "TODO broken"))])])]))
+                                                          (read-image! (.getAbsolutePath file)))))])])]))
 
 (defn show-mapeditor []
   

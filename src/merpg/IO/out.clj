@@ -46,7 +46,10 @@
                                  (into {}))
           filename (if (.endsWith filename ".zip")
                      filename
-                     (str filename ".zip"))]
+                     (str filename ".zip"))
+          final-filename (-> filename
+                             (str/replace ".zip" ".memap")
+                             (str/replace #"(\.memap)+$" ".memap"))]
       (with-open [file (io/output-stream filename)
                   zip  (ZipOutputStream. file)
                   wrt  (io/writer zip)]
@@ -61,7 +64,7 @@
                 (ImageIO/write tileset "png" zipfile))))))
       
       (.renameTo (io/file filename)
-                 (io/file (str/replace filename ".zip" ".memap"))))
+                 (io/file final-filename)))
     (println "Saved " (str/replace filename ".zip" ".memap"))
     true
     (catch Exception ex

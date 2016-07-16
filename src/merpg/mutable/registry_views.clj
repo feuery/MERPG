@@ -67,9 +67,7 @@
                      (map (fn [[map-id layer-ids]]
                             [map-id (pmap (fn [layer-id]
                                             ;; (image 50 50 :color "#00FF00"
-                                                    (map_renderer/render map-id layer-id
-                                            
-                                                                )) layer-ids)]))
+                                                    (map_renderer/render map-id layer-id)) layer-ids)]))
                      (map (fn [[map-id layer-surfaces]]
                             (if (and (some? layer-surfaces)
                                      (some? (first layer-surfaces)))

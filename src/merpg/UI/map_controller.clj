@@ -1,6 +1,7 @@
 (ns merpg.UI.map-controller
   (:require [merpg.IO.tileset :refer [load-tileset]]
             [merpg.mutable.layers :refer [current-hitlayer current-hitlayer-data]]
+            [merpg.UI.render-drawqueue :refer :all]
             [merpg.events.mouse :refer [post-mouse-event!]]
             [merpg.UI.draggable-canvas :refer :all]
             [merpg.2D.core :refer :all]
@@ -48,7 +49,9 @@
   []
   (let [c (draggable-canvas :paint-fn
                             (fn [_ g]
-                              (.drawImage g (map-surface!) nil 0 0))
+                              (doto g
+                                (.drawImage (map-surface!) nil 0 0)
+                                (.drawImage (render-drawqueue!) nil 0 0)))
                             :surface-provider map-surface!
                             :draggable-fn (fn [e]
                                             (let [[x y] (mouse-location e)]

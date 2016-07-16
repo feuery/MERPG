@@ -55,7 +55,13 @@
                             :surface-provider map-surface!
                             :draggable-fn (fn [e]
                                             (let [[x y] (mouse-location e)]
-                                              (post-mouse-event! x y :map-controller))))]
+                                              (post-mouse-event! x y :map-controller :mousemove)))
+                            :onmousedown (fn [e]
+                                           (let [[x y] (mouse-location e)]
+                                             (post-mouse-event! x y :map-controller :mousedown)))
+                            :onmouseup (fn [e]
+                                         (let [[x y] (mouse-location e)]
+                                              (post-mouse-event! x y :map-controller :mouseup))))]
     
     (remove-rendered-map-watcher :map-controller)
     (add-rendered-map-watcher #(do

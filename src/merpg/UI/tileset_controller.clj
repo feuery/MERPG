@@ -23,7 +23,7 @@
                             :draggable-fn
                             (fn [e]
                               (let [[x-pxl y-pxl] (mouse-location e)]
-                                (post-mouse-event! x-pxl y-pxl :tileset-controller)))
+                                (post-mouse-event! x-pxl y-pxl :tileset-controller :mousemove)))
                             :surface-provider get-tileset-surface!)]
     (remove-rtileset-watcher :tileset)
     (add-rtileset-watcher #(repaint! c) :tileset)

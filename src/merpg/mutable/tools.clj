@@ -13,6 +13,11 @@
                             :type :tool
                             :fn func}))
 
+(defn tile-id->pxcoords [tile-id]
+  (let [{:keys [map-x map-y]} (re/peek-registry tile-id)]
+    [(* map-x 50)
+     (* map-y 50)]))
+
 (defn load-default-tools! []
 
   (deftool :pen (fn [tile-id]
@@ -33,7 +38,19 @@
 
   (deftool :rotater (fn [tile-id]
                       (re/update-registry tile-id
-                                          (update tile-id :rotation #(mod (inc %) 4))))))
+                                          (update tile-id :rotation #(mod (inc %) 4)))))
+  (deftool :move-sprite {:mousedown
+                         (fn [tile-id]
+                           (locking *out*
+                             (println "Mousedown on :move-sprite")))
+                         :mouseup
+                         (fn [tile-id]
+                           (locking *out*
+                             (println "Mouseup on :move-sprite")))
+                         :mousemove
+                         (fn [tile-id]
+                           (locking *out*
+                             (println "Mousemove on :move-sprite")))}))
 
 (load-default-tools!)
                                                                      

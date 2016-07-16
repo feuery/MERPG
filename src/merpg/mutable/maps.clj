@@ -65,18 +65,22 @@
         tile-id))))
 
 (def map-events (->> m/mouse-events
-                      (r/filter #(= (:source %) :map-controller))
-                      (r/map (fn [{:keys [tile-x tile-y]}]
-                               (let [tile-id (get-edited-tile! tile-x tile-y)
-                                     tool-id (re/peek-registry :selected-tool)
-                                     {tool-fn :fn} (re/peek-registry tool-id)]
-                                 (if (fn? tool-fn)
-                                   (do
-                                     (tool-fn tile-id)
-                                     {:success? true
-                                      :coords [tile-x tile-y]})
-                                   {:success? false
-                                    :coords [tile-x tile-y]}))))))
-
-
-
+                     (r/filter #(= (:source %) :map-controller))
+                     (r/map (fn [{:keys [tile-x tile-y type]}]
+                              (let [tile-id (get-edited-tile! tile-x tile-y)
+                                    tool-id (re/peek-registry :selected-tool)
+                                    {tool-fn :fn} (re/peek-registry tool-id)]
+                                (if (fn? tool-fn)
+                                  (do
+                                    (tool-fn tile-id)
+                                    {:success? true
+                                     :coords [tile-x tile-y]})
+                                  (if (and (map? tool-fn)
+                                           (contains? tool-fn type))
+                                    (let [tool-fn (get tool-fn type)]
+                                      (tool-fn tile-id)
+                                      {:success? true
+                                       :coords [tile-x tile-y]})
+                                    
+                                    {:success? false
+                                     :coords [tile-x tile-y]})))))))

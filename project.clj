@@ -1,4 +1,4 @@
-(defproject memapper "0.1.1"
+(defproject memapper "0.1.2-SNAPSHOT"
   :description "A map editor for the MERPG-game. Might morph into a real 2d-game-building-environment some day"
   :url "http://yearofourlord.blogspot.com"
   :license {:name "MIT License"

@@ -15,3 +15,9 @@ Currently under-development, thus there's no way to actually use it :)
 ## License
 
 Distributed currently under the GPLv3, because I don't care enough to research something better. Will probably change though.
+
+## Assets
+
+At the moment I use test assets drawn by [fairandcruel](http://fairandcruel.tumblr.com) and [rinkamari](http://rinkamari.tumblr.com) with all rights granted for this project. Here's a list of the assets I also use that haven't been drawn by previously mentioned:
+
+	 

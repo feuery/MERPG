@@ -36,3 +36,5 @@
                            :source source
                            :process? true
                            :type type}))
+
+(def current-mouse-location (atom [0 0]))

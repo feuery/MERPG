@@ -1,7 +1,8 @@
 (ns merpg.UI.draggable-canvas
   (:require [seesaw.core :refer :all]
             [seesaw.mouse :refer [location] :rename {location mouse-location}]
-            [merpg.2D.core :as dd]))
+            [merpg.2D.core :as dd]
+            [merpg.events.mouse :refer [current-mouse-location]]))
 
 (defn draggable-canvas [& {:keys [paint-fn draggable-fn surface-provider
                                   onmousedown onmouseup]
@@ -26,10 +27,11 @@
                                                 vec))
                  (onmousedown e)))
              :mouse-dragged (fn [e]
-                              (let [[x-pxl y-pxl] (mouse-location e)
+                              (let [[x-pxl y-pxl :as mouse-coord] (mouse-location e)
                                     [x-tile y-tile] [(long (/ x-pxl 50))
                                                      (long (/ y-pxl 50))]]
                                 (when-not (get-in @mouse-visited-map [x-tile y-tile])
+                                  (reset! current-mouse-location mouse-coord)
                                   (draggable-fn e)
                                   (swap! mouse-visited-map update-in [x-tile y-tile] not))))
              :mouse-released #(onmouseup %)])))

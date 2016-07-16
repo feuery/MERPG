@@ -4,7 +4,9 @@
             [clojure.pprint :refer [pprint]]
             
             [merpg.mutable.registry :as re]
-            [merpg.mutable.registry-views :as rv]))
+            [merpg.2D.core :refer :all]
+            [merpg.mutable.registry-views :as rv]
+            [merpg.events.mouse :refer [current-mouse-location]]))
 
 (defn deftool
   "The func shall receive the tile-id of the tile it's been used on as a parameter. This will probably break with the hitlayer-tool, but that'll be tested when the time is right"
@@ -17,6 +19,22 @@
   (let [{:keys [map-x map-y]} (re/peek-registry tile-id)]
     [(* map-x 50)
      (* map-y 50)]))
+
+(defn point-in-rect? [[x y] [r-x r-y r-width r-height]]
+  (and (>= x r-x)
+       (<= x (+ r-x r-width))
+       (>= y r-y)
+       (<= y (+ r-y r-height))))
+
+(defn sprites-near! [[mouse-x mouse-y :as point]]
+  (->>
+   (re/query! #(= (:type %) :sprite))
+   (re/query (fn [{:keys [x y surface]}]
+                (let [w (img-width surface)
+                      h (img-height surface)]
+                  (point-in-rect? point [x y w h]))))
+   vals
+   (sort-by :order)))
 
 (defn load-default-tools! []
 
@@ -39,18 +57,26 @@
   (deftool :rotater (fn [tile-id]
                       (re/update-registry tile-id
                                           (update tile-id :rotation #(mod (inc %) 4)))))
-  (deftool :move-sprite {:mousedown
-                         (fn [tile-id]
-                           (locking *out*
-                             (println "Mousedown on :move-sprite")))
-                         :mouseup
-                         (fn [tile-id]
-                           (locking *out*
-                             (println "Mouseup on :move-sprite")))
-                         :mousemove
-                         (fn [tile-id]
-                           (locking *out*
-                             (println "Mousemove on :move-sprite")))}))
+  (let [sprite-id (atom nil)]
+    (deftool :move-sprite {:mousedown
+                           (fn [tile-id]
+                             (let [coord (tile-id->pxcoords tile-id)
+                                   id (-> coord
+                                          sprites-near!
+                                          last
+                                          :id)]
+                               (reset! sprite-id id)))
+                           
+                           :mouseup
+                           (fn [tile-id]
+                             (reset! sprite-id nil))
+                           :mousemove
+                           (fn [tile-id]
+                             (when-some [sprite @sprite-id]
+                               (let [[x y] @current-mouse-location]
+                                 (re/update-registry sprite
+                                                     (assoc sprite :x x
+                                                            :y y)))))})))
 
 (load-default-tools!)
                                                                      

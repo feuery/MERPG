@@ -16,9 +16,13 @@
     (->> queue
          (reduce (fn [surface {x :x
                                y :y
+                               angle :angle
                                name :name
                                sprite :surface}]
                    (println "Rendering " name " at " [x y])
                    (draw-to-surface surface
-                                    (Draw sprite [x y])))
+                                    (Draw (if (= angle 0)
+                                            sprite
+                                            (rotate sprite (Math/toDegrees angle)))
+                                            [x y])))
                  surface))))

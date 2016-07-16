@@ -6,7 +6,8 @@
             [merpg.mutable.registry :as re]
             [merpg.2D.core :refer :all]
             [merpg.mutable.registry-views :as rv]
-            [merpg.events.mouse :refer [current-mouse-location]]))
+            [merpg.events.mouse :refer [current-mouse-location]]
+            [merpg.math.vector :refer [vec-angle]]))
 
 (defn deftool
   "The func shall receive the tile-id of the tile it's been used on as a parameter. This will probably break with the hitlayer-tool, but that'll be tested when the time is right"
@@ -57,26 +58,44 @@
   (deftool :rotater (fn [tile-id]
                       (re/update-registry tile-id
                                           (update tile-id :rotation #(mod (inc %) 4)))))
-  (let [sprite-id (atom nil)]
-    (deftool :move-sprite {:mousedown
-                           (fn [tile-id]
-                             (let [coord (tile-id->pxcoords tile-id)
-                                   id (-> coord
-                                          sprites-near!
-                                          last
-                                          :id)]
-                               (reset! sprite-id id)))
-                           
-                           :mouseup
-                           (fn [tile-id]
-                             (reset! sprite-id nil))
+  (let [sprite-id (atom nil)
+        mousedown (fn [tile-id]
+                    (let [id (-> @current-mouse-location
+                                 sprites-near!
+                                 last
+                                 :id)]
+                      (when-not (some? id)
+                        (println "Id is nil at " @current-mouse-location)
+                        (pprint (-> @current-mouse-location
+                                    sprites-near!)))
+                      (reset! sprite-id id)))
+        mouseup (fn [tile-id]
+                  (reset! sprite-id nil))]
+    (deftool :move-sprite {:mousedown mousedown
+                           :mouseup mouseup
                            :mousemove
                            (fn [tile-id]
-                             (when-some [sprite @sprite-id]
+                             (if-some [sprite @sprite-id]
                                (let [[x y] @current-mouse-location]
                                  (re/update-registry sprite
-                                                     (assoc sprite :x x
-                                                            :y y)))))})))
+                                                     (assoc sprite
+                                                            :x x
+                                                            :y y)))
+                               (println "Sprite-id is nil at ")))})
+    (deftool :rotate-sprite {:mousedown mousedown
+                             :mouseup mouseup
+                             :mousemove (fn [tile-id]
+                                          (if-some [sprite @sprite-id]
+                                            (let [[m-x m-y] @current-mouse-location
+                                                  {:keys [x y]} (re/peek-registry sprite)
+                                                  sprite-mouse-vec [(double (- x m-x)) (double (- y m-y))]
+                                                  x-unit-vector [10.0 0.0]
+                                                  angle (vec-angle sprite-mouse-vec
+                                                                   x-unit-vector)]
+                                              (println "Angle is " angle)
+                                              (re/update-registry sprite
+                                                                  (assoc sprite :angle angle)))
+                                            (println "Sprite-id is nil")))})))
 
 (load-default-tools!)
                                                                      

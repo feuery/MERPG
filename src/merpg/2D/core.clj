@@ -199,12 +199,12 @@ Example implementation of Rect: (def-primitive-draw Rect  :doc-string \"Here be 
                        (img-height img))
           rad-rot (Math/toRadians (double degrees))
           tx (doto (AffineTransform.)
-               (.rotate rad-rot (double (/ W 2)) (double (/ H 2))))
-          op (AffineTransformOp. tx AffineTransformOp/TYPE_BILINEAR)]
-      (.filter op img toret)
+               (.translate (double (/ W 2)) (double (/ H 2)))
+               (.rotate rad-rot)
+               (.translate (- (double (/ W 2))) (- (double (/ H 2)))))]
       (draw-to-surface toret
                        (with-handle
-                         (.translate handle 0 0))))
+                         (.drawImage handle img tx nil))))
     (println "Img's class is " (class img) " at merpg.2D.core/rotate")))
 
 (defn img-resize

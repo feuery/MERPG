@@ -25,6 +25,7 @@
                                                 vec
                                                 (repeat w)
                                                 vec))
+                 (reset! current-mouse-location (mouse-location e))
                  (onmousedown e)))
              :mouse-dragged (fn [e]
                               (let [[x-pxl y-pxl :as mouse-coord] (mouse-location e)

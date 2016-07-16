@@ -31,13 +31,15 @@
                                                    (println "Creating map with params " [w h l])
                                                    (println "map created with id " (map! w h l :name name)))))))))])
                  (menu-item :text "Load tileset"
-               :listen
-               [:action (fn [_]
-                          (choose-file :filters [["Tilesetit" ["png" "jpg" "jpeg"]]]
-                                         :remember-directory? true
-                                         :multi? true :success-fn
-                                         (fn [_ files]
-                                           (let [tilesets (->> files
-                                                               (map str)
-                                                               (mapv tileset!))]
-                                             (println "Loaded tilesets!")))))])]))
+                            :listen
+                            [:action (fn [_]
+                                       (choose-file :filters [["Tilesets" ["png" "jpg" "jpeg"]]]
+                                                    :remember-directory? true
+                                                    :all-files? false
+                                                    :multi? true :success-fn
+                                                    (fn [_ files]
+                                                      (let [tilesets (->> files
+                                                                          (map str)
+                                                                          (mapv tileset!))]
+                                                        (println "Loaded tilesets!")))))])]))
+                                                        

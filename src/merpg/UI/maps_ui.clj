@@ -4,9 +4,11 @@
             [merpg.mutable.registry :as re]
             [merpg.mutable.to-registry-binding :as tbr]
             [seesaw.core :refer :all]
+            [seesaw.chooser :refer :all]
             [clojure.core.async :as a]
             [merpg.mutable.maps :refer [map! map-metas-ui]]
-            [merpg.mutable.layers :refer [layer! mapwidth! mapheight! layer-count!]]))
+            [merpg.mutable.layers :refer [layer! mapwidth! mapheight! layer-count!]]
+            [merpg.mutable.sprites :refer [static-sprite!]]))
 
 (defmethod popupmenu :map [val]
   (popup :items [(menu-item :text "New layer"
@@ -17,6 +19,17 @@
                                                  (mapheight! smap)
                                                  :parent-id smap
                                                  :order (inc (layer-count! smap)))))])
+                 (menu-item :text "Load static sprite"
+                            :listen
+                            [:action (fn [_]
+                                       (choose-file :filters [["Sprites" ["png" "jpg" "jpeg"]]]
+                                                    :remember-directory? true
+                                                    :all-files? false
+                                                    :multi? true
+                                                    :success-fn
+                                                    (fn [_ sprites]
+                                                      (->> sprites
+                                                           (mapv (comp (partial static-sprite! (:id val)) str))))))])
                  (menu-item)
                  (menu-item :text "Remove map"
                             :listen

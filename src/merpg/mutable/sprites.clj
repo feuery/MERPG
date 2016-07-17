@@ -46,7 +46,7 @@
                                                                      (Draw (subimage spritesheet frame-x 0 frame-w frame-h) [0 0])))))
                                
                                :playing? true
-                               :last-updated (atom (System/currentTimeMillis))
+                               :last-updated (System/currentTimeMillis)
                                :frame-age 38 ;; millis
                                :frame-index 0
                                :frame-count frame-amount}))))

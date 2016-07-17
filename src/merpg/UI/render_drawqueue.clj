@@ -17,19 +17,20 @@
                                         playing?] :as sprite}]
   (if playing?
     (let [current-millis (System/currentTimeMillis)
-          needs-updating? (> (- current-millis @last-updated) frame-age)]
+          needs-updating? (> (- current-millis last-updated) frame-age)]
       (when needs-updating?
-        
-        (re/update-registry id
-                            (assoc id :frame-index (mod (inc frame-index) frame-count)))
-
         (if-let [current-frame (get frames frame-index)]
           (let [[w h] [(img-width surface) (img-height surface)]]
             (clear! surface)
             (draw-to-surface surface
                              (Draw current-frame [0 0]))
-            (reset! last-updated (System/currentTimeMillis)))
-          (println "Frame is nil on " frame-index)))))
+            (re/update-registry id
+                                (assoc id
+                                       :frame-index (mod (inc frame-index) frame-count)
+                                       :last-updated (System/currentTimeMillis))))
+          (do
+            (println "Frame is nil on " frame-index)
+            (pprint frames))))))
   sprite)
       
 

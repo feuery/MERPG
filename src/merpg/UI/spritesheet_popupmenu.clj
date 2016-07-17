@@ -20,5 +20,13 @@
                                          (swap! atom assoc :meta
                                                 {:parent-id {:visible? false}
                                                  :type {:visible? false}
-                                                 :id {:visible? false}})
+                                                 :id {:visible? false}
+                                                 :frames {:visible? false}
+                                                 :x {:visible? false}
+                                                 :y {:visible? false}
+                                                 :last-updated {:visible? false}
+                                                 :frame-count {:visible? false}
+                                                 :subtype {:visible? false}
+                                                 :frame-index {:visible? false}
+                                                 :frame-age {:max 1000}})
                                          (ask-box atom)))])]))

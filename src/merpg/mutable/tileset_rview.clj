@@ -22,7 +22,7 @@
                                         (dotimes [y h]
                                           (dd/Draw (get-in tileset [x y]) [(* x 50)
                                                                            (* y 50)]))))])))
-(def rendered-tilesets (->> rv/local-registry
+(def rendered-tilesets (->> (r/sample 600 re/registry)
                             (r/map (fn [r]
                                      (->> r
                                           (filter #(= (-> % second :type) :tileset))
@@ -35,16 +35,16 @@
                                      r))))
 
 (t/make-atom-binding tileset-meta {:allow-seq? true}
-                     (->> rv/local-registry
+                     (->> (r/sample 1000 re/registry)
                           (r/map (fn [r]
                                    (->> r
                                         (filterv #(= (-> % second :type) :tileset)))))))
 
 
-(def selected-tileset-view (->> rv/local-registry
-                             (r/filter #(and (coll? %)
-                                             (contains? % :selected-tileset)))
-                             (r/map :selected-tileset)))
+(def selected-tileset-view (->> (r/sample 1000 re/registry)
+                                (r/filter #(and (coll? %)
+                                                (contains? % :selected-tileset)))
+                                (r/map :selected-tileset)))
 
 (def c (a/chan))
 (def selected-tileset-ui (atom :nil :validator (complement coll?)))

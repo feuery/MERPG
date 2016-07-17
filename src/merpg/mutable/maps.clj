@@ -49,7 +49,7 @@
 (map! 1 1 1 :name "Initial map") 
 
 (tt/make-atom-binding map-metas {:allow-seq? true}
-                      (->> rv/local-registry
+                      (->> (r/sample 700 re/registry)
                            (r/map (fn [r]
                                     (->> r
                                          (filterv #(= (-> % second :type) :map))

@@ -13,7 +13,8 @@
          (apply max))
     (println "Empty collection")))
 
-(def local-registry (r/events))
+;; a clone of the merpg.mutable.registry/registry we can't use because of the moronic don't depend cyclically - rule
+(def local-registry-atom (atom {}))
 
 (defn layer-ids
   "Skips hit-layer"
@@ -27,15 +28,9 @@
 
 
 
-(comment
-  ;; Reset registry with these while repling
-  (reset! merpg.mutable.registry/registry {})
-  (def id1 (merpg.mutable.maps/map! 4 4 1))
-  (def id2 (merpg.mutable.maps/map! 2 2 5)))
-
-(def layers-meta (->> local-registry
-                      (r/map (fn [r]
-                               (->> r
+(def layers-meta (->> (r/sample 600 r/time)
+                      (r/map (fn [_]
+                               (->> @local-registry-atom
                                     (filter #(and
                                               (= (-> % second :type) :layer)
                                               (= (-> % second :subtype) :layer)))
@@ -52,13 +47,13 @@
 ;; TODO optimize this to render only the selected map
 (def rendered-maps 
   "This contains all the rendered maps AS A pmapped SEQ - DO NOT USE GET HERE"
-  (->> local-registry
+  (->> (r/sample 25 local-registry-atom)
        (r/map (fn [r]
                 (->> r
                      (filter #(= (-> % second :type) :map))
                      (map (fn [[mapid _]]
                             ;; [map-id ;;layer-ids]
-                            [mapid (->> @local-registry
+                            [mapid (->> r
                                         (filter
                                          #(and (-> % second :parent-id (= mapid))
                                                (-> % second :subtype (= :layer))))
@@ -90,8 +85,7 @@
 (defn layer-metadata-of!
   "Returns layer-metadatas associated with the map-id"
   [map-id]
-  (->> @local-registry
-
+  (->> @local-registry-atom
        (filter #(and
                   (= (-> % second :type) :layer)
                   (= (-> % second :subtype) :layer)

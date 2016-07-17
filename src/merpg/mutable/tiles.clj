@@ -49,7 +49,7 @@
 (defn remove-current-tile-watcher [k]
   (swap! current-tile-watchers dissoc k))
 
-(def selected-tile (->> rv/local-registry
+(def selected-tile (->> (r/sample 600 re/registry)
                         (r/filter #(and (coll? %)
                                         (contains? % :selected-tile)))
                         (r/map :selected-tile)

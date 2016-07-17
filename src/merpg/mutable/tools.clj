@@ -139,13 +139,13 @@
 
 
 (make-atom-binding all-tools {:allow-seq? true}
-                   (->> rv/local-registry
+                   (->> (r/sample 300 re/registry)
                         (r/map (fn [r]
                                  (->> r
                                       (filter #(= (-> % second :type) :tool))
                                       (mapv first))))))
 
-(def selected-tool-view (->> rv/local-registry
+(def selected-tool-view (->> (r/sample 300 re/registry)
                              (r/filter #(and (coll? %)
                                              (contains? % :selected-tool)))
                              (r/map :selected-tool)))

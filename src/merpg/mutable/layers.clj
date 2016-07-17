@@ -50,7 +50,7 @@
           [k (f v)])))
 
 (tt/make-atom-binding layer-metas {:allow-seq? true}
-                      (->> rv/local-registry
+                      (->> (r/sample 1000 re/registry)
                            (r/map (fn [r]
                                     (->> r
                                          (filterv #(and
@@ -65,11 +65,11 @@
 
 ;; these can't depend on indexable-layers-view which depends on registry-to-layer which depends on these
 (defn mapwidth! [map-id]
-  (let [layer-ids (->> @rv/local-registry
+  (let [layer-ids (->> @re/registry
                        (filter #(and (= (-> % second :subtype) :layer)
                                      (= (-> % second :parent-id) map-id)))
                        (map first))
-        tiles (->> @rv/local-registry
+        tiles (->> @re/registry
                    (filter #(and (= (-> % second :type) :tile)
                                  (in? layer-ids (-> % second :parent-id))))
                    (map second))
@@ -81,12 +81,11 @@
       (inc (apply max xs)))))
 
 (defn mapheight! [map-id]
-  (let [layer-ids (->> @rv/local-registry
+  (let [layer-ids (->> @re/registry
                        (filter #(and (= (-> % second :type) :layer)
                                      (= (-> % second :parent-id) map-id)))
                        (map first))
-        tiles (->> @rv/local-registry
-                   try
+        tiles (->> @re/registry
                    (filter #(and (= (-> % second :type) :tile)
                                  (in? layer-ids (-> % second :parent-id))))
                    (map (comp :map-y second))
@@ -97,11 +96,11 @@
 
 (defn registry-to-layer
   [layer-id]
-  (let [registry @rv/local-registry
+  (let [registry @re/registry
         mapid (-> registry
                   (get layer-id)
                   :parent-id)
-        meta (get @rv/local-registry layer-id)
+        meta (get registry layer-id)
         tiles (->> registry
                    ;; get relevant tiles
                    (filter #(and (= (-> % second :type) :tile)
@@ -139,7 +138,7 @@
             ;; (pprint toret)
             toret)))))
 
-(def indexable-layers-view (->> rv/local-registry
+(def indexable-layers-view (->> (r/sample 30 re/registry)
                                 (r/map (fn [r]
                                          ;; (if (re/is-render-allowed?)
                                          (->> r
@@ -177,7 +176,7 @@
 (defn layer-count! [map-id]
   (count (get @indexable-layers-view map-id)))
 
-(def current-hitlayer (->> rv/local-registry
+(def current-hitlayer (->> (r/sample 50 re/registry)
                            (r/map (fn [r]
                                     (->> r
                                          (filter #(and

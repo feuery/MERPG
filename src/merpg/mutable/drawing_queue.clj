@@ -7,19 +7,19 @@
 (defn- query [fn r]
   (filter #(fn (second %)) r))
 
-(def drawing-queues-per-map (->> rv/local-registry
-                                   (r/map (fn [r]
-                                            (let [map-ids (->> r
-                                                               (query #(= (:type %) :map))
-                                                               keys)]
-                                              (zipmap map-ids (->> map-ids
-                                                                   (mapv
-                                                                    (fn [mapid]
-                                                                      (->> r
-                                                                           (query #(and (= (:type %) :sprite)
-                                                                                        (= (:parent-id %) mapid)))
-                                                                           vals
-                                                                           (sort-by :order)
-                                                                           vec))))))))))
+(def drawing-queues-per-map (->> (r/sample 200 re/registry)
+                                 (r/map (fn [r]
+                                          (let [map-ids (->> r
+                                                             (query #(= (:type %) :map))
+                                                             keys)]
+                                            (zipmap map-ids (->> map-ids
+                                                                 (mapv
+                                                                  (fn [mapid]
+                                                                    (->> r
+                                                                         (query #(and (= (:type %) :sprite)
+                                                                                      (= (:parent-id %) mapid)))
+                                                                         vals
+                                                                         (sort-by :order)
+                                                                         vec))))))))))
 
 

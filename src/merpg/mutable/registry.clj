@@ -17,7 +17,7 @@
 ;; it might be necessary if they lock the app when heavily reorganizing registry
 ;; ie. onload
 
-(add-watch registry :layer-view-updater #(r/deliver rv/local-registry %4))
+(add-watch registry :layer-view-updater #(reset! rv/local-registry-atom %4))
 
 (defn query [fun registry]
   (->> registry

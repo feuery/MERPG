@@ -7,8 +7,6 @@
             [clojure.pprint :refer :all])
   (:import [java.awt Color]))
 
-(def transparent (Color. 0 0 0 0))
-
 (defn update-animated-sprites! [{:keys [last-updated
                                         frame-age
                                         surface

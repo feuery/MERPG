@@ -202,3 +202,16 @@ Example implementation of Rect: (def-primitive-draw Rect  :doc-string \"Here be 
          (>= h (img-height old-img))]}
   (draw-to-surface (image w h)
                    (Draw old-img [0 0])))
+
+(def transparent (Color. 0 0 0 0))
+
+(defn clear!
+  "Clears the image with RGBA 0, 0, 0, 0"
+  [img]
+  (let [[w h] [(img-width img) (img-height img)]]
+    (draw-to-surface img
+                     (with-handle
+                       (doto handle
+                         (.setBackground transparent)
+                         (.clearRect 0 0 w h)
+                         .dispose)))))

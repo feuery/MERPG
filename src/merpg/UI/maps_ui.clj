@@ -8,7 +8,7 @@
             [clojure.core.async :as a]
             [merpg.mutable.maps :refer [map! map-metas-ui]]
             [merpg.mutable.layers :refer [layer! mapwidth! mapheight! layer-count!]]
-            [merpg.mutable.sprites :refer [static-sprite!]]))
+            [merpg.mutable.sprites :refer :all]))
 
 (defmethod popupmenu :map [val]
   (popup :items [(menu-item :text "New layer"
@@ -30,6 +30,26 @@
                                                     (fn [_ sprites]
                                                       (->> sprites
                                                            (mapv (comp (partial static-sprite! (:id val)) str))))))])
+                 (menu-item :text "Load animated spritesheet"
+                            :listen
+                            [:action (fn [_]
+                                       (choose-file :filters [["Spritesheets" ["png" "jpg" "jpeg"]]]
+                                                    :remember-directory? true
+                                                    :all-files? false
+                                                    :multi? false
+                                                    :success-fn
+                                                    (fn [_ sprite]
+                                                      (a/go
+                                                        (let [sprite (str sprite)
+                                                              vm (atom {:amount-of-frames 0
+                                                                        :meta
+                                                                        {:amount-of-frames
+                                                                         {:max 100
+                                                                          :min 0}}})
+                                                              c (ask-box vm)]
+                                                          (if (a/<! c)
+                                                            (animated-sprite! (:id val) sprite (:amount-of-frames @vm))))))))])
+                                       
                  (menu-item)
                  (menu-item :text "Remove map"
                             :listen

@@ -123,19 +123,41 @@ public class map_renderer
 	}
     }
 
+//     public static BufferedImage rotate(BufferedImage image, double angle) {
+	
+//     int w = image.getWidth(), h = image.getHeight();
+//     int neww = (int)Math.floor(w*cos+h*sin), newh = (int)Math.floor(h*cos+w*sin);
+//     GraphicsConfiguration gc = getDefaultConfiguration();
+//     BufferedImage result = gc.createCompatibleImage(neww, newh, Transparency.TRANSLUCENT);
+//     Graphics2D g = result.createGraphics();
+//     g.translate((neww-w)/2, (newh-h)/2);
+//     g.rotate(rad_rot, w/2, h/2);
+//     g.drawRenderedImage(image, null);
+//     g.dispose();
+//     return result;
+// }
+    
     public static BufferedImage Rotate(BufferedImage img, int degrees)
     {
+	double rad_rot = Math.toRadians((double)degrees);
+	
+	double sin = Math.abs(Math.sin(rad_rot)), cos = Math.abs(Math.cos(rad_rot));
 	double w = img.getWidth(), h = img.getHeight();
-	BufferedImage new_img = new BufferedImage((int)w, (int)h, BufferedImage.TYPE_INT_ARGB);
+	int neww = (int)Math.floor(w*cos+h*sin), newh = (int)Math.floor(h*cos+w*sin);
+	
+	// System.out.println("W and H: " + w + ", "+ h +"  |  newW and newH: " + neww + ", " + newh);
+	
+	BufferedImage new_img = new BufferedImage(neww, newh, BufferedImage.TYPE_INT_ARGB);
 	Graphics2D g = new_img.createGraphics();
 
-	double rad_rot = Math.toRadians((double)degrees);
-	AffineTransform tx = new AffineTransform();
-	tx.rotate(rad_rot, w / 2, h / 2);
+        g.translate(((int)(neww-w))/2, ((int)(newh-h)/2));
+        g.rotate(rad_rot, (int)w/2, (int)h/2);
+        // g.translate(-(((int)w) / 2), -(((int)h) / 2));
+        // g2.drawImage(image, 0, 0, null);
+	g.drawRenderedImage(img, null);
 
-	AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BILINEAR);
-	op.filter(img, new_img);
-	g.translate(0, 0);
+        g.dispose();
+
 
 	return new_img;	
     }

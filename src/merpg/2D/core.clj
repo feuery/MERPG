@@ -7,7 +7,8 @@
             [java.awt.geom AffineTransform]
             [java.awt.event KeyEvent]
             [java.awt.image BufferedImage AffineTransformOp]
-            [javax.imageio ImageIO]))
+            [javax.imageio ImageIO]
+            [merpg.java map_renderer]))
 
 ;;;;;; (def ^:dynamic *draw-queue* (atom nil)) ;Frames are used as keys...
 (def ^:dynamic *buffer*  nil)
@@ -192,20 +193,7 @@ Example implementation of Rect: (def-primitive-draw Rect  :doc-string \"Here be 
     new-img))  
 
 (defn rotate [img degrees]
-  (if (instance? java.awt.Image img)
-    (let [W (img-width img)
-          H (img-height img)
-          toret (image (img-width img)
-                       (img-height img))
-          rad-rot (Math/toRadians (double degrees))
-          tx (doto (AffineTransform.)
-               (.translate (double (/ W 2)) (double (/ H 2)))
-               (.rotate rad-rot)
-               (.translate (- (double (/ W 2))) (- (double (/ H 2)))))]
-      (draw-to-surface toret
-                       (with-handle
-                         (.drawImage handle img tx nil))))
-    (println "Img's class is " (class img) " at merpg.2D.core/rotate")))
+  (map_renderer/Rotate img (int degrees)))
 
 (defn img-resize
   "Creates a new buffer. Location of the new pixels is not guaranteed."

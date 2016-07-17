@@ -87,11 +87,16 @@
                              :mousemove (fn [tile-id]
                                           (if-some [sprite @sprite-id]
                                             (let [[m-x m-y] @current-mouse-location
-                                                  {:keys [x y]} (re/peek-registry sprite)
-                                                  sprite-mouse-vec [(double (- x m-x)) (double (- y m-y))]
-                                                  x-unit-vector [10.0 0.0]
-                                                  angle (vec-angle sprite-mouse-vec
-                                                                   x-unit-vector)]
+                                                  {:keys [x y surface]} (re/peek-registry sprite)
+                                                  w (img-width surface)
+                                                  h (img-height surface)
+
+                                                  x (+ x (/ w 2))  ;; middle instead of upper left
+                                                  y (+ y (/ h 2))
+
+                                                  vec  [(- m-x x) (- m-y y)]
+
+                                                  angle (vec-angle vec)]
                                               (println "Angle is " angle)
                                               (re/update-registry sprite
                                                                   (assoc sprite :angle angle)))

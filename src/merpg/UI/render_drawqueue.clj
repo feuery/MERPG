@@ -23,6 +23,6 @@
                    (draw-to-surface surface
                                     (Draw (if (= angle 0)
                                             sprite
-                                            (rotate sprite (Math/toDegrees angle)))
+                                            (rotate sprite angle))
                                             [x y])))
                  surface))))

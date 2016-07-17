@@ -13,22 +13,23 @@
                                         frames
                                         frame-count
                                         frame-index
+                                        id
                                         playing?] :as sprite}]
-  (if @playing?
+  (if playing?
     (let [current-millis (System/currentTimeMillis)
           needs-updating? (> (- current-millis @last-updated) frame-age)]
       (when needs-updating?
-        (println "Old frame-index " @frame-index)
-        (swap! frame-index #(mod (inc %) frame-count))
-        (println "New frame-index " @frame-index)
         
-        (let [[w h] [(img-width surface) (img-height surface)]]
-          (clear! surface)
-          (draw-to-surface surface
-                           (Draw (get frames @frame-index)
-                                 [0 0]))
-          (reset! last-updated (System/currentTimeMillis))
-          (println "Sprite updated")))))
+        (re/update-registry id
+                            (assoc id :frame-index (mod (inc frame-index) frame-count)))
+
+        (if-let [current-frame (get frames frame-index)]
+          (let [[w h] [(img-width surface) (img-height surface)]]
+            (clear! surface)
+            (draw-to-surface surface
+                             (Draw current-frame [0 0]))
+            (reset! last-updated (System/currentTimeMillis)))
+          (println "Frame is nil on " frame-index)))))
   sprite)
       
 

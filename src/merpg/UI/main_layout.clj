@@ -32,6 +32,7 @@
             [merpg.UI.root-ui]
             [merpg.UI.tileset-ui]
             [merpg.UI.maps-ui]
+            [merpg.UI.spritesheet-popupmenu]
             [merpg.mutable.registry :as re]
             [merpg.mutable.to-registry-binding :as trb]
             [merpg.mutable.resize-algorithms :refer [resize!]]))

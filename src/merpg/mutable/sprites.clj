@@ -27,9 +27,11 @@
         spritesheet (image path)
         frame-h (img-height spritesheet)
         frame-w (/ (img-width spritesheet)
-                   frame-amount)]
+                   frame-amount)
+        id (gensym "ANIM__")]
     (e/allow-events
-     (re/register-element! {:name "New animation"
+     (re/register-element! id {:name "New animation"
+                               :id id
                             :type :sprite
                             :subtype :animated
                             :order sprites-per-map
@@ -43,8 +45,8 @@
                                                  (draw-to-surface (BufferedImage. frame-w frame-h BufferedImage/TYPE_INT_ARGB)
                                                                   (Draw (subimage spritesheet frame-x 0 frame-w frame-h) [0 0])))))
                             
-                            :playing? (atom false)
+                            :playing? true
                             :last-updated (atom (System/currentTimeMillis))
                             :frame-age 38 ;; millis
-                            :frame-index (atom 0)
+                            :frame-index 0
                             :frame-count frame-amount}))))

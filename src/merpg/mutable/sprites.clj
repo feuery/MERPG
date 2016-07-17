@@ -28,25 +28,25 @@
         frame-h (img-height spritesheet)
         frame-w (/ (img-width spritesheet)
                    frame-amount)
-        id (gensym "ANIM__")]
+        id (keyword (gensym "ANIM__"))]
     (e/allow-events
      (re/register-element! id {:name "New animation"
                                :id id
-                            :type :sprite
-                            :subtype :animated
-                            :order sprites-per-map
-                            :parent-id map-id
-                            :x 0
-                            :y 0
-                            :angle 0.0
-                            :surface (image frame-w frame-h :color (Color. 0 0 0 0))
-                            :frames (->> (range 0 (img-width spritesheet) frame-w)
-                                         (mapv (fn [frame-x]
-                                                 (draw-to-surface (BufferedImage. frame-w frame-h BufferedImage/TYPE_INT_ARGB)
-                                                                  (Draw (subimage spritesheet frame-x 0 frame-w frame-h) [0 0])))))
-                            
-                            :playing? true
-                            :last-updated (atom (System/currentTimeMillis))
-                            :frame-age 38 ;; millis
-                            :frame-index 0
-                            :frame-count frame-amount}))))
+                               :type :sprite
+                               :subtype :animated
+                               :order sprites-per-map
+                               :parent-id map-id
+                               :x 0
+                               :y 0
+                               :angle 0.0
+                               :surface (image frame-w frame-h :color (Color. 0 0 0 0))
+                               :frames (->> (range 0 (img-width spritesheet) frame-w)
+                                            (mapv (fn [frame-x]
+                                                    (draw-to-surface (BufferedImage. frame-w frame-h BufferedImage/TYPE_INT_ARGB)
+                                                                     (Draw (subimage spritesheet frame-x 0 frame-w frame-h) [0 0])))))
+                               
+                               :playing? true
+                               :last-updated (atom (System/currentTimeMillis))
+                               :frame-age 38 ;; millis
+                               :frame-index 0
+                               :frame-count frame-amount}))))

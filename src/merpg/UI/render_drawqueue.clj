@@ -19,7 +19,6 @@
                                angle :angle
                                name :name
                                sprite :surface}]
-                   (println "Rendering " name " at " [x y])
                    (draw-to-surface surface
                                     (Draw (if (= angle 0)
                                             sprite

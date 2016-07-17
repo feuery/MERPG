@@ -97,7 +97,6 @@
                                                   vec  [(- m-x x) (- m-y y)]
 
                                                   angle (vec-angle vec)]
-                                              (println "Angle is " angle)
                                               (re/update-registry sprite
                                                                   (assoc sprite :angle angle)))
                                             (println "Sprite-id is nil")))})))

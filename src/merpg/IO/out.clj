@@ -4,6 +4,8 @@
             [clojure.pprint :refer [pprint]]
             [merpg.IO.tileset :refer :all]
             [merpg.mutable.tileset :refer [tileset!]]
+            [merpg.mutable.sprites :refer [animation->spritesheet]]
+            [merpg.mutable.layers :refer [mapvals]]
             [merpg.UI.askbox :refer [in?]]
             [merpg.mutable.registry :as re]
             [merpg.mutable.tools :as t]
@@ -40,11 +42,15 @@
 
 (defn dump-image [filename registry-snapshot rendered-tilesets] 
   (try
-    (let [registry-snapshot (->> (dissoc registry-snapshot nil)
+    (let [registry-snapshot (dissoc registry-snapshot nil)
+          sprites (->> registry-snapshot
+                       (re/query #(= (:type %) :sprite)))
+          
+          registry-snapshot (->> registry-snapshot
                                  (filter #(not (in? [:tool :tileset :sprite] (-> %
-                                                                                 second
-                                                                                 :type))))
-                                 (into {}))
+                                                                         second
+                                                                         :type))))
+                                 (into {}))          
           filename (if (.endsWith filename ".zip")
                      filename
                      (str filename ".zip"))
@@ -57,12 +63,37 @@
         (binding [*out* wrt]
           (doto zip
             (with-entry "registry" _
-              (pr registry-snapshot))))
+              (pr registry-snapshot))
+            (with-entry "sprite-registry" _
+              (pr (->> sprites
+                       (mapvals #(do
+                                   (let [anim? (= (:type %) :animated)
+                                         result (dissoc % :surface
+                                                        :frames)]
+                                     (if anim?
+                                       (assoc result :last-updated 0)
+                                       result)))))))))
+                                  
+          ;; write the sprite registry
+          
+          
         (doseq [[key tileset] rendered-tilesets]
           (let [name (:name (re/peek-registry key))]
             (doto zip
               (with-entry (str "TILESET - " key " - " name ".png") zipfile
-                (ImageIO/write tileset "png" zipfile))))))
+                (ImageIO/write tileset "png" zipfile)))))
+        ;; save sprites and spritesheets
+        (doseq [[key {:keys [subtype surface frames] :as sprite}] sprites]
+          (let [filename (str "SPRITE - " key ".png")]
+            (condp = subtype
+              :static
+              (doto zip
+                (with-entry filename file
+                  (ImageIO/write surface "png" file)))
+              :animated
+              (doto zip
+                (with-entry filename file
+                  (ImageIO/write (animation->spritesheet sprite) "png" file)))))))
       
       (.renameTo (io/file filename)
                  (io/file final-filename)))

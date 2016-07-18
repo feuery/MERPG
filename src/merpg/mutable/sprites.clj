@@ -3,7 +3,10 @@
             [merpg.UI.events :as e]
             [merpg.2D.core :refer :all]
 
-            [reagi.core :as r])
+            [reagi.core :as r]
+            [clojure.pprint :refer :all]
+            ;; [seesaw.core :refer :all]
+            )
   (:import [java.awt Color]
            [java.awt.image BufferedImage]))
 
@@ -50,3 +53,31 @@
                                :frame-age 38 ;; millis
                                :frame-index 0
                                :frame-count frame-amount}))))
+
+;; (defn show-img [img]
+;;   (frame :content
+;;          (canvas :paint #(.drawImage %2 img 0 0 nil))
+;;          :width (* 2 (img-width img))
+;;          :height (* (img-height img) 2)
+;;          :visible? true))
+
+(defn animation->spritesheet [{:keys [subtype
+                                      frames]}]
+  {:pre [(= subtype :animated)
+         (some? frames)
+         (pos? (count frames))]}
+  (let [w (->> frames
+               (map img-width)
+               (reduce +))
+        step (/ w (count frames))
+        h (img-height (first frames))
+        xs (vec (range 0 w step))]
+    (assert (= (count xs) (count frames)))
+    (draw-to-surface (clear! (image w h))
+                     (dotimes [i (count frames)]
+                       (if-let [frame (get frames i)]
+                         (Draw frame
+                               [(get xs i) 0])
+                         (do
+                           (println "Frame is nil at " i)))))))
+  

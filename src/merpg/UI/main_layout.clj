@@ -142,7 +142,9 @@
                                                         :multi? false
                                                         :success-fn
                                                         (fn [_ file]
-                                                          (read-image! (.getAbsolutePath file)))))])])]))
+                                                          (if (read-image! (.getAbsolutePath file))
+                                                            (println (.getAbsolutePath file) " loaded")
+                                                            (println "Loading " (.getAbsolutePath file) " failed.")))))])])]))
 
 (defn show-mapeditor []
   

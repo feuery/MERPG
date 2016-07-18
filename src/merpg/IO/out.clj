@@ -6,7 +6,8 @@
             [merpg.mutable.tileset :refer [tileset!]]
             [merpg.UI.askbox :refer [in?]]
             [merpg.mutable.registry :as re]
-            [merpg.mutable.tools :as t])
+            [merpg.mutable.tools :as t]
+            [merpg.UI.events :as e])
   (:import [java.util.zip ZipEntry ZipOutputStream ZipInputStream ZipFile]
            [javax.imageio ImageIO]))
 
@@ -40,9 +41,9 @@
 (defn dump-image [filename registry-snapshot rendered-tilesets] 
   (try
     (let [registry-snapshot (->> (dissoc registry-snapshot nil)
-                                 (filter #(not (in? [:tool :tileset] (-> %
-                                                                         second
-                                                                         :type))))
+                                 (filter #(not (in? [:tool :tileset :sprite] (-> %
+                                                                                 second
+                                                                                 :type))))
                                  (into {}))
           filename (if (.endsWith filename ".zip")
                      filename
@@ -60,7 +61,7 @@
         (doseq [[key tileset] rendered-tilesets]
           (let [name (:name (re/peek-registry key))]
             (doto zip
-              (with-entry (str key " - " name ".png") zipfile
+              (with-entry (str "TILESET - " key " - " name ".png") zipfile
                 (ImageIO/write tileset "png" zipfile))))))
       
       (.renameTo (io/file filename)
@@ -103,12 +104,12 @@
             (.endsWith (.getName entry) ".png")
             (with-open [in-stream (.getInputStream zip entry)]
               (let [filename (.getName entry)
-                    kw-regex #"^:[a-zA-Z0-9_-]* - "
+                    kw-regex #"^TILESET - :[a-zA-Z0-9_-]* - "
                     ;; in theory, user code execution vulnerability
                     ;; in practice, this app is designed to be ran with the embedded nrepl-server on
                     ;; filename is supposed to be formatted :keyword-id - Name.png and read-string is the easiest way to get the id out because it ignores whatever rubbish comes after the first valid clojure literal
                     ;; getting the tileset's name out will require regex-trickery pockery
-                    id (read-string filename)
+                    id (read-string (str/replace filename #"^TILESET - " ""))
                     name (-> filename
                              (str/replace kw-regex "")
                              (str/replace ".png" ""))
@@ -117,7 +118,8 @@
             
             true (locking *out*
                    (println "Found unrecognized data-entry with name " (.getName entry) " in file " filename)))))
-      (t/load-default-tools!)
+      (e/allow-events 
+       (t/load-default-tools!))
       true
       (catch Exception ex
         (reset! re/registry old-registry)

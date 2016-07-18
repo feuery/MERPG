@@ -36,23 +36,27 @@
 
 (defn render-drawqueue! []
   (let [mapid (re/peek-registry :selected-map)
-        surface (image (* (mapwidth! mapid) 50)
-                       (* (mapheight! mapid) 50)
-                       :color transparent)
-        queue (get @drawing-queues-per-map mapid)]
-    (->> queue
-         (map (fn [{:keys [subtype] :as sprite}]
-                (if (= subtype :animated)
-                  (update-animated-sprites! sprite)
-                  sprite)))                
-         (reduce (fn [surface {x :x
-                               y :y
-                               angle :angle
-                               name :name
-                               sprite :surface}]
-                   (draw-to-surface surface
-                                    (Draw (if (= angle 0)
-                                            sprite
-                                            (rotate sprite angle))
-                                            [x y])))
-                 surface))))
+        [w h] [(mapwidth! mapid) (mapheight! mapid)]]
+    (if (and (pos? w)
+             (pos? h))
+      (let [surface (image (* (mapwidth! mapid) 50)
+                           (* (mapheight! mapid) 50)
+                           :color transparent)
+            queue (get @drawing-queues-per-map mapid)]
+        (->> queue
+             (map (fn [{:keys [subtype] :as sprite}]
+                    (if (= subtype :animated)
+                      (update-animated-sprites! sprite)
+                      sprite)))                
+             (reduce (fn [surface {x :x
+                                   y :y
+                                   angle :angle
+                                   name :name
+                                   sprite :surface}]
+                       (draw-to-surface surface
+                                        (Draw (if (= angle 0)
+                                                sprite
+                                                (rotate sprite angle))
+                                              [x y])))
+                     surface)))
+      (image 50 50 "#00FF00"))))

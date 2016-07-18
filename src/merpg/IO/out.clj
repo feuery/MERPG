@@ -1,10 +1,12 @@
 (ns merpg.IO.out
   (:require [clojure.java.io :as io]
+            [merpg.2D.core :refer [copy]]
             [clojure.string :as str]
             [clojure.pprint :refer [pprint]]
             [merpg.IO.tileset :refer :all]
             [merpg.mutable.tileset :refer [tileset!]]
-            [merpg.mutable.sprites :refer [animation->spritesheet]]
+            [merpg.mutable.sprites :refer [animation->spritesheet
+                                           split-spritesheet]]
             [merpg.mutable.layers :refer [mapvals]]
             [merpg.UI.askbox :refer [in?]]
             [merpg.mutable.registry :as re]
@@ -122,6 +124,8 @@
       (reset! re/registry {})
       
       (with-open [zip (ZipFile. filename)]
+        (let [sprite-surfaces (atom {})
+              sprite-registry (atom {})]
         (doseq [entry (entries zip)]
           (cond
             (= (.getName entry) "registry")
@@ -131,8 +135,14 @@
                                  rdr-slurp
                                  read-string)]
                 (swap! re/registry merge registry)))
+
+            (= (.getName entry) "sprite-registry")
+            (with-open [in-stream (.getInputStream zip entry)
+                        rdr (io/reader in-stream)]
+              (let [registry (-> rdr rdr-slurp read-string)]
+                (swap! sprite-registry merge registry)))
             
-            (.endsWith (.getName entry) ".png")
+            (.startsWith (.getName entry) "TILESET")
             (with-open [in-stream (.getInputStream zip entry)]
               (let [filename (.getName entry)
                     kw-regex #"^TILESET - :[a-zA-Z0-9_-]* - "
@@ -146,9 +156,33 @@
                              (str/replace ".png" ""))
                     image (ImageIO/read in-stream)]
                 (tileset! id name image)))
+
+            (.startsWith (.getName entry) "SPRITE")
+            (with-open [in-stream (.getInputStream zip entry)]
+              (let [filename (.getName entry)
+                    kw-regex #"^SPRITE - (:[a-zA-Z0-9_-]*).png"
+                    id (-> filename
+                           (str/replace kw-regex "$1")
+                           read-string)
+                    image (ImageIO/read in-stream)]
+                (swap! sprite-surfaces assoc id image)))
             
             true (locking *out*
-                   (println "Found unrecognized data-entry with name " (.getName entry) " in file " filename)))))
+                   (println "Found unrecognized data-entry with name " (.getName entry) " in file " filename))))
+        (doseq [[id {:keys [subtype frame-count] :as sprite}] @sprite-registry]
+          (condp = subtype
+            :static
+            (re/register-element! id (assoc sprite :surface (get @sprite-surfaces id)))
+            :animated
+            (if-let [sprites (get @sprite-surfaces id)]
+              (let [spritesheet (split-spritesheet sprites frame-count)]
+              (re/register-element! id (assoc sprite :surface (copy (first spritesheet))
+                                              :frames spritesheet)))
+              (do
+                (println "spritesheet source image is nil for some reason (id = " id ")")
+                (println "sprite-surfaces follows: ")
+                (pprint @sprite-surfaces)))))))
+              
       (e/allow-events 
        (t/load-default-tools!))
       true

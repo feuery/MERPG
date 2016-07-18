@@ -207,7 +207,7 @@ Example implementation of Rect: (def-primitive-draw Rect  :doc-string \"Here be 
 
 (defn clear!
   "Clears the image with RGBA 0, 0, 0, 0"
-  [img]
+  [^BufferedImage img]
   (let [[w h] [(img-width img) (img-height img)]]
     (draw-to-surface img
                      (with-handle
@@ -215,3 +215,11 @@ Example implementation of Rect: (def-primitive-draw Rect  :doc-string \"Here be 
                          (.setBackground transparent)
                          (.clearRect 0 0 w h)
                          .dispose)))))
+
+(defn copy [^BufferedImage img]
+  (let [cm (.getColorModel img)
+        isAlphaPremultiplied (.isAlphaPremultiplied img)
+        raster (.copyData img (-> img
+                                  .getRaster
+                                  .createCompatibleWritableRaster))]
+    (BufferedImage. cm raster isAlphaPremultiplied nil)))

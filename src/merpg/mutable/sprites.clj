@@ -24,6 +24,15 @@
                             :angle 0.0
                             :surface (image path)}))))
 
+(defn split-spritesheet [spritesheet frame-count]
+  {:pre [(some? spritesheet)]}
+  (let [frame-h (img-height spritesheet)
+        frame-w (/ (img-width spritesheet) frame-count)]
+    (->> (range 0 (img-width spritesheet) frame-w)
+         (mapv (fn [frame-x]
+                 (draw-to-surface (BufferedImage. frame-w frame-h BufferedImage/TYPE_INT_ARGB)
+                                  (Draw (subimage spritesheet frame-x 0 frame-w frame-h) [0 0])))))))
+
 (defn animated-sprite! [map-id path frame-amount]
   (let [sprites-per-map (count (re/query! #(and (= (:type %) :sprite)
                                                 (= (:parent-id %) map-id))))
@@ -43,11 +52,7 @@
                                :y 0
                                :angle 0.0
                                :surface (image frame-w frame-h :color (Color. 0 0 0 0))
-                               :frames (->> (range 0 (img-width spritesheet) frame-w)
-                                            (mapv (fn [frame-x]
-                                                    (draw-to-surface (BufferedImage. frame-w frame-h BufferedImage/TYPE_INT_ARGB)
-                                                                     (Draw (subimage spritesheet frame-x 0 frame-w frame-h) [0 0])))))
-                               
+                               :frames (split-spritesheet spritesheet frame-amount)
                                :playing? true
                                :last-updated (System/currentTimeMillis)
                                :frame-age 38 ;; millis
@@ -80,4 +85,4 @@
                                [(get xs i) 0])
                          (do
                            (println "Frame is nil at " i)))))))
-  
+

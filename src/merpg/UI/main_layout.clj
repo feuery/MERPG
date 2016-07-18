@@ -1,7 +1,5 @@
 (ns merpg.UI.main-layout
-  (:require [seesaw.core :refer [frame border-panel flow-panel make-widget dispose! config! show!
-                                 confirm vertical-panel left-right-split top-bottom-split alert
-                                 button menubar menu menu-item label]]
+  (:require [seesaw.core :refer :all]
             [environ.core :refer [env]]
             [seesaw.bind :as b]
             [clojure.core.async :as a]
@@ -35,7 +33,8 @@
             [merpg.UI.spritesheet-popupmenu]
             [merpg.mutable.registry :as re]
             [merpg.mutable.to-registry-binding :as trb]
-            [merpg.mutable.resize-algorithms :refer [resize!]]))
+            [merpg.mutable.resize-algorithms :refer [resize!]]
+            [merpg.settings.core :refer [get-prop! set-prop!]]))
 
 (defn linux? []
   (= (System/getProperty "os.name") "Linux"))
@@ -138,13 +137,22 @@
                               [:action (fn [_]
                                          (choose-file :filters [["Kartat" ["memap"]]]
                                                       :all-files? false
-                                                        :remember-directory? true
-                                                        :multi? false
-                                                        :success-fn
-                                                        (fn [_ file]
-                                                          (if (read-image! (.getAbsolutePath file))
-                                                            (println (.getAbsolutePath file) " loaded")
-                                                            (println "Loading " (.getAbsolutePath file) " failed.")))))])])]))
+                                                      :remember-directory? true
+                                                      :multi? false
+                                                      :success-fn
+                                                      (fn [_ file]
+                                                        (if (read-image! (.getAbsolutePath file))
+                                                          (println (.getAbsolutePath file) " loaded")
+                                                          (println "Loading " (.getAbsolutePath file) " failed.")))))])
+
+                   
+                   (checkbox-menu-item :text "nREPL running?"
+                                       :selected? (get-prop! :nrepl-running?)
+                                       :listen [:action (fn [_]
+                                                          (let [running? (not (get-prop! :nrepl-running?))]
+                                                            (println "Running? " running?)
+                                                            (set-prop! :nrepl-running? running?)))])])]))
+    
 
 (defn show-mapeditor []
   
@@ -157,3 +165,5 @@
                 :hide
                 ))
   (config! f :content (get-content f)))
+
+  ;; (config! f :menubar (make-menu))

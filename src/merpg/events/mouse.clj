@@ -1,7 +1,7 @@
 (ns merpg.events.mouse
   (:require [reagi.core :as r]
             [schema.core :as s]
-            [merpg.UI.askbox :refer [in?]]))
+            [merpg.util :refer [in?]]))
 
 (def type-pred (s/pred (partial in? [:mousedown :mousemove :mouseup])))
 

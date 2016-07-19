@@ -47,3 +47,12 @@
   (let [lst (last @queue-atm)]
     (swap! queue-atm drop-last)
     lst))
+
+(defn mapvals
+  "Maps function over hashmap's values"
+  [f m]
+  (into {}
+        (for [[k v] m]
+          [k (f v)])))
+(defn in? [vec val]
+  (some (partial = val) vec))

@@ -5,7 +5,7 @@
 
             [merpg.mutable.registry-views :as rv]
             [merpg.macros.multi :refer :all]
-            [merpg.UI.askbox :refer [in?]]))
+            [merpg.util :refer [in?]]))
 
 (def ^:dynamic registry (atom {}))
 (def render-allowed? (atom false))

@@ -3,13 +3,14 @@
             [seesaw.core :refer :all]
             [seesaw.bind :as b]
             [clojure.core.async :as a]
-            [merpg.UI.events :refer [allow-events]]))
+            [merpg.UI.events :refer [allow-events]]
+            [merpg.settings.core :refer [set-prop!]]
+            [merpg.util :refer :all]))
 
-(defn in? [vec val]
-  (some (partial = val) vec))
-
-(defn numeric-input [data-atom key-to-bind & {:keys [meta] :or {meta {:max 255
-                                                                      :min 0}}}]
+(defn numeric-input [data-atom key-to-bind & {:keys [meta
+                                                     settings-vm?] :or {meta {:max 255
+                                                                              :min 0}
+                                                                        settings-vm? false}}]
   (let [{:keys [max min] :or {max 255
                               min 0}} meta
         val (long (get @data-atom key-to-bind))
@@ -21,7 +22,9 @@
         s (spinner :model (spinner-model val :from min :to max :by 1))]
     (b/bind s (b/b-swap! data-atom #(do
                                       (allow-events
-                                       (assoc %1 key-to-bind %2)))))
+                                      (if settings-vm?
+                                        (set-prop! key-to-bind %2)
+                                        (assoc %1 key-to-bind %2))))))
     (flow-panel :items [(str min) s (str max)])))
 
 (defn ask-box
@@ -46,9 +49,11 @@ Currently supported meta constraints:
 :max, :min - limit numeric input range - applies to Integers and Longs
 :visible? - hide the component completely - applies to everything"
   [viewmodel-atom & {:keys [visible?
-                            completed-chan]
+                            completed-chan
+                            settings-vm?]
                      :or {visible? true
-                          completed-chan (a/chan)}}]
+                          completed-chan (a/chan)
+                          settings-vm? false}}]
   (let [{:keys [meta]} @viewmodel-atom
         gridded-widgets (concat
                          (->> @viewmodel-atom
@@ -63,36 +68,44 @@ Currently supported meta constraints:
                                       (let [component-meta (get meta key)
                                             {:keys [visible?] :or {visible? true}} component-meta]
                                         (if visible?
-                                      [(str key)
-                                       (condp = (class val)
-                                         java.lang.String (text :text (str val)
-                                                                :listen
-                                                                [:key-released (fn [e]
-                                                                                 (allow-events
-                                                                                  (swap! viewmodel-atom assoc key (text e))))])
-                                         ;; binds itself to the atom
-                                         java.lang.Long (numeric-input viewmodel-atom key
-                                                                       :meta (get meta key))
-                                         ;; binds itself to the atom
-                                         java.lang.Integer (numeric-input viewmodel-atom key
-                                                                          :meta (get meta key))
-                                         java.lang.Boolean (checkbox :selected? val
-                                                                     :listen
-                                                                     [:item-state-changed (fn [e]
-                                                                                            (allow-events
-                                                                                             (swap! viewmodel-atom assoc key (selection e))))])
-                                         clojure.lang.Keyword (text :text (str val)
-                                                                    :editable? false
-                                                                    :enabled? false)
-                                         clojure.lang.PersistentVector
-                                         (do
-                                           (swap! viewmodel-atom assoc key (first val))
-                                           (combobox :model val
-                                                                                 :listen
-                                                                                 [:selection
-                                                                                  (fn [e]
-                                                                                    (allow-events
-                                                                                     (swap! viewmodel-atom assoc key (selection e))))])))]))))
+                                          [(str key)
+                                           (condp = (class val)
+                                             java.lang.String (text :text (str val)
+                                                                    :listen
+                                                                    [:key-released (fn [e]
+                                                                                     (allow-events
+                                                                                      (if settings-vm?
+                                                                                        (set-prop! key (text e))
+                                                                                        (swap! viewmodel-atom assoc key (text e)))))])
+                                             ;; binds itself to the atom
+                                             java.lang.Long (numeric-input viewmodel-atom key
+                                                                           :meta (get meta key)
+                                                                           :settings-vm? settings-vm?)
+                                             ;; binds itself to the atom
+                                             java.lang.Integer (numeric-input viewmodel-atom key
+                                                                              :meta (get meta key)
+                                                                              :settings-vm? settings-vm?)
+                                             java.lang.Boolean (checkbox :selected? val
+                                                                         :listen
+                                                                         [:item-state-changed (fn [e]
+                                                                                                (allow-events
+                                                                                                 (if settings-vm?
+                                                                                                   (set-prop! key (selection e))
+                                                                                                   (swap! viewmodel-atom assoc key (selection e)))))])
+                                             clojure.lang.Keyword (text :text (str val)
+                                                                        :editable? false
+                                                                        :enabled? false)
+                                             clojure.lang.PersistentVector
+                                             (do
+                                               (swap! viewmodel-atom assoc key (first val))
+                                               (combobox :model val
+                                                         :listen
+                                                         [:selection
+                                                          (fn [e]
+                                                            (allow-events
+                                                             (if settings-vm?
+                                                               (set-prop! key (selection e))
+                                                               (swap! viewmodel-atom assoc key (selection e)))))])))]))))
                               (filter some?)
                               flatten
                               vec)

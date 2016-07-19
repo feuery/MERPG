@@ -34,7 +34,7 @@
             [merpg.mutable.registry :as re]
             [merpg.mutable.to-registry-binding :as trb]
             [merpg.mutable.resize-algorithms :refer [resize!]]
-            [merpg.settings.core :refer [get-prop! set-prop!]]))
+            [merpg.settings.core :refer [get-prop! set-prop!] :as settings]))
 
 (defn linux? []
   (= (System/getProperty "os.name") "Linux"))
@@ -151,7 +151,10 @@
                                        :listen [:action (fn [_]
                                                           (let [running? (not (get-prop! :nrepl-running?))]
                                                             (println "Running? " running?)
-                                                            (set-prop! :nrepl-running? running?)))])])]))
+                                                            (set-prop! :nrepl-running? running?)))])
+                   (menu-item :text "Settings"
+                              :listen [:action (fn [_]
+                                                 (ask-box settings/settings :settings-vm? true))])])]))
     
 
 (defn show-mapeditor []
@@ -166,4 +169,4 @@
                 ))
   (config! f :content (get-content f)))
 
-  ;; (config! f :menubar (make-menu))
+ ;; (config! f :menubar (make-menu))

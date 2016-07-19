@@ -6,7 +6,7 @@
             [merpg.mutable.registry-views :as rv]
             [merpg.mutable.tiles :as t]
             [merpg.mutable.tools :as tt]
-            [merpg.UI.askbox :refer [in?]]
+            [merpg.util :refer [in? mapvals]]
             [merpg.UI.events :as e]))
 
 (println "Loading merpg.mutable.layers")
@@ -41,13 +41,6 @@
                                             "Hitlayer"
                                             name)
                                           parent-id order hit?)))))
-
-(defn mapvals
-  "Maps function over hashmap's values"
-  [f m]
-  (into {}
-        (for [[k v] m]
-          [k (f v)])))
 
 (tt/make-atom-binding layer-metas {:allow-seq? true}
                       (->> (r/sample 1000 re/registry)

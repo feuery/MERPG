@@ -7,8 +7,7 @@
             [merpg.mutable.tileset :refer [tileset!]]
             [merpg.mutable.sprites :refer [animation->spritesheet
                                            split-spritesheet]]
-            [merpg.mutable.layers :refer [mapvals]]
-            [merpg.UI.askbox :refer [in?]]
+            [merpg.util :refer [mapvals in?]]
             [merpg.mutable.registry :as re]
             [merpg.mutable.tools :as t]
             [merpg.UI.events :as e])

@@ -23,7 +23,7 @@
                     eval)]
       toret)))
 
-(def settings (atom (merge initial-settings (get-settings))))
+(def settings (atom (merge initial-settings (get-settings)) :validator some?))
 
 (def setting-watchers (atom {}))
 

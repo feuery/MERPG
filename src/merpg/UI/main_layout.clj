@@ -118,43 +118,47 @@
      :divider-location 1/6)))
 
 (defn make-menu []
-  (menubar :items
-           [(menu :text "File"
-                  :items
-                  [(menu-item :text "Save game image"
-                              :listen
-                              [:action (fn [_]
-                                         (choose-file :filters [["Kartat" ["memap"]]]
-                                                      :remember-directory? true
-                                                      :all-files? false
-                                                      :type :save
-                                                      :multi? false
-                                                      :success-fn 
-                                                      (fn [_ file]
-                                                        (dump-image (.getAbsolutePath file) @re/registry @tr/rendered-tilesets))))])
-                   (menu-item :text "Load game image"
-                              :listen
-                              [:action (fn [_]
-                                         (choose-file :filters [["Kartat" ["memap"]]]
-                                                      :all-files? false
-                                                      :remember-directory? true
-                                                      :multi? false
-                                                      :success-fn
-                                                      (fn [_ file]
-                                                        (if (read-image! (.getAbsolutePath file))
-                                                          (println (.getAbsolutePath file) " loaded")
-                                                          (println "Loading " (.getAbsolutePath file) " failed.")))))])
+  (let [menu (menubar :items
+                      [(menu :text "File"
+                             :items
+                             [(menu-item :text "Save game image"
+                                         :listen
+                                         [:action (fn [_]
+                                                    (choose-file :filters [["Kartat" ["memap"]]]
+                                                                 :remember-directory? true
+                                                                 :all-files? false
+                                                                 :type :save
+                                                                 :multi? false
+                                                                 :success-fn 
+                                                                 (fn [_ file]
+                                                                   (dump-image (.getAbsolutePath file) @re/registry @tr/rendered-tilesets))))])
+                              (menu-item :text "Load game image"
+                                         :listen
+                                         [:action (fn [_]
+                                                    (choose-file :filters [["Kartat" ["memap"]]]
+                                                                 :all-files? false
+                                                                 :remember-directory? true
+                                                                 :multi? false
+                                                                 :success-fn
+                                                                 (fn [_ file]
+                                                                   (if (read-image! (.getAbsolutePath file))
+                                                                     (println (.getAbsolutePath file) " loaded")
+                                                                     (println "Loading " (.getAbsolutePath file) " failed.")))))])
 
-                   
-                   (checkbox-menu-item :text "nREPL running?"
-                                       :selected? (get-prop! :nrepl-running?)
-                                       :listen [:action (fn [_]
-                                                          (let [running? (not (get-prop! :nrepl-running?))]
-                                                            (println "Running? " running?)
-                                                            (set-prop! :nrepl-running? running?)))])
-                   (menu-item :text "Settings"
-                              :listen [:action (fn [_]
-                                                 (ask-box settings/settings :settings-vm? true))])])]))
+                              
+                              (checkbox-menu-item :text "nREPL running?"
+                                                  :id :nrepl-menu
+                                                  :selected? (get-prop! :nrepl-running?)
+                                                  :listen [:action (fn [_]
+                                                                     (let [running? (not (get-prop! :nrepl-running?))]
+                                                                       (println "Running? " running?)
+                                                                       (set-prop! :nrepl-running? running?)))])
+                              (menu-item :text "Settings"
+                                         :listen [:action (fn [_]
+                                                            (ask-box settings/settings :settings-vm? true))])])])]
+    (settings/add-prop-watch :nrepl-running? :menu-updater (fn [running?]
+                                                             (config! (select menu [:#nrepl-menu]) :selected? running?)))
+    menu))
     
 
 (defn show-mapeditor []

@@ -1,6 +1,7 @@
 (ns merpg.IO.out
   (:require [clojure.java.io :as io]
             [merpg.2D.core :refer [copy]]
+            [clojure.walk :refer [postwalk]]
             [clojure.string :as str]
             [clojure.pprint :refer [pprint]]
             [merpg.IO.tileset :refer :all]
@@ -51,7 +52,12 @@
                                  (filter #(not (in? [:tool :tileset :sprite] (-> %
                                                                          second
                                                                          :type))))
-                                 (into {}))          
+                                 (into {})
+                                 (mapvals (fn [v]
+                                            (postwalk (fn [vv]
+                                                        (if (symbol? vv)
+                                                          `(quote ~vv)
+                                                          vv)) v))))
           filename (if (.endsWith filename ".zip")
                      filename
                      (str filename ".zip"))

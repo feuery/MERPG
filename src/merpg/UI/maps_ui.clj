@@ -2,6 +2,7 @@
   (:require [merpg.UI.tree :refer [popupmenu]]
             [merpg.UI.askbox :refer [ask-box]]
             [merpg.mutable.registry :as re]
+            [merpg.mutable.scripts :refer :all]
             [merpg.mutable.to-registry-binding :as tbr]
             [seesaw.core :refer :all]
             [seesaw.chooser :refer :all]
@@ -49,7 +50,21 @@
                                                               c (ask-box vm)]
                                                           (if (a/<! c)
                                                             (animated-sprite! (:id val) sprite (:amount-of-frames @vm))))))))])
-                                       
+
+                 (menu-item :text "New script"
+                            :listen
+                            [:action (fn [_]
+                                       (a/go
+                                         (let [vm (atom {:ns ""
+                                                         :parent-id (->> (re/query! #(= (:type %) :map))
+                                                                         keys
+                                                                         vec)
+                                                         :name ""})
+                                               c (ask-box vm)]
+                                           (if (a/<! c)
+                                             (script! (symbol (:ns @vm))
+                                                      (:parent-id @vm)
+                                                      (:name @vm))))))])
                  (menu-item)
                  (menu-item :text "Remove map"
                             :listen

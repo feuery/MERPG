@@ -1,8 +1,11 @@
 (ns merpg.settings.nrepl
   (:require [merpg.settings.core :refer :all]
             [cider.nrepl :refer [cider-nrepl-handler]]
-            [clojure.tools.nrepl.server :as nrepl])
+            [clojure.tools.nrepl.server :as nrepl]
+            [merpg.nrepl.middleware :refer [find-file-handler]])
   (:import [java.net ServerSocket BindException]))
+
+
 
 (def server (atom nil))
 
@@ -12,7 +15,7 @@
                   (if (and start?
                            (not (some? @server)))
                     (let [port (get-prop! :nrepl-port)]
-                      (reset! server (nrepl/start-server :port port :handler cider-nrepl-handler))
+                      (reset! server (nrepl/start-server :port port :handler (find-file-handler cider-nrepl-handler)))
                       (println "nREPL Server running on port " port))
                     (when (and (not start?)
                                (some? @server))

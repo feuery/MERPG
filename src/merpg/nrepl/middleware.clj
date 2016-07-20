@@ -6,7 +6,7 @@
 (defn find-file-handler [h]
   (fn [{:keys [op transport] :as msg}]
     (if (= "find-file" op)
-      (t/send transport (response-for msg :status :done :file "(ns lol.core)\n\n(println \"Hello world\")"))
+      (t/send transport (response-for msg :status :done :contents "(ns lol.core)\n\n(println \"Hello world\")"))
       (h msg))))
 
 (set-descriptor! #'find-file-handler

@@ -56,7 +56,7 @@
                                  (mapvals (fn [v]
                                             (postwalk (fn [vv]
                                                         (if (symbol? vv)
-                                                          `(quote ~vv)
+                                                          (str vv)
                                                           vv)) v))))
           filename (if (.endsWith filename ".zip")
                      filename
@@ -136,9 +136,13 @@
             (= (.getName entry) "registry")
             (with-open [in-stream (.getInputStream zip entry)
                         rdr (io/reader in-stream)]
-              (let [registry (-> rdr
-                                 rdr-slurp
-                                 read-string)]
+              (let [registry (->> (-> rdr
+                                      rdr-slurp
+                                      read-string)                                  
+                                  (mapvals (fn [{:keys [type ns] :as val}]
+                                             (if (= type :script)
+                                               (assoc val :ns (symbol ns))
+                                               val))))]
                 (swap! re/registry merge registry)))
 
             (= (.getName entry) "sprite-registry")

@@ -1,8 +1,9 @@
+;; -*- lexical-binding: t -*-
+
 (require 'cider-client)
 (require 'nrepl-client)
 
-(setq *merpg-debug* t)
-
+(setq *merpg-debug* nil)
 (setq lexical-binding t)
 
 (make-variable-buffer-local (defvar ns "" "Buffer-local var to track the ns of the currently opened merpg script asset's buffer"))
@@ -12,22 +13,33 @@
 (make-variable-buffer-local (defvar buf-name ""))
 (make-variable-buffer-local (defvar buf))
 
+(defun clear-modified ()
+  (interactive)
+  (set-buffer-modified-p nil))
+
 (defun merpg-save-file ()
   (interactive)
   (message (concat "Saving " ns))
-
   (unless (string= ns "")
-    ;; (message (concat "Sending " (buffer-substring-no-properties (point-min) (point-max))))
-    (cider-nrepl-send-request (list "op" "save-file"
-				    "ns" ns
-				    "contents" (buffer-substring-no-properties (point-min) (point-max)))
-			      (lambda (result)
-				(message (prin1-to-string result))))))
+    (lexical-let ((current-buf (current-buffer)))
+      (cider-nrepl-send-request (list "op" "save-file"
+				      "ns" ns
+				      "contents" (buffer-substring-no-properties (point-min) (point-max)))
+				(lambda (result)
+				  (with-current-buffer current-buf
+				    (message (prin1-to-string result))
+				    (clear-modified)
+				    (message (concat "Saved " ns)))))
+      (message "Sent save request")))
+  (when (string= ns "")
+    (message "ERROR: ns is \"\"")))
 
 
 
 (defun merpg-find-file (url)
-  (interactive "sFind file: ")
+  (interactive
+   (list
+    (read-file-name "Find file - start with ! to find merpg ns: " default-directory "" nil)))
   (if (string-prefix-p "!" url)
       (progn
 	(setq real-url (replace-regexp-in-string "^!\\(.*\\)" "\\1" url))

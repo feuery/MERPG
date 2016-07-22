@@ -39,7 +39,7 @@
         ids (->> (re/query! #(and (= (:type %) :script)
                                   (= (:ns %) (symbol ns))))
                  keys)
-        notes (atom "")]
+        notes (atom [])]
     (doseq [id ids]
       (re/update-registry id
                           (assoc id :src contents)))

@@ -9,6 +9,7 @@
 
 (def ^:dynamic registry (atom {}))
 (def render-allowed? (atom false))
+(def watches {})
 
 (defn is-render-allowed? []
   @render-allowed?) ;; I can't be arsed to trick the java type checked to use atoms correctly
@@ -25,9 +26,17 @@
 (defn query! [fun]
   (query fun @registry))
 
+(defn- run-watches! [id new-val]
+  (if-let [fns (get @registry id)]
+    (let [new-atom (atom new-val)]
+      (doseq [[_ f] fns]
+        (f new-atom))
+      @new-atom)
+    new-val))
+
 (defn update-element!
   ([id fn]
-   (swap! registry update id fn)))
+   (swap! registry update id (comp (partial run-watches! id ) fn))))
 
 (defn remove-element! [id]
   (swap! registry dissoc id)
@@ -43,11 +52,11 @@
    {:pre [(or (not= id :selected-tool)
               (not (coll? element)))]}
    ;; element has to know its own id due to how popupmenu in the domtree works
-   (let [element (if (coll? element)
-                   (assoc element :id id)
-                   element)]
+   (let [element (->> (if (coll? element)
+                        (assoc element :id id)
+                        element)
+                      (run-watches! id))]
      (swap! registry assoc id element))
-   
    id)
   ([element]
    (let [id (keyword (gensym))]
@@ -92,3 +101,14 @@
 (defn children-of! [id & {:keys [exclude-types] :or {exclude-types []}}]
   (children-of @registry id :exclude-types exclude-types))
        
+
+;; watches
+
+(defn set-watch! [id watch-key fun]
+  (if-not (contains? @watches id)
+    (swap! watches assoc id {}))
+
+  (swap! watches update id assoc watch-key fun))
+
+(defn drop-watch! [id watch-key]
+  (swap! watches update id dissoc watch-key))

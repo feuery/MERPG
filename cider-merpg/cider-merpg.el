@@ -69,12 +69,22 @@
 				    (message (nrepl-dict-get result "notes")))))
     (find-file url)))
 
+(defun to-kill-buffer ()
+  (interactive)
+  (if (or (not (buffer-modified-p))
+  	       (and (buffer-modified-p)
+  		    (y-or-n-p (concat "Buffer " (prin1-to-string (current-buffer)) " modified. Kill anyway?"))))
+  	   (kill-buffer (current-buffer)))
+  )
+
 (define-minor-mode merpg-edit-mode
   "An extension to CIDER. With cider connected to a live instance of MERPG (URL `https://github.com/feuery/memapper/'), this mode overrides C-x C-f and C-x C-s to be able to load and save script assets from the game"
   :lighter " merpg"
   :keymap (let ((map (make-sparse-keymap)))
 	    (define-key map (kbd "C-x C-f") 'merpg-find-file)
 	    (define-key map (kbd "C-x C-s") 'merpg-save-file)
+	    (define-key map (kbd "C-x k") 'to-kill-buffer)
+						   
 	    map)
   :global nil)
 

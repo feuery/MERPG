@@ -30,7 +30,9 @@
     
     (t/send transport
             (response-for msg
-                          :status :done
+                          :status (if (pos? (count script-assets))
+                                    :done
+                                    :not-found)
                           :contents (:src the-asset)
                           :notes (str/join "\n" @notes)))))
 

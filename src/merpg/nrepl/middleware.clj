@@ -34,15 +34,34 @@
                           :contents (:src the-asset)
                           :notes (str/join "\n" @notes)))))
 
+(defn handle-save-file [op transport ns msg]
+  (let [{:keys [contents]} msg
+        ids (->> (re/query! #(and (= (:type %) :script)
+                                  (= (:ns %) (symbol ns))))
+                 keys)
+        notes (atom "")]
+    (doseq [id ids]
+      (re/update-registry id
+                          (assoc id :src contents)))
+    (swap! notes conj (str "Saved ns " ns " (" (count ids) ") assets saved"))
+
+    (t/send transport
+          (response-for msg
+                        :status :done
+                        :notes (str/join "\n" @notes)))))
+
 (defn find-file-handler [h]
   (fn [{:keys [op transport ns] :as msg}]
     (if (= "find-file" op)
       (handle-find-file op transport ns msg)
-      (h msg))))
+      (if (= "save-file" op)
+        (handle-save-file op transport ns msg)
+        (h msg)))))
 
 (set-descriptor! #'find-file-handler
                  {:requires #{}
                   :expects #{"eval"}
                   :handles {"find-file"
                             {:doc "Handles find-file on merpg's script assets"
-                             :returns {"file" "Contents of the script file"}}}})
+                             :returns {"file" "Contents of the script file"}}
+                            "save-file" {}}})

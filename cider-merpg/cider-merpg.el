@@ -21,6 +21,7 @@
   (interactive)
   (message (concat "Saving " ns))
   (unless (string= ns "")
+    
     (lexical-let ((current-buf (current-buffer)))
       (cider-nrepl-send-request (list "op" "save-file"
 				      "ns" ns
@@ -54,7 +55,8 @@
 				    (setq buf-name (concat "MERPG: " real-url))
 				    (setq buf (get-buffer-create buf-name))
 				    (switch-to-buffer buf)
-				    ;; contents on nil
+				    (delete-region (point-min) (point-max))
+				    
 				    (if *merpg-debug*
 					(message (concat "Got a dict: " (prin1-to-string result))))
 				    (insert (nrepl-dict-get result "contents"))

@@ -50,29 +50,36 @@
   (loop [forms (drop 2 orig-forms)
          depth 0]
     (if (= (-> forms first first) kw-type)
-      (rest (first forms))
-      (if (empty? forms) '()
-          (if (> depth 100)
-            (throw (Exception. (str "Depth of 100 calls reached in get-import-list for parameters" [orig-forms kw-type])))
-            (recur (rest forms) (inc depth)))))))
+      (if (= kw-type :require)
+        (conj (rest (first forms)) '[clojure.core :refer :all])
+        (rest (first forms)))
+      (if (empty? forms)
+        (if (= kw-type :require)
+          '([clojure.core :refer :all])
+          '())
+        (if (> depth 100)
+          (throw (Exception. (str "Depth of 100 calls reached in get-import-list for parameters" [orig-forms kw-type])))
+          (recur (rest forms) (inc depth)))))))
   
 (defn parse-ns [textual-src]
   {:pre [(-> textual-src read-string first (= 'ns))]}
   (let [ns-form (read-string textual-src)
         ns (second ns-form)
-        require-list (->> (get-import-list ns-form :require) 
-                          (map (fn [ns]
-                                 (list require (list 'quote ns))))
-                          (into '[do])
-                          (apply list))
-        import-list (->> (get-import-list ns-form :import)
-                         (map (fn [ns]
-                                (list 'import (list 'quote ns))))
-                         (into '[do])
-                         (apply list))]
-    {:script-ns ns
-     :requires require-list
-     :imports import-list}))
+        r-list (get-import-list ns-form :require)
+        i-list (get-import-list ns-form :import)]
+    (let [require-list (->> r-list
+                            (map (fn [ns]
+                                   (list require (list 'quote ns))))
+                            (into '[do])
+                            (apply list))
+          import-list (->> i-list
+                           (map (fn [ns]
+                                  (list 'import (list 'quote ns))))
+                           (into '[do])
+                           (apply list))]
+      {:script-ns ns
+       :requires require-list
+       :imports import-list})))
     
                              
 

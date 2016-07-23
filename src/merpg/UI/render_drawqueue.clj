@@ -32,7 +32,9 @@
             (println "Frame is nil on " frame-index)
             (pprint frames))))))
   sprite)
-      
+
+(def load-the-map-surface (draw-to-surface (image 400 400)
+                                           (Draw "Create a map in the domtree" [100 100])))
 
 (defn render-drawqueue! []
   (let [mapid (re/peek-registry :selected-map)
@@ -59,4 +61,4 @@
                                                 (rotate sprite angle))
                                               [x y])))
                      surface)))
-      (image 50 50 "#00FF00"))))
+      load-the-map-surface)))

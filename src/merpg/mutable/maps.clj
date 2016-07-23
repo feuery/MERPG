@@ -46,7 +46,59 @@
                              :selected-tile (ti/tile 0 0 :initial 0))))
     id))
 
-(map! 1 1 1 :name "Initial map") 
+(defn- get-import-list [orig-forms kw-type]
+  (loop [forms (drop 2 orig-forms)
+         depth 0]
+    (if (= (-> forms first first) kw-type)
+      (rest (first forms))
+      (if (empty? forms) '()
+          (if (> depth 100)
+            (throw (Exception. (str "Depth of 100 calls reached in get-import-list for parameters" [orig-forms kw-type])))
+            (recur (rest forms) (inc depth)))))))
+  
+(defn parse-ns [textual-src]
+  {:pre [(-> textual-src read-string first (= 'ns))]}
+  (let [ns-form (read-string textual-src)
+        ns (second ns-form)
+        require-list (->> (get-import-list ns-form :require) 
+                          (map (fn [ns]
+                                 (list require (list 'quote ns))))
+                          (into '[do])
+                          (apply list))
+        import-list (->> (get-import-list ns-form :import)
+                         (map (fn [ns]
+                                (list 'import (list 'quote ns))))
+                         (into '[do])
+                         (apply list))]
+    {:script-ns ns
+     :requires require-list
+     :imports import-list}))
+    
+                             
+
+(re/set-watch! :selected-map :script-loader (fn [selected-map]
+                                              (let [selected-map @selected-map
+                                                    scripts (re/query! #(and (= (:type %) :script)
+                                                                             (= (:parent-id %) selected-map)))]
+                                                (doseq [[_ script] scripts]
+                                                  (let [{:keys [script-ns
+                                                                requires
+                                                                imports]} (parse-ns (:src script))
+                                                        ns-form (-> script :src read-string)
+                                                        ast (->> (str "(do " (:src script) ")")
+                                                                 read-string
+                                                                 (filter #(not= % ns-form)))]
+                                                    (try
+                                                      (binding [*ns* (or (find-ns script-ns)
+                                                                         (create-ns script-ns))]
+                                                        (if (some? *ns*)
+                                                          (do
+                                                            (eval requires)
+                                                            (eval imports)
+                                                            (eval ast))
+                                                          (println "*ns* is nil")))
+                                                      (catch Exception ex
+                                                        (pprint ex))))))))
 
 (tt/make-atom-binding map-metas {:allow-seq? true}
                       (->> (r/sample 700 re/registry)

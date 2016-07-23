@@ -9,7 +9,7 @@
 
 (def ^:dynamic registry (atom {}))
 (def render-allowed? (atom false))
-(def watches {})
+(def watches (atom {}))
 
 (defn is-render-allowed? []
   @render-allowed?) ;; I can't be arsed to trick the java type checked to use atoms correctly
@@ -23,14 +23,18 @@
 (defn query [fun registry]
   (->> registry
        (filter #(fun (-> % second)))))
+
 (defn query! [fun]
   (query fun @registry))
 
 (defn- run-watches! [id new-val]
-  (if-let [fns (get @registry id)]
+  (if-let [fns (get @watches id)]
     (let [new-atom (atom new-val)]
       (doseq [[_ f] fns]
-        (f new-atom))
+        (try
+          (f new-atom)
+          (catch Exception ex
+            (pprint ex))))
       @new-atom)
     new-val))
 

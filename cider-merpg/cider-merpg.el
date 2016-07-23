@@ -53,26 +53,41 @@
 							 "true"
 						       "false"))
 				      (lambda (result)
-					(if (equal (nrepl-dict-get result "status") '("done"))
-					    (progn
-					      
-					      (message (concat "Found ns " real-url ", opening..."))
-					      (setq buf-name (concat "MERPG: " real-url))
-					      (setq buf (get-buffer-create buf-name))
-					      (switch-to-buffer buf)
-					      (delete-region (point-min) (point-max))
-					      
-					      (if *merpg-debug*
-						  (message (concat "Got a dict: " (prin1-to-string result))))
-					      (insert (nrepl-dict-get result "contents"))
-					      (clojure-mode)
-					      (merpg-edit-mode)
-					      (not-modified)
-					      (setq ns real-url)
-					      (if *merpg-debug*
-						  (message (concat "Set ns to " ns)))
-					      (message (nrepl-dict-get result "notes")))
-					  (message (concat "NS " real-url " not found in the running MERPG instance")))))
+					(if *merpg-debug*
+					    (message (concat "Result from nrepl server: " (prin1-to-string result))))
+					(if (equal (nrepl-dict-get result "status") '("create-asset"))
+					    (let ((new-map-id (completing-read "Creating new script asset. Parent map id: " (nrepl-dict-get result "map-ids") nil 44)))
+					      (cider-nrepl-send-request (list "op" "create-file"
+									      "parent-id" new-map-id
+									      "ns" real-url)
+									(lambda (result)
+									  (if (equal (nrepl-dict-get result "status") '("done"))
+									      (merpg-find-file url)
+									    (message (concat "Error while creating " real-url ". "
+											     (if *merpg-debug*
+												 (prin1-to-string result)
+											       "Turn *merpg-debug* on to get more info")))))))
+					  
+					  (if (equal (nrepl-dict-get result "status") '("done"))
+					      (progn
+						
+						(message (concat "Found ns " real-url ", opening..."))
+						(setq buf-name (concat "MERPG: " real-url))
+						(setq buf (get-buffer-create buf-name))
+						(switch-to-buffer buf)
+						(delete-region (point-min) (point-max))
+						
+						(if *merpg-debug*
+						    (message (concat "Got a dict: " (prin1-to-string result))))
+						(insert (nrepl-dict-get result "contents"))
+						(clojure-mode)
+						(merpg-edit-mode)
+						(not-modified)
+						(setq ns real-url)
+						(if *merpg-debug*
+						    (message (concat "Set ns to " ns)))
+						(message (nrepl-dict-get result "notes")))
+					    (message (concat "NS " real-url " not found in the running MERPG instance"))))))
 	  (message "Cider not connected. cider-merpg cannot operate")))
     (find-file url)))
 

@@ -35,8 +35,10 @@
 					  (message (concat "Saved " ns)))))
 	    (message "Sent save request")))
 	(when (string= ns "")
-	  (message "ERROR: ns is \"\"")))
-    (message "Cider not connected. cider-merpg cannot operate")))
+	  ;; (message "ERROR: ns is \"\"")
+	  (save-buffer)))
+    ;; (message "Cider not connected. cider-merpg cannot operate")
+    (save-buffer)))
 
 (defun merpg-find-file (url)
   (interactive

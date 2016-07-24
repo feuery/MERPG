@@ -17,4 +17,6 @@
                             :ns ns
                             :src (str "(ns " (str ns) ")\n\n(println \"Hello world!\")")
                             :type :script
-                            :id id}))))
+                            :id id
+                            :onstartup false
+                            :onexit false }))))

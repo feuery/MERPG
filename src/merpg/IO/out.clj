@@ -49,9 +49,9 @@
                        (re/query #(= (:type %) :sprite)))
           
           registry-snapshot (->> registry-snapshot
-                                 (filter #(not (in? [:tool :tileset :sprite] (-> %
-                                                                         second
-                                                                         :type))))
+                                 (filter #(not (in? [:tool :tileset :sprite :zonetile] (-> %
+                                                                                           second
+                                                                                           :type))))
                                  (into {})
                                  (mapvals (fn [v]
                                             (postwalk (fn [vv]

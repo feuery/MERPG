@@ -28,15 +28,22 @@
   (query fun @registry))
 
 (defn- run-watches! [id new-val]
-  (if-let [fns (get @watches id)]
-    (let [new-atom (atom new-val)]
+  (let [new-atom (atom new-val)]
+    (if-let [fns (get @watches id)]
       (doseq [[_ f] fns]
         (try
           (f new-atom)
           (catch Exception ex
-            (pprint ex))))
-      @new-atom)
-    new-val))
+            (pprint ex)))))
+    (if (and (map? @new-atom)
+             (contains? @new-atom :type))
+      (when-let [type-fns (get (:types @watches) (:type @new-atom))]
+        (doseq [[_ f] type-fns]
+          (try 
+            (f new-atom)
+            (catch Exception ex
+              (pprint ex))))))
+    @new-atom))
 
 (defn update-element!
   ([id fn]
@@ -116,3 +123,11 @@
 
 (defn drop-watch! [id watch-key]
   (swap! watches update id dissoc watch-key))
+
+(defn set-type-watch! [type-id watch-key fun]
+  (if-not (contains? (:types @watches) type-id)
+    (swap! watches assoc-in [:types type-id] {watch-key fun})
+    (swap! watches update-in [:types type-id] assoc watch-key fun)))
+
+(defn drop-type-watch! [type-id watch-key]
+  (swap! watches update-in [:types type-id] dissoc watch-key))

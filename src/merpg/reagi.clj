@@ -11,6 +11,19 @@
                     @editor-streams-running?))
         ~@rest-exprs))
 
-;; (editor-stream
-;;  (r/sample 1000 r/time)
-;;  (r/map #(println "A second has passed, r/time is now " %)))
+(def game-streams-running? (atom false))
+
+(defmacro game-stream [initial-expr & rest-exprs]
+  `(->> ~initial-expr
+        (r/filter (fn [~'_]
+                    @game-streams-running?))
+        ~@rest-exprs))
+
+(defmacro stream
+  "An OR of editor- and game-streams-running?"
+  [initial-expr & rest-exprs]
+  `(->> ~initial-expr
+        (r/filter (fn [~'_]
+                    (or @editor-streams-running?
+                        @game-streams-running?)))
+        ~@rest-exprs))

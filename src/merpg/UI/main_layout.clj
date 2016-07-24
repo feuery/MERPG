@@ -37,7 +37,7 @@
             [merpg.mutable.to-registry-binding :as trb]
             [merpg.mutable.resize-algorithms :refer [resize!]]
             [merpg.settings.core :refer [get-prop! set-prop!] :as settings]
-            [merpg.reagi :refer [editor-streams-running?]])
+            [merpg.reagi :refer :all])
   (:import [java.awt Component]))
 
 (defn linux? []
@@ -82,6 +82,7 @@
       :constraints ["" "[]" "[]"]
       :items
       [[(config! (make-widget editor-streams-running?) :text "Rendering running") "wrap"]
+       [(config! (make-widget game-streams-running?) :text "Game rendering") "wrap"]
        [all-tools-view "wrap"]
        ["Current tool" "wrap"]
        [current-tool-view "wrap"]

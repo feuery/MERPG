@@ -3,6 +3,8 @@
             [merpg.mutable.registry :as re]
             [merpg.mutable.layers :refer [mapwidth! mapheight!]]
             [merpg.mutable.drawing-queue :refer :all]
+            [merpg.reagi :refer :all]
+            [reagi.core :as r]
 
             [clojure.pprint :refer :all])
   (:import [java.awt Color]))
@@ -36,7 +38,7 @@
 (def load-the-map-surface (draw-to-surface (image 400 400)
                                            (Draw "Create a map in the domtree" [100 100])))
 
-(defn render-drawqueue! []
+(defn render-drawqueue! [& _]
   (let [mapid (re/peek-registry :selected-map)
         [w h] [(mapwidth! mapid) (mapheight! mapid)]]
     (if (and (pos? w)
@@ -62,3 +64,6 @@
                                               [x y])))
                      surface)))
       load-the-map-surface)))
+
+(def drawqueue (stream (r/sample 16 r/time)
+                       (r/map render-drawqueue!)))

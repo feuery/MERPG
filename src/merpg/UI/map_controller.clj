@@ -51,7 +51,7 @@
                             (fn [_ g]
                               (doto g
                                 (.drawImage (map-surface!) nil 0 0)
-                                (.drawImage (render-drawqueue!) nil 0 0)))
+                                (.drawImage @drawqueue nil 0 0)))
                             :surface-provider map-surface!
                             :draggable-fn (fn [e]
                                             (let [[x y] (mouse-location e)]
@@ -62,12 +62,6 @@
                             :onmouseup (fn [e]
                                          (let [[x y] (mouse-location e)]
                                               (post-mouse-event! x y :map-controller :mouseup))))]
-    
-    (remove-rendered-map-watcher :map-controller)
-    (add-rendered-map-watcher #(do
-                                 ;; (println "Repainting canvas")
-                                 (repaint! c))
-                              :map-controller)
     (scrollable c)))
 
 (defn show [f stuff]

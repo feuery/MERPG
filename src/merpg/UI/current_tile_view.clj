@@ -6,7 +6,8 @@
 (defn current-tile-view []
   (let [c (canvas :paint (fn [_ g]
                            (if (realized? selected-tile)
-                             (.drawImage g @selected-tile nil 0 0))))]
+                             (.drawImage g @selected-tile nil 0 0)))
+                  :size [50 :by 50])]
     (remove-current-tile-watcher :current-tile)
     (add-current-tile-watcher #(repaint! c) :current-tile)
     (scrollable c)))

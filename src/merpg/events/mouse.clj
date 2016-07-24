@@ -1,5 +1,6 @@
 (ns merpg.events.mouse
   (:require [reagi.core :as r]
+            [merpg.reagi :refer [editor-stream]]
             [schema.core :as s]
             [merpg.util :refer [in?]]))
 
@@ -17,13 +18,14 @@
 ;; r/filter runs the schema validation only now-and-then
 ;; who knows what's the matter with it
 
-(def mouse-events (->> (r/events {:pixel-x 0 :pixel-y 0
+(def mouse-events (editor-stream
+                   (r/events {:pixel-x 0 :pixel-y 0
                                   :tile-x 0 :tile-y 0
                                   :source :nil
                                   :process? false
                                   :type :mousedown})
-                       (r/filter (partial s/validate mouse-event-schema))
-                       (r/filter :process?)))
+                   (r/filter (partial s/validate mouse-event-schema))
+                   (r/filter :process?)))
 
 (s/defn ^:always-validate post-mouse-event! [pixel-x :- s/Int
                                              pixel-y :- s/Int

@@ -6,6 +6,7 @@
             [merpg.mutable.tiles :as ti]
             [merpg.events.mouse :as m]
             [merpg.macros.multi :refer [def-real-multi]]
+            [merpg.reagi :refer [editor-stream]]
             [merpg.UI.events :as e]
             [seesaw.core :as s]
             [reagi.core :as r]
@@ -108,7 +109,7 @@
                                                         (pprint ex))))))))
 
 (tt/make-atom-binding map-metas {:allow-seq? true}
-                      (->> (r/sample 700 re/registry)
+                      (editor-stream (r/sample 700 re/registry)
                            (r/map (fn [r]
                                     (->> r
                                          (filterv #(= (-> % second :type) :map))
@@ -123,7 +124,7 @@
         (pprint [tile-x tile-y])
         tile-id))))
 
-(def map-events (->> m/mouse-events
+(def map-events (editor-stream m/mouse-events
                      (r/filter #(= (:source %) :map-controller))
                      (r/map (fn [{:keys [tile-x tile-y type]}]
                               (let [tile-id (get-edited-tile! tile-x tile-y)

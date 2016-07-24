@@ -1,6 +1,7 @@
 (ns merpg.mutable.layers
   (:require [clojure.pprint :refer [pprint]]
             [clojure.test :refer :all]
+            [merpg.reagi :refer [editor-stream]]
             [reagi.core :as r]
             [merpg.mutable.registry :as re]
             [merpg.mutable.registry-views :as rv]
@@ -43,7 +44,7 @@
                                           parent-id order hit?)))))
 
 (tt/make-atom-binding layer-metas {:allow-seq? true}
-                      (->> (r/sample 1000 re/registry)
+                      (editor-stream (r/sample 1000 re/registry)
                            (r/map (fn [r]
                                     (->> r
                                          (filterv #(and
@@ -131,7 +132,7 @@
             ;; (pprint toret)
             toret)))))
 
-(def indexable-layers-view (->> (r/sample 30 re/registry)
+(def indexable-layers-view (editor-stream (r/sample 30 re/registry)
                                 (r/map (fn [r]
                                          ;; (if (re/is-render-allowed?)
                                          (->> r
@@ -161,7 +162,7 @@
     nil))
 
 
-(def layers-view (->> indexable-layers-view
+(def layers-view (editor-stream indexable-layers-view
                       (r/map (fn [r]
                                (get-in r [(re/peek-registry :selected-map)
                                           (re/peek-registry :selected-layer)])))))
@@ -169,7 +170,7 @@
 (defn layer-count! [map-id]
   (count (get @indexable-layers-view map-id)))
 
-(def current-hitlayer (->> (r/sample 50 re/registry)
+(def current-hitlayer (editor-stream (r/sample 50 re/registry)
                            (r/map (fn [r]
                                     (->> r
                                          (filter #(and
@@ -178,7 +179,7 @@
                                                    (= (-> % second :parent-id) (re/peek-registry :selected-map))))
                                          first)))))
 
-(def current-hitlayer-data (->> current-hitlayer
+(def current-hitlayer-data (editor-stream current-hitlayer
                                 (r/filter some?)
                                 (r/map first)
                                 (r/map #(registry-to-layer %))))         

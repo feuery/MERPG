@@ -7,7 +7,8 @@
             [merpg.2D.core :refer :all]
             [merpg.mutable.registry-views :as rv]
             [merpg.events.mouse :refer [current-mouse-location]]
-            [merpg.math.vector :refer [vec-angle]]))
+            [merpg.math.vector :refer [vec-angle]]
+            [merpg.reagi :refer [editor-stream]]))
 
 (defn deftool
   "The func shall receive the tile-id of the tile it's been used on as a parameter. This will probably break with the hitlayer-tool, but that'll be tested when the time is right"
@@ -139,13 +140,13 @@
 
 
 (make-atom-binding all-tools {:allow-seq? true}
-                   (->> (r/sample 300 re/registry)
+                   (editor-stream (r/sample 300 re/registry)
                         (r/map (fn [r]
                                  (->> r
                                       (filter #(= (-> % second :type) :tool))
                                       (mapv first))))))
 
-(def selected-tool-view (->> (r/sample 300 re/registry)
+(def selected-tool-view (editor-stream (r/sample 300 re/registry)
                              (r/filter #(and (coll? %)
                                              (contains? % :selected-tool)))
                              (r/map :selected-tool)))

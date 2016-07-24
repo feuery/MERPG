@@ -1,6 +1,7 @@
 (ns merpg.mutable.tiles
   (:require [merpg.mutable.registry :as re]
             [merpg.mutable.registry-views :as rv]
+            [merpg.reagi :refer [editor-stream]]
             [merpg.2D.core :refer :all]
             [reagi.core :as r]
             [schema.core :as s]))
@@ -13,15 +14,15 @@
   "Returns id tile is registered with"
   [x y tileset rotation map-x map-y parent-id & {:keys [debug?] :or {debug? false}}]
   (let [id (re/register-element! (zipmap
-                        [:x
-                         :y
-                         :tileset
-                         :rotation
-                         :map-x
-                         :map-y
-                         :parent-id
-                         :type]
-                        [x y tileset rotation map-x map-y parent-id :tile]))]
+                                  [:x
+                                   :y
+                                   :tileset
+                                   :rotation
+                                   :map-x
+                                   :map-y
+                                   :parent-id
+                                   :type]
+                                  [x y tileset rotation map-x map-y parent-id :tile]))]
     (when debug?
       (println "Created a tile with id " id))
     id))
@@ -49,13 +50,13 @@
 (defn remove-current-tile-watcher [k]
   (swap! current-tile-watchers dissoc k))
 
-(def selected-tile (->> (r/sample 600 re/registry)
-                        (r/filter #(and (coll? %)
-                                        (contains? % :selected-tile)))
-                        (r/map :selected-tile)
-                        (r/map render-tile!)
-                        (r/map (fn [d]
-                                 (doseq [[_ func] @current-tile-watchers]
-                                   (func))
-                                 d))))
-                        
+(def selected-tile (editor-stream (r/sample 600 re/registry)
+                                  (r/filter #(and (coll? %)
+                                                  (contains? % :selected-tile)))
+                                  (r/map :selected-tile)
+                                  (r/map render-tile!)
+                                  (r/map (fn [d]
+                                           (doseq [[_ func] @current-tile-watchers]
+                                             (func))
+                                           d))))
+

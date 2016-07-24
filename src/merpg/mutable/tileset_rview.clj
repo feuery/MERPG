@@ -4,6 +4,7 @@
             [merpg.mutable.registry :as re]
             [merpg.mutable.registry-views :as rv]
             [merpg.mutable.tools :as t]
+            [merpg.reagi :refer [editor-stream]]
             [merpg.2D.core :as dd]))
 
 (def rtilesets-watchers (atom {}))
@@ -22,29 +23,29 @@
                                         (dotimes [y h]
                                           (dd/Draw (get-in tileset [x y]) [(* x 50)
                                                                            (* y 50)]))))])))
-(def rendered-tilesets (->> (r/sample 600 re/registry)
-                            (r/map (fn [r]
-                                     (->> r
-                                          (filter #(= (-> % second :type) :tileset))
-                                          (map first)
-                                          (pmap render-tileset!)
-                                          (into {}))))
-                            (r/map (fn [r]
-                                     (doseq [[_ func] @rtilesets-watchers]
-                                       (func))
-                                     r))))
+(def rendered-tilesets (editor-stream (r/sample 600 re/registry)
+                                      (r/map (fn [r]
+                                               (->> r
+                                                    (filter #(= (-> % second :type) :tileset))
+                                                    (map first)
+                                                    (pmap render-tileset!)
+                                                    (into {}))))
+                                      (r/map (fn [r]
+                                               (doseq [[_ func] @rtilesets-watchers]
+                                                 (func))
+                                               r))))
 
 (t/make-atom-binding tileset-meta {:allow-seq? true}
-                     (->> (r/sample 1000 re/registry)
-                          (r/map (fn [r]
-                                   (->> r
-                                        (filterv #(= (-> % second :type) :tileset)))))))
+                     (editor-stream (r/sample 1000 re/registry)
+                                    (r/map (fn [r]
+                                             (->> r
+                                                  (filterv #(= (-> % second :type) :tileset)))))))
 
 
-(def selected-tileset-view (->> (r/sample 1000 re/registry)
-                                (r/filter #(and (coll? %)
-                                                (contains? % :selected-tileset)))
-                                (r/map :selected-tileset)))
+(def selected-tileset-view (editor-stream (r/sample 1000 re/registry)
+                                          (r/filter #(and (coll? %)
+                                                          (contains? % :selected-tileset)))
+                                          (r/map :selected-tileset)))
 
 (def c (a/chan))
 (def selected-tileset-ui (atom :nil :validator (complement coll?)))

@@ -1,5 +1,6 @@
 (ns merpg.UI.main-layout
   (:require [seesaw.core :refer :all]
+            [seesaw.mig :refer :all]
             [environ.core :refer [env]]
             [seesaw.bind :as b]
             [clojure.core.async :as a]
@@ -35,7 +36,9 @@
             [merpg.mutable.registry :as re]
             [merpg.mutable.to-registry-binding :as trb]
             [merpg.mutable.resize-algorithms :refer [resize!]]
-            [merpg.settings.core :refer [get-prop! set-prop!] :as settings]))
+            [merpg.settings.core :refer [get-prop! set-prop!] :as settings]
+            [merpg.reagi :refer [editor-streams-running?]])
+  (:import [java.awt Component]))
 
 (defn linux? []
   (= (System/getProperty "os.name") "Linux"))
@@ -51,6 +54,20 @@
                                           (re/register-element! :selected-tool
                                                                 s))])))))
 
+(extend-type clojure.lang.Atom
+  seesaw.make-widget/MakeWidget
+  (make-widget* [v]
+    (let [val @v]
+      (if-not (instance? java.lang.Boolean val)
+        (throw (Exception. "Atom-makewidget binding supports currently only atoms with boolean values")))
+      (let [widget (checkbox :selected? val)]
+        (b/bind (b/selection widget)
+                v)
+        (b/bind v
+                (b/selection widget))
+        widget))))
+      
+
 (defn get-content [f]  
   (let [current-tool-view (label :text (str @tools/selected-tool-ui))
         all-tools-view (vertical-panel :items (tool-collection-to-buttons @tools/all-tools-ui))]
@@ -61,13 +78,15 @@
             (b/transform tool-collection-to-buttons)
             (b/property all-tools-view :items))
     (left-right-split
-     (vertical-panel
+     (mig-panel
+      :constraints ["" "[]" "[]"]
       :items
-      [all-tools-view
-       "Current tool"
-       current-tool-view
+      [[(config! (make-widget editor-streams-running?) :text "Rendering running") "wrap"]
+       [all-tools-view "wrap"]
+       ["Current tool" "wrap"]
+       [current-tool-view "wrap"]
        
-       (button :text "Resize map"
+       [(button :text "Resize map"
                :listen
                [:action (fn [_]
                           (let [w (->> :selected-map
@@ -98,20 +117,20 @@
                                            w
                                            h
                                            horizontal-anchor
-                                           vertical-anchor))))))])
-                                  
-                                         
+                                           vertical-anchor))))))]) "wrap"]
+       
+       
 
-       "Current tile"           
-       (current-tile-view)
+       ["Current tile" "wrap"]           
+       [(current-tile-view) "span"]
 
-       "Document Tree"
-       (domtree)
+       ["Document Tree" "wrap"]
+       [(domtree) "wrap"]
 
-       (button :text "Close"
+       [(button :text "Close"
                :listen
                [:action (fn [_]
-                          (dispose! f))])])
+                          (dispose! f))]) "wrap"]])
      (top-bottom-split
       (map-controller )
       (tileset-controller)

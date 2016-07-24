@@ -2,6 +2,7 @@
   (:require [reagi.core :as r]
 
             [merpg.IO.tileset :refer :all]
+            [merpg.reagi :refer [editor-stream]]
             [merpg.UI.events :as e]
             [merpg.2D.core :refer [image]]
             [merpg.mutable.registry :as re]
@@ -27,11 +28,11 @@
                                 :parent-id :root})
 (re/register-element! :selected-tileset :initial)
 
-(def tileset-events (->> m/mouse-events
-                         (r/filter #(= (:source %) :tileset-controller))
-                         (r/map (fn [{:keys [tile-x tile-y]}]
-                                  (re/update-registry :selected-tile
-                                                      (assoc :selected-tile
-                                                             :x tile-x
-                                                             :y tile-y
-                                                             :tileset (re/peek-registry :selected-tileset)))))))
+(def tileset-events (editor-stream m/mouse-events
+                                   (r/filter #(= (:source %) :tileset-controller))
+                                   (r/map (fn [{:keys [tile-x tile-y]}]
+                                            (re/update-registry :selected-tile
+                                                                (assoc :selected-tile
+                                                                       :x tile-x
+                                                                       :y tile-y
+                                                                       :tileset (re/peek-registry :selected-tileset)))))))

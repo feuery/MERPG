@@ -43,6 +43,7 @@
      (when first?
        (re/register-element! :selected-layer (first layers)
                              :selected-map id
+                             :initial-map id
                              :selected-tool :pen
                              :selected-tile (ti/tile 0 0 :initial 0))))
     id))

@@ -27,7 +27,8 @@
                    (r/filter (partial s/validate mouse-event-schema))
                    (r/filter :process?)))
 
-(s/defn ^:always-validate post-mouse-event! [pixel-x :- s/Int
+(s/defn ;; ^:always-validate
+  post-mouse-event! [pixel-x :- s/Int
                                              pixel-y :- s/Int
                                              source :- s/Keyword
                                              type :- type-pred]

@@ -12,4 +12,6 @@
                  [org.clojure/tools.nrepl "0.2.12"]]
   :main merpg.core
   :java-source-paths ["java-src"]
+  :jvm-opts ["-Dsun.java2d.opengl=True"
+             "-Dsun.java2d.accthreshold=0"]
   :profiles {:uberjar {:aot :all}})

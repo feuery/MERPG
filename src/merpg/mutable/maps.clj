@@ -122,7 +122,6 @@
       (let [{:keys [tile-id] :as tile} (get-in @l/current-hitlayer-data [tile-x tile-y])]
         tile-id)
       (let [{:keys [tile-id] :as tile} (get-in @l/layers-view [ tile-x tile-y])]
-        (pprint [tile-x tile-y])
         tile-id))))
 
 (def map-events (editor-stream m/mouse-events

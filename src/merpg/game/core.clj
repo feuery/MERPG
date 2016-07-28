@@ -6,7 +6,11 @@
             [seesaw.core :refer :all]
             [clojure.pprint :refer :all]
             [merpg.mutable.registry :refer :all]
-            [merpg.game.map-stream :refer [final-image final-img-dimensions]]))
+            [merpg.game.map-stream :refer [final-image final-img-dimensions]])
+  (:import [java.awt.event KeyEvent]))
+
+(def keydown-stream "The keycodes game-frame receives will be sent to this stream. Key-still-down events are too delivered here, as per JFrame's keylistener functionality. If you need to explicitly know when key isn't down anymore, subscribe to the keyup-stream." (game-stream (r/events)))
+(def keyup-stream "The keycodes game-frame receives will be sent to this stream" (game-stream (r/events)))
 
 (defn run-game! [& {:keys [hide-editor?
                            fullscreen?
@@ -21,20 +25,27 @@
   
   (reset! game-streams-running? true)
 
-  (def ff (frame :width 800
-                :height 600
-                :visible? false
-                :content (border-panel :center (canvas :paint #(if (realized? final-image)
-                                                                 (let [[w h] @final-img-dimensions]
-                                                                   (doto %2
-                                                                     (.setBackground transparent)
-                                                                     (.clearRect 0 0 w h)
-                                                                     (.drawImage @final-image 0 0 nil)))
-                                                                 (println "Final-image isn't done")))
-                                       :south (button :text "Hide!"
-                                                       :listen
-                                                       [:action (fn [_]
-                                                                  (dispose! ff))]))))
+  (def ff (doto (frame :width 800
+                       :height 600
+                       :visible? false
+                       :listen
+                       [:key-released (fn [e]
+                                        (r/deliver keyup-stream (.getKeyCode e)))
+                        :key-pressed (fn [e]
+                                       (r/deliver keydown-stream (.getKeyCode e)))]
+                       :content (border-panel :center (canvas :paint #(if (realized? final-image)
+                                                                        (let [[w h] @final-img-dimensions]
+                                                                          (doto %2
+                                                                            (.setBackground transparent)
+                                                                            (.clearRect 0 0 w h)
+                                                                            (.drawImage @final-image 0 0 nil)))
+                                                                        (println "Final-image isn't done")))
+                                              :south (button :text "Hide!"
+                                                             :listen
+                                                             [:action (fn [_]
+                                                                        (dispose! ff))])))
+            (.setFocusable true)
+            (.setFocusTraversalKeysEnabled false)))
   (def tt (timer (fn [_]
                    (invoke-now
                     (repaint! ff)))

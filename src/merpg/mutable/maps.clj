@@ -84,30 +84,30 @@
        :imports import-list})))
     
                              
+(defn load-map-scripts! [selected-map]
+  (let [scripts (re/query! #(and (= (:type %) :script)
+                                 (= (:parent-id %) selected-map)))]
+    (doseq [[_ script] scripts]
+      (let [{:keys [script-ns
+                    requires
+                    imports]} (parse-ns (:src script))
+            ns-form (-> script :src read-string)
+            ast (->> (str "(do " (:src script) ")")
+                     read-string
+                     (filter #(not= % ns-form)))]
+        (try
+          (binding [*ns* (or (find-ns script-ns)
+                             (create-ns script-ns))]
+            (if (some? *ns*)
+              (do
+                (eval requires)
+                (eval imports)
+                (eval ast))
+              (println "*ns* is nil")))
+          (catch Exception ex
+            (pprint ex)))))))
 
-(re/set-watch! :selected-map :script-loader (fn [selected-map]
-                                              (let [selected-map @selected-map
-                                                    scripts (re/query! #(and (= (:type %) :script)
-                                                                             (= (:parent-id %) selected-map)))]
-                                                (doseq [[_ script] scripts]
-                                                  (let [{:keys [script-ns
-                                                                requires
-                                                                imports]} (parse-ns (:src script))
-                                                        ns-form (-> script :src read-string)
-                                                        ast (->> (str "(do " (:src script) ")")
-                                                                 read-string
-                                                                 (filter #(not= % ns-form)))]
-                                                    (try
-                                                      (binding [*ns* (or (find-ns script-ns)
-                                                                         (create-ns script-ns))]
-                                                        (if (some? *ns*)
-                                                          (do
-                                                            (eval requires)
-                                                            (eval imports)
-                                                            (eval ast))
-                                                          (println "*ns* is nil")))
-                                                      (catch Exception ex
-                                                        (pprint ex))))))))
+(re/set-watch! :selected-map :script-loader #(load-map-scripts! @%))
 
 (tt/make-atom-binding map-metas {:allow-seq? true}
                       (editor-stream (r/sample 700 re/registry)

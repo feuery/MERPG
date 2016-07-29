@@ -1,11 +1,11 @@
 (ns merpg.game.core
   (:require [merpg.2D.core :refer :all]
-            [merpg.UI.main-layout :as ml]
             [merpg.reagi :refer :all]
             [reagi.core :as r]
             [seesaw.core :refer :all]
             [clojure.pprint :refer :all]
             [merpg.mutable.registry :refer :all]
+            [merpg.mutable.maps :refer [load-map-scripts!]]
             [merpg.game.map-stream :refer [final-image final-img-dimensions]]
             [merpg.game.keyboard :refer [keycodes-down]])
   (:import [java.awt.event KeyEvent]))
@@ -27,12 +27,14 @@
                            fullscreen?
                            editor-frame] :or {hide-editor? true
                                               fullscreen? true
-                                              editor-frame ml/f}}]
+                                              editor-frame nil}}]
   (when hide-editor?
-    (hide! editor-frame)
+    (if (some? editor-frame)
+      (hide! editor-frame))
     (reset! editor-streams-running? false))
 
-  (register-element! :selected-map (peek-registry :initial-map)) ;; set the correct map and run its scripts which hopefully contain the code to resume the possibly saved game
+  (register-element! :selected-map (peek-registry :initial-map))
+  (load-map-scripts! (peek-registry :selected-map))
   
   (reset! game-streams-running? true)
 

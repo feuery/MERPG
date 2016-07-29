@@ -37,7 +37,8 @@
             [merpg.mutable.to-registry-binding :as trb]
             [merpg.mutable.resize-algorithms :refer [resize!]]
             [merpg.settings.core :refer [get-prop! set-prop!] :as settings]
-            [merpg.reagi :refer :all])
+            [merpg.reagi :refer :all]
+            [merpg.game.core :refer [run-game!]])
   (:import [java.awt Component]))
 
 (defn linux? []
@@ -119,9 +120,11 @@
                                            h
                                            horizontal-anchor
                                            vertical-anchor))))))]) "wrap"]
+       ["" "wrap"]
+       [(button :text "Run game"
+                :listen [:action (fn [_]
+                                   (run-game! :hide-editor? false))]) "wrap"]
        
-       
-
        ["Current tile" "wrap"]           
        [(current-tile-view) "span"]
 

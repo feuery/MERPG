@@ -15,14 +15,12 @@
    (r/map #(rv/registry->rendered-map (peek-registry :selected-map) %))))
 
 (def final-image (game-stream
-                  (r/sample 16 (r/zip rendered-map drawqueue))
-                  (r/map (fn [r]
-                           (reduce (fn [map-surface drawqueue]
-                                     (draw-to-surface map-surface
-                                                      (Draw drawqueue [0 0]))) r)))))
-
-(def final-img-dimensions (->> final-image
-                               (r/map (fn [img]
-                                        [(img-width img) (img-height img)]))))
-
+                  (r/sample 16 r/time)
+                  (r/map (fn [_]
+                           (let [m @rendered-map
+                                 [w h] [(img-width m)
+                                        (img-height m)]]
+                             (draw-to-surface (image w h)
+                                              (Draw m [0 0])
+                                              (Draw (render-drawqueue!) [0 0])))))))
 

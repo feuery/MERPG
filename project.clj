@@ -13,5 +13,6 @@
   :main merpg.core
   :java-source-paths ["java-src"]
   :jvm-opts ["-Dsun.java2d.opengl=True"
-             "-Dsun.java2d.accthreshold=0"]
+             "-Dsun.java2d.accthreshold=0"
+             "-Dsun.java2d.pmoffscreen=false"]
   :profiles {:uberjar {:aot :all}})

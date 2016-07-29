@@ -6,22 +6,9 @@
             [clojure.pprint :refer :all]
             [merpg.mutable.registry :refer :all]
             [merpg.mutable.maps :refer [load-map-scripts!]]
-            [merpg.game.map-stream :refer [final-image final-img-dimensions]]
+            [merpg.game.map-stream :refer [final-image]]
             [merpg.game.keyboard :refer [keycodes-down]])
   (:import [java.awt.event KeyEvent]))
-
-
-
-;; (def keydown-stream
-;;   "The keycodes game-frame receives will be sent to this stream. Key-still-down events are too delivered here, as per JFrame's keylistener functionality. If you need to explicitly know when key isn't down anymore, subscribe to the keyup-stream."
-;;   (game-stream (r/events)))
-
-;; (def keyup-stream
-;;   "The keycodes game-frame receives will be sent to this stream"
-;;   (game-stream (r/events)))
-               ;; (r/map (fn [k]
-               ;;          (swap! keycodes-down disj k)
-               ;;          k))))
 
 (defn run-game! [& {:keys [hide-editor?
                            fullscreen?
@@ -37,37 +24,34 @@
   (load-map-scripts! (peek-registry :selected-map))
   
   (reset! game-streams-running? true)
-
-  (def ff (doto (frame :width 800
-                       :height 600
-                       :visible? false
-                       :listen
-                       [:key-released (fn [e]
-                                        (swap! keycodes-down disj (.getKeyCode e)))
-                        :key-pressed (fn [e]
-                                       (swap! keycodes-down conj (.getKeyCode e)))]
-                       :content (border-panel :center (canvas :paint #(if (realized? final-image)
-                                                                        (let [[w h] @final-img-dimensions]
-                                                                          (doto %2
-                                                                            (.setBackground transparent)
-                                                                            (.clearRect 0 0 w h)
-                                                                            (.drawImage @final-image 0 0 nil)))))
-                                              :south (button :text "Hide!"
-                                                             :listen
-                                                             [:action (fn [_]
-                                                                        (dispose! ff))])))
-            (.setFocusable true)
-            (.setFocusTraversalKeysEnabled false)))
-  (def tt (timer (fn [_]
-                   (invoke-now
-                    (repaint! ff)))
-                 :start? true
-                 :repeats? true
-                 :delay 16))
-                                                           
   
-  (listen ff :window-closed (fn [_]
-                              (println "ff closed")
-                              (.stop tt)
-                              (reset! game-streams-running? false)))
-  (full-screen! ff))
+  (let [c (canvas :paint #(doto %2
+                            (.drawImage @final-image 0 0 nil)))]
+    (def ff (doto (frame :width 800
+                         :height 600
+                         :visible? false
+                         :listen
+                         [:key-released (fn [e]
+                                          (swap! keycodes-down disj (.getKeyCode e)))
+                          :key-pressed (fn [e]
+                                         (swap! keycodes-down conj (.getKeyCode e)))]
+                         :content (border-panel :center c
+                                                :south (button :text "Hide!"
+                                                               :listen
+                                                               [:action (fn [_]
+                                                                          (dispose! ff))])))
+              (.setFocusable true)
+              (.setFocusTraversalKeysEnabled false)))
+    (def tt (timer (fn [_]
+                     (invoke-now
+                      (repaint! c)))
+                   :start? true
+                   :repeats? true
+                   :delay 16))
+    
+    
+    (listen ff :window-closed (fn [_]
+                                (println "ff closed")
+                                (.stop tt)
+                                (reset! game-streams-running? false)))
+    (full-screen! ff)))

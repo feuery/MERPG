@@ -61,12 +61,11 @@
        vals
        ;; async render their layers and assoc to map-id
        (pmap (fn [{:keys [parent-id
-                          id] :as mitvit}]
+                          id]}]
                (if-let [rendered-layer (map_renderer/render parent-id id)]
                  rendered-layer
                  (locking *out*
-                   (println "Rendering layer on " [parent-id id] " failed")
-                   (pprint mitvit)))))
+                   (println "Rendering layer on " [parent-id id] " failed")))))
        
        ;; reduce all the layer-surfaces to a single surface
        (reduce (fn [final-surface layer-surface]

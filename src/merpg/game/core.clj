@@ -56,5 +56,5 @@
                                 (println "ff closed")
                                 (.stop tt)
                                 (reset! game-streams-running? false)
-                                (on-close)))
+                                (on-close :nil)))
     (full-screen! ff)))

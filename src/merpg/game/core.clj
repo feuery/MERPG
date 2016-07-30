@@ -14,7 +14,7 @@
                            fullscreen?
                            editor-frame
                            on-close] :or {hide-editor? true
-                                              fullscreen? true
+                                          fullscreen? true
                                           editor-frame nil
                                           on-close identity}}]
   (when hide-editor?
@@ -38,10 +38,21 @@
                           :key-pressed (fn [e]
                                          (swap! keycodes-down conj (.getKeyCode e)))]
                          :content (border-panel :center c
-                                                :south (button :text "Hide!"
-                                                               :listen
-                                                               [:action (fn [_]
-                                                                          (dispose! ff))])))
+                                                :south (grid-panel :columns 2
+                                                                   :items
+                                                                   [(button :text "Close game"
+                                                                            :listen
+                                                                            [:action (fn [_]
+                                                                                       (dispose! ff))])
+
+                                                                    (button :text "Open editor"
+                                                                            :listen
+                                                                            [:action (fn [_]
+                                                                                       (if (some? editor-frame)
+                                                                                         (do
+                                                                                           (reset! editor-streams-running? true)
+                                                                                           (show! editor-frame))
+                                                                                         (alert "Editor frame isn't initialized")))])])))
               (.setFocusable true)
               (.setFocusTraversalKeysEnabled false)))
     (def tt (timer (fn [_]

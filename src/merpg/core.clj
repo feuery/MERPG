@@ -22,12 +22,12 @@ java -jar $path-to-merpg.jar --image $path-to-memap-file
 
 Runs the game contained in the memap file"
                           :fn
-                          (fn [[_ path]]
+                          (fn [[_ path editor]]
                             (println "Reading " path)
                             (if (read-image! path)
                               (println "Read " path)
                               (println "Failure while reading " path))
-                            (run-game!))}
+                            (run-game! :editor-frame editor))}
                "--help" {:fn (fn [[_ cmd]]
                                (if (contains? arg-cmds cmd)
                                  (do
@@ -48,17 +48,16 @@ Prints the help. If --command is supplied, prints only its help, otherwise print
 (defn -main [& args]  
   (native!)
   (reset! re/render-allowed? true)
-  (if (nil? args)
-    (do
-      (swap! re/registry identity)
-      (show-mapeditor))
-    (let [[cmd path] args]
-      (if-some [fnn (some-> (get arg-cmds cmd)
-                            :fn)]
-        (fnn args)
-        (do
-          (println "No command " cmd " found, known commands are: ")
-          (pprint (keys arg-cmds)))))))
+  (swap! re/registry identity)
+  (let [editor (show-mapeditor)]
+    (if (some? args)
+      (let [[cmd path] args]
+        (if-some [fnn (some-> (get arg-cmds cmd)
+                              :fn)]
+          (fnn (concat args [editor]))
+          (do
+            (println "No command " cmd " found, known commands are: ")
+            (pprint (keys arg-cmds))))))))
     
 
 (defn main []

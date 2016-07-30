@@ -66,6 +66,13 @@
                                                       (:parent-id @vm)
                                                       (:name @vm))))))])
                  (menu-item)
+                 (checkbox-menu-item :text "Initial map?"
+                                     :id :initial-map
+                                     :selected? (= (re/peek-registry :initial-map) (:id val))
+                                     :listen [:action
+                                              (fn [_]
+                                                (re/register-element! :initial-map (:id val)))])
+                 (menu-item)
                  (menu-item :text "Remove map"
                             :listen
                             [:action (fn [_]

@@ -200,9 +200,10 @@
                 :visible? true
                 :menubar (make-menu)
                 :on-close 
-                ;; :exit
-                :hide
-                ))
+                :dispose
+                :listen [:window-closed (fn [_]
+                                          (if (confirm "Do you want to close the application?\n\nPressing no keeps the game and nrepl-server running")
+                                            (System/exit 0)))]))
   (config! f :content (get-content f)))
 
  ;; (config! f :menubar (make-menu))

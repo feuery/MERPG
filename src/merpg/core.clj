@@ -1,6 +1,6 @@
 (ns merpg.core
   (:require [merpg.UI.main-layout :refer [show-mapeditor]]
-            [seesaw.core :refer [native!]]
+            [seesaw.core :refer [native! alert]]
             [clojure.pprint :refer :all]
             [clojure.string :as str]
             [merpg.mutable.tileset]
@@ -47,6 +47,12 @@ Prints the help. If --command is supplied, prints only its help, otherwise print
 
 (defn -main [& args]  
   (native!)
+
+  (if (not= (System/getProperty "sun.java2d.opengl") "True")
+    (let [warning "sun.java2d.opengl isn't True, game will be SLOW. Run java with -Dsun.java2d.opengl=True"]
+      (println "sun.java2d.opengl isn't True, game will be SLOW. Run java with -Dsun.java2d.opengl=True")
+      (alert warning)))
+  
   (reset! re/render-allowed? true)
   (swap! re/registry identity)
   (let [editor (show-mapeditor)]

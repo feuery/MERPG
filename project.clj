@@ -7,7 +7,7 @@
                  [seesaw "1.4.5"]
                  [environ "0.5.0"]
                  [prismatic/schema "1.1.1"]
-                 [reagi "0.10.1"]
+                 [reagi "0.10.1" :exclusions [org.clojure/clojure org.clojure/core]]
                  [cider/cider-nrepl "0.12.0"]
                  [org.clojure/tools.nrepl "0.2.12"]]
   :main merpg.core

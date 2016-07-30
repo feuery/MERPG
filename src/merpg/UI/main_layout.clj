@@ -67,6 +67,8 @@
         (b/bind v
                 (b/selection widget))
         widget))))
+
+(re/register-element! :preserve-registry true)
       
 
 (defn get-content [f]  
@@ -121,9 +123,15 @@
                                            horizontal-anchor
                                            vertical-anchor))))))]) "wrap"]
        ["" "wrap"]
-       [(button :text "Run game"
-                :listen [:action (fn [_]
-                                   (run-game! :hide-editor? false))]) "wrap"]
+       [(vertical-panel :items
+                    [(config! (make-widget (trb/atom->registry-binding :preserve-registry)) :text "Preserve registry while playing")
+                     (button :text "Run game"
+                             :listen [:action (fn [_]
+                                                (let [old-registry @re/registry]
+                                                  (run-game! :hide-editor? false
+                                                             :on-close (fn []
+                                                                         (when (re/peek-registry :preserve-registry)
+                                                                           (reset! re/registry old-registry))))))])]) "wrap"]
        
        ["Current tile" "wrap"]           
        [(current-tile-view) "span"]

@@ -12,9 +12,11 @@
 
 (defn run-game! [& {:keys [hide-editor?
                            fullscreen?
-                           editor-frame] :or {hide-editor? true
+                           editor-frame
+                           on-close] :or {hide-editor? true
                                               fullscreen? true
-                                              editor-frame nil}}]
+                                          editor-frame nil
+                                          on-close identity}}]
   (when hide-editor?
     (if (some? editor-frame)
       (hide! editor-frame))
@@ -53,5 +55,6 @@
     (listen ff :window-closed (fn [_]
                                 (println "ff closed")
                                 (.stop tt)
-                                (reset! game-streams-running? false)))
+                                (reset! game-streams-running? false)
+                                (on-close)))
     (full-screen! ff)))

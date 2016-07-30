@@ -129,7 +129,9 @@
                              :listen [:action (fn [_]
                                                 (let [old-registry @re/registry]
                                                   (run-game! :hide-editor? false
-                                                             :on-close (fn []
+                                                             :editor-frame f
+                                                             :on-close (fn [& _]
+                                                                         (println "At on-close, preserving registry? " (re/peek-registry :preserve-registry))
                                                                          (when (re/peek-registry :preserve-registry)
                                                                            (reset! re/registry old-registry))))))])]) "wrap"]
        

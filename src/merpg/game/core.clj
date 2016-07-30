@@ -3,11 +3,13 @@
             [merpg.reagi :refer :all]
             [reagi.core :as r]
             [seesaw.core :refer :all]
+            [seesaw.mouse :refer [location] :rename {location mouse-location}]
             [clojure.pprint :refer :all]
             [merpg.mutable.registry :refer :all]
             [merpg.mutable.maps :refer [load-map-scripts!]]
             [merpg.game.map-stream :refer [final-image]]
-            [merpg.game.keyboard :refer [keycodes-down]])
+            [merpg.game.keyboard :refer [keycodes-down]]
+            [merpg.events.mouse :refer [current-mouse-location]])
   (:import [java.awt.event KeyEvent]))
 
 (defn run-game! [& {:keys [hide-editor?
@@ -36,7 +38,10 @@
                          [:key-released (fn [e]
                                           (swap! keycodes-down disj (.getKeyCode e)))
                           :key-pressed (fn [e]
-                                         (swap! keycodes-down conj (.getKeyCode e)))]
+                                         (swap! keycodes-down conj (.getKeyCode e)))
+                          :mouse-moved (fn [e]
+                                         (let [loc (mouse-location e)]
+                                           (reset! current-mouse-location loc)))]
                          :content (border-panel :center c
                                                 :south (grid-panel :columns 2
                                                                    :items
@@ -67,8 +72,13 @@
                                 (println "ff closed")
                                 (.stop tt)
                                 (reset! game-streams-running? false)
+                                (println "Calling on-close")
                                 (on-close :nil)
-                                (if (or (nil? editor-frame)
-                                        (not (visible? editor-frame)))
+                                (when (or (nil? editor-frame)
+                                          (not (visible? editor-frame)))
+                                  (println "Editor-frame: " editor-frame)
+                                  (if (some? editor-frame)
+                                    (println "Visible? " (visible? editor-frame)))
+                                  (println "Exiting")
                                   (System/exit 0))))
     (full-screen! ff)))

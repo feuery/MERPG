@@ -56,9 +56,10 @@
                             [:action (fn [_]
                                        (a/go
                                          (let [vm (atom {:ns ""
-                                                         :parent-id (->> (re/query! #(= (:type %) :map))
-                                                                         keys
-                                                                         vec)
+                                                         :parent-id (-> (re/query! #(= (:type %) :map))
+                                                                        keys
+                                                                        (conj :root)
+                                                                        vec)
                                                          :name ""})
                                                c (ask-box vm)]
                                            (if (a/<! c)

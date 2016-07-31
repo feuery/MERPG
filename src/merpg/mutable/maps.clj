@@ -86,7 +86,8 @@
                              
 (defn load-map-scripts! [selected-map]
   (let [scripts (re/query! #(and (= (:type %) :script)
-                                 (= (:parent-id %) selected-map)))]
+                                 (or (= (:parent-id %) selected-map)
+                                     (= (:parent-id %) :root))))]
     (doseq [[_ script] scripts]
       (let [{:keys [script-ns
                     requires

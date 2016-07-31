@@ -25,9 +25,10 @@
       (t/send transport
               (response-for msg
                             :status :create-asset
-                            :map-ids (->> (re/query! #(= (:type %) :map))
-                                          keys
-                                          vec)))
+                            :map-ids (-> (re/query! #(= (:type %) :map))
+                                         keys
+                                         (conj :root)
+                                         vec)))
       
       (if (> amount-of-assets  1)
         (swap! notes conj (str "Found " (count script-assets) " scripts in this ns. Errors are probable. Use only one script asset per ns. Returning the first found"))
@@ -68,8 +69,10 @@
 (defn handle-create-file [op transport ns msg]
   (let [{:keys [parent-id]} msg
         parent-id (keyword parent-id)]
-    (if-not (empty? (re/query! #(and (= (:type %) :map)
-                                       (= (:id %) parent-id))))
+    (if (or (not (empty? (re/query! #(and (= (:type %) :map)
+                                          (= (:id %) parent-id)))))
+            (= parent-id :root))
+      
       (e/allow-events
        (s/script! (symbol ns)
                   parent-id
